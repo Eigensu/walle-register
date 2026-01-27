@@ -63,6 +63,9 @@ export default function AdminDashboard() {
   const [paymentError, setPaymentError] = useState("");
   const [regOpen, setRegOpen] = useState<boolean | null>(null);
   const [regUpdating, setRegUpdating] = useState(false);
+  const [maxRegistrations, setMaxRegistrations] = useState<number>(174);
+  const [editingMaxReg, setEditingMaxReg] = useState(false);
+  const [maxRegInput, setMaxRegInput] = useState<string>("174");
 
   useEffect(() => {
     const fetchPlayers = async () => {
@@ -115,6 +118,8 @@ export default function AdminDashboard() {
         const [username, password] = atob(credentials).split(":");
         const config = await adminGetConfig(username, password);
         setRegOpen(config.registration_open);
+        setMaxRegistrations(config.max_registrations);
+        setMaxRegInput(String(config.max_registrations));
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch config");
       }
@@ -138,6 +143,38 @@ export default function AdminDashboard() {
       setRegOpen(updated.registration_open);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update config");
+    } finally {
+      setRegUpdating(false);
+    }
+  };
+
+  const handleUpdateMaxRegistrations = async () => {
+    const newMax = parseInt(maxRegInput, 10);
+    if (isNaN(newMax) || newMax < 1) {
+      setError("Max registrations must be a positive number");
+      return;
+    }
+
+    setRegUpdating(true);
+    try {
+      const credentials = localStorage.getItem("admin_credentials");
+      if (!credentials) {
+        router.push("/admin");
+        return;
+      }
+
+      const [username, password] = atob(credentials).split(":");
+      const updated = await adminUpdateConfig(
+        username,
+        password,
+        regOpen ?? true,
+        newMax
+      );
+      setMaxRegistrations(updated.max_registrations);
+      setMaxRegInput(String(updated.max_registrations));
+      setEditingMaxReg(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update max registrations");
     } finally {
       setRegUpdating(false);
     }
@@ -461,15 +498,62 @@ export default function AdminDashboard() {
           </Button>
           <div className="flex items-center gap-2">
             {regOpen !== null && (
-              <span
-                className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
-                  regOpen
-                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                }`}
-              >
-                {regOpen ? "Registration Open" : "Registration Closed"}
-              </span>
+              <>
+                <span
+                  className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
+                    regOpen
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                      : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                  }`}
+                >
+                  {regOpen ? "Registration Open" : "Registration Closed"}
+                </span>
+                <div className="flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Cap:</span>
+                  {editingMaxReg ? (
+                    <>
+                      <Input
+                        type="number"
+                        value={maxRegInput}
+                        onChange={(e) => setMaxRegInput(e.target.value)}
+                        className="w-16 h-6 px-1 text-xs"
+                        min="1"
+                      />
+                      <Button
+                        size="sm"
+                        onClick={handleUpdateMaxRegistrations}
+                        disabled={regUpdating}
+                        className="h-6 px-2 text-xs"
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingMaxReg(false);
+                          setMaxRegInput(String(maxRegistrations));
+                        }}
+                        className="h-6 px-2 text-xs"
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-slate-900 dark:text-slate-100">{maxRegistrations}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingMaxReg(true)}
+                        className="h-6 px-1 hover:bg-slate-200 dark:hover:bg-slate-700"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </>
             )}
             <Button
               onClick={handleToggleRegistration}
