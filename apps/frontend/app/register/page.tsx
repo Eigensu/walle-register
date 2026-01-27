@@ -23,7 +23,7 @@ export default function RegisterPage() {
       try {
         const cfg = await getPublicConfig();
         setConfig(cfg);
-      } catch (e) {
+      } catch {
         // If config fails, default to showing the form to avoid blocking
         setConfig({
           registration_open: true,
