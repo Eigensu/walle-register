@@ -47,8 +47,16 @@ export type PlayerDetailsResponse = {
   registration_status: string;
 };
 
-export type PublicConfig = { registration_open: boolean };
-export type AdminConfig = { registration_open: boolean };
+export type PublicConfig = {
+  registration_open: boolean;
+  max_registrations: number;
+  current_registrations: number;
+  cap_reached: boolean;
+};
+export type AdminConfig = {
+  registration_open: boolean;
+  max_registrations: number;
+};
 
 async function handleJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -132,12 +140,19 @@ export async function adminUpdateConfig(
   username: string,
   password: string,
   registration_open: boolean,
+  max_registrations?: number,
 ): Promise<AdminConfig> {
   const url = `/api/admin/config?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+  const body: { registration_open: boolean; max_registrations?: number } = {
+    registration_open,
+  };
+  if (max_registrations !== undefined) {
+    body.max_registrations = max_registrations;
+  }
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ registration_open }),
+    body: JSON.stringify(body),
   });
   return handleJson<AdminConfig>(res);
 }

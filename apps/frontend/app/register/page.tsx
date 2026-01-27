@@ -11,16 +11,26 @@ import { SponsorStrip } from "@/components/sponsor-strip";
 import { getPublicConfig } from "@/lib/api";
 
 export default function RegisterPage() {
-  const [regOpen, setRegOpen] = useState<boolean | null>(null);
+  const [config, setConfig] = useState<{
+    registration_open: boolean;
+    max_registrations: number;
+    current_registrations: number;
+    cap_reached: boolean;
+  } | null>(null);
 
   useEffect(() => {
     const loadConfig = async () => {
       try {
         const cfg = await getPublicConfig();
-        setRegOpen(cfg.registration_open);
+        setConfig(cfg);
       } catch (e) {
         // If config fails, default to showing the form to avoid blocking
-        setRegOpen(true);
+        setConfig({
+          registration_open: true,
+          max_registrations: 174,
+          current_registrations: 0,
+          cap_reached: false,
+        });
       }
     };
     loadConfig();
@@ -81,22 +91,32 @@ export default function RegisterPage() {
             </div>
 
             {/* Registration Status Pill */}
-            {regOpen !== null && (
-              <div
-                className={
-                  `inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.12em] shadow-sm ` +
-                  (regOpen
-                    ? "bg-green-100/90 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                    : "bg-red-100/90 text-red-800 dark:bg-red-900/50 dark:text-red-300")
-                }
-              >
+            {config !== null && (
+              <div className="flex flex-col items-center gap-2">
                 <div
                   className={
-                    `h-1.5 w-1.5 animate-pulse rounded-full ` +
-                    (regOpen ? "bg-green-600" : "bg-red-600")
+                    `inline-flex items-center gap-2 rounded-full px-3 py-1 text-[10px] sm:text-xs font-semibold uppercase tracking-[0.12em] shadow-sm ` +
+                    (config.registration_open && !config.cap_reached
+                      ? "bg-green-100/90 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                      : "bg-red-100/90 text-red-800 dark:bg-red-900/50 dark:text-red-300")
                   }
-                ></div>
-                {regOpen ? "Registration Open" : "Registration Closed"}
+                >
+                  <div
+                    className={
+                      `h-1.5 w-1.5 animate-pulse rounded-full ` +
+                      (config.registration_open && !config.cap_reached ? "bg-green-600" : "bg-red-600")
+                    }
+                  ></div>
+                  {config.registration_open && !config.cap_reached
+                    ? "Registration Open"
+                    : config.cap_reached
+                      ? "Registration Cap Reached"
+                      : "Registration Closed"}
+                </div>
+                {/* Registration count */}
+                <p className="text-[11px] sm:text-xs font-medium text-blue-100">
+                  {config.current_registrations} / {config.max_registrations} spots filled
+                </p>
               </div>
             )}
           </div>
@@ -116,14 +136,38 @@ export default function RegisterPage() {
 
         <Card className="border-2 border-blue-200 bg-white/95 shadow-2xl shadow-blue-100/60 backdrop-blur dark:border-slate-700 dark:bg-slate-800/90 dark:shadow-none">
           <CardContent className="p-6 sm:p-8 space-y-3">
-            {regOpen === false ? (
-              <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center text-slate-800 dark:border-yellow-900/40 dark:bg-yellow-950/20 dark:text-yellow-200">
-                <p className="text-lg font-semibold">
-                  Registration is currently closed
-                </p>
-                <p className="mt-1 text-sm">
-                  Please check back later or contact the organizers for updates.
-                </p>
+            {config?.registration_open === false || config?.cap_reached ? (
+              <div className="space-y-4">
+                <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center text-slate-800 dark:border-yellow-900/40 dark:bg-yellow-950/20 dark:text-yellow-200">
+                  <p className="text-lg font-semibold">
+                    {config.cap_reached
+                      ? `Registration cap of ${config.max_registrations} has been reached`
+                      : "Registration is currently closed"}
+                  </p>
+                  <p className="mt-1 text-sm">
+                    {config.cap_reached
+                      ? "All available spots have been filled."
+                      : "Please check back later or contact the organizers for updates."}
+                  </p>
+                </div>
+                {/* Resume Payment Section */}
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-900/40 dark:bg-blue-950/20">
+                  <h3 className="text-center text-base font-semibold text-slate-800 dark:text-slate-200 mb-3">
+                    Already Registered?
+                  </h3>
+                  <p className="text-center text-sm text-slate-600 dark:text-slate-400 mb-4">
+                    If you&apos;ve already registered but haven&apos;t completed payment, you can resume your payment process below.
+                  </p>
+                  <Suspense
+                    fallback={
+                      <div className="text-center text-sm text-slate-500">
+                        Loading...
+                      </div>
+                    }
+                  >
+                    <ResumePaymentForm />
+                  </Suspense>
+                </div>
               </div>
             ) : (
               <Suspense
@@ -164,4 +208,61 @@ function RegistrationFormWrapper() {
   const searchParams = useSearchParams();
   const resumePlayerId = searchParams.get("resume");
   return <RegistrationForm resumePlayerId={resumePlayerId} />;
+}
+
+function ResumePaymentForm() {
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleResumePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const { resumePayment } = await import("@/lib/api");
+      const response = await resumePayment(email);
+      // Redirect to registration page with resume parameter
+      window.location.href = `/register?resume=${response.player_id}`;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to find registration");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleResumePayment} className="space-y-3">
+      <div>
+        <label
+          htmlFor="resume-email"
+          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+        >
+          Enter your registered email
+        </label>
+        <input
+          id="resume-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="your.email@example.com"
+          required
+          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-500"
+        />
+      </div>
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
+          {error}
+        </div>
+      )}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-blue-700 dark:hover:bg-blue-600"
+      >
+        {loading ? "Searching..." : "Resume Payment"}
+      </button>
+    </form>
+  );
 }

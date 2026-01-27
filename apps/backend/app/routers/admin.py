@@ -208,10 +208,12 @@ async def export_players_csv(
 
 class ConfigResponse(BaseModel):
     registration_open: bool
+    max_registrations: int
 
 
 class ConfigUpdateRequest(BaseModel):
     registration_open: bool
+    max_registrations: int | None = None
 
 
 @router.get("/config", response_model=ConfigResponse)
@@ -229,9 +231,12 @@ async def get_config(
 
     cfg = await AppConfig.find_one({})
     if cfg is None:
-        cfg = AppConfig(registration_open=True)
+        cfg = AppConfig(registration_open=True, max_registrations=174)
         await cfg.insert()
-    return ConfigResponse(registration_open=cfg.registration_open)
+    return ConfigResponse(
+        registration_open=cfg.registration_open,
+        max_registrations=cfg.max_registrations
+    )
 
 
 @router.post("/config", response_model=ConfigResponse)
@@ -250,9 +255,17 @@ async def update_config(
 
     cfg = await AppConfig.find_one({})
     if cfg is None:
-        cfg = AppConfig(registration_open=payload.registration_open)
+        cfg = AppConfig(
+            registration_open=payload.registration_open,
+            max_registrations=payload.max_registrations or 174
+        )
         await cfg.insert()
     else:
         cfg.registration_open = payload.registration_open
+        if payload.max_registrations is not None:
+            cfg.max_registrations = payload.max_registrations
         await cfg.save()
-    return ConfigResponse(registration_open=cfg.registration_open)
+    return ConfigResponse(
+        registration_open=cfg.registration_open,
+        max_registrations=cfg.max_registrations
+    )

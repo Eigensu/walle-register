@@ -89,6 +89,15 @@ async def register_player(
     cfg = await AppConfig.find_one({})
     if cfg and not cfg.registration_open:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Registration is currently closed")
+    
+    # Check registration cap
+    if cfg:
+        paid_count = await Player.find(Player.registration_status == RegistrationStatus.PAID).count()
+        if paid_count >= cfg.max_registrations:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Registration cap of {cfg.max_registrations} has been reached"
+            )
 
     # Basic phone validation: require at least 10 digits (ignoring formatting)
     digit_only_phone = "".join(ch for ch in phone if ch.isdigit())
@@ -292,6 +301,9 @@ async def get_player_details(player_id: str):
 
 class PublicConfigResponse(BaseModel):
     registration_open: bool
+    max_registrations: int
+    current_registrations: int
+    cap_reached: bool
 
 
 @router.get("/config", response_model=PublicConfigResponse)
@@ -299,6 +311,16 @@ async def get_public_config():
     """Public endpoint: expose registration open/closed status for frontend."""
     cfg = await AppConfig.find_one({})
     if cfg is None:
-        # default open
-        return PublicConfigResponse(registration_open=True)
-    return PublicConfigResponse(registration_open=cfg.registration_open)
+        # default open with cap of 174
+        cfg = AppConfig(registration_open=True, max_registrations=174)
+    
+    # Count PAID registrations
+    paid_count = await Player.find(Player.registration_status == RegistrationStatus.PAID).count()
+    cap_reached = paid_count >= cfg.max_registrations
+    
+    return PublicConfigResponse(
+        registration_open=cfg.registration_open,
+        max_registrations=cfg.max_registrations,
+        current_registrations=paid_count,
+        cap_reached=cap_reached
+    )
