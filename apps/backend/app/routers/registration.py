@@ -15,9 +15,15 @@ PHOTO_MIMES = {"image/jpeg", "image/png", "image/heic", "image/heif"}
 CARD_MIMES = {"image/jpeg", "image/png", "image/heic", "image/heif", "application/pdf"}
 
 
+async def get_paid_registrations_count() -> int:
+    """Helper function to count PAID registrations."""
+    return await Player.find(Player.registration_status == RegistrationStatus.PAID).count()
+
+
 class RegisterResponse(BaseModel):
     player_id: str
     message: str = "Details Saved"
+
 
 
 class ResumePaymentResponse(BaseModel):
@@ -92,7 +98,7 @@ async def register_player(
     
     # Check registration cap
     if cfg:
-        paid_count = await Player.find(Player.registration_status == RegistrationStatus.PAID).count()
+        paid_count = await get_paid_registrations_count()
         if paid_count >= cfg.max_registrations:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -315,7 +321,7 @@ async def get_public_config():
         cfg = AppConfig(registration_open=True, max_registrations=174)
     
     # Count PAID registrations
-    paid_count = await Player.find(Player.registration_status == RegistrationStatus.PAID).count()
+    paid_count = await get_paid_registrations_count()
     cap_reached = paid_count >= cfg.max_registrations
     
     return PublicConfigResponse(

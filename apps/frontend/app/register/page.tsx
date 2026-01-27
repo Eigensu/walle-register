@@ -1,14 +1,14 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { RegistrationForm } from "@/components/registration-form";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SponsorStrip } from "@/components/sponsor-strip";
-import { getPublicConfig } from "@/lib/api";
+import { getPublicConfig, resumePayment } from "@/lib/api";
 
 export default function RegisterPage() {
   const [config, setConfig] = useState<{
@@ -211,6 +211,7 @@ function RegistrationFormWrapper() {
 }
 
 function ResumePaymentForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -221,10 +222,9 @@ function ResumePaymentForm() {
     setError("");
 
     try {
-      const { resumePayment } = await import("@/lib/api");
       const response = await resumePayment(email);
       // Redirect to registration page with resume parameter
-      window.location.href = `/register?resume=${response.player_id}`;
+      router.push(`/register?resume=${response.player_id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to find registration");
     } finally {
