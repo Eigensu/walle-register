@@ -18,8 +18,8 @@ export function JerseyDetailsStep({
   form,
   fieldClass,
 }: JerseyDetailsStepProps) {
-  const tshirtSizes = ["S", "M", "L", "XL", "XXL", "XXXL"];
-  const waistOptions = [28, 30, 32, 34, 36, 38, 40, 42];
+  const tshirtSizes = ["S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL"];
+  const waistOptions = [28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50];
 
   return (
     <div className="space-y-6">
