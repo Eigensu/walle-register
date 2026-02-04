@@ -94,48 +94,63 @@ async def get_all_players(
 
     # Use pagination
     skip = (page - 1) * limit
-    
-    # Get total count
-    total = await Player.find_all().count()
 
-    # Get total paid count (based on registration_status)
-    total_paid = await Player.find(Player.registration_status == "PAID").count()
-    
-    # Fetch players with pagination
-    players = await Player.find_all().skip(skip).limit(limit).sort("-created_at").to_list()
-    
-    # Optimize N+1 query: Fetch all payments for these players in one go
-    player_ids = [player.id for player in players]
-    payments = await Payment.find(In(Payment.player_id, player_ids)).to_list()
-    
-    # Create a map for O(1) lookup
-    payment_map = {payment.player_id: payment for payment in payments}
-    
+    players_collection = Player.get_motor_collection()
+    payments_collection = Payment.get_motor_collection()
+
+    total = await players_collection.count_documents({})
+    total_paid = await players_collection.count_documents({"registration_status": "PAID"})
+
+    players_docs = await players_collection.find({}).sort("created_at", -1).skip(skip).limit(limit).to_list(None)
+    player_ids = [doc.get("_id") for doc in players_docs if doc.get("_id")]
+
+    payments_docs = []
+    if player_ids:
+        payments_docs = await payments_collection.find({"player_id": {"$in": player_ids}}).to_list(None)
+
+    payment_map = {doc.get("player_id"): doc for doc in payments_docs if doc.get("player_id")}
+
     result = []
-    for player in players:
-        payment = payment_map.get(player.id)
-        
+    for doc in players_docs:
+        player_id = doc.get("_id")
+        payment_doc = payment_map.get(player_id)
+
+        raw_registration_status = doc.get("registration_status")
+        registration_status = (
+            raw_registration_status
+            if raw_registration_status in {status.value for status in RegistrationStatus}
+            else "UNKNOWN"
+        )
+
+        raw_payment_status = payment_doc.get("status") if payment_doc else None
+        payment_status = (
+            raw_payment_status
+            if raw_payment_status in {status.value for status in PaymentStatus}
+            else None
+        )
+
+        created_at = doc.get("created_at")
         result.append(
             PlayerResponse(
-                id=str(player.id),
-                first_name=player.first_name,
-                last_name=player.last_name,
-                email=player.email,
-                phone=player.phone,
-                residential_area=player.residential_area,
-                firm_name=player.firm_name,
-                designation=player.designation,
-                batting_type=player.batting_type,
-                bowling_type=player.bowling_type,
-                wicket_keeper=player.wicket_keeper,
-                name_on_jersey=player.name_on_jersey,
-                tshirt_size=player.tshirt_size,
-                waist_size=player.waist_size,
-                played_jypl_s7=player.played_jypl_s7,
-                jypl_s7_team=player.jypl_s7_team,
-                registration_status=player.registration_status.value,
-                payment_status=payment.status.value if payment else None,
-                created_at=player.created_at.isoformat() if player.created_at else None,
+                id=str(player_id) if player_id else "",
+                first_name=doc.get("first_name", ""),
+                last_name=doc.get("last_name", ""),
+                email=doc.get("email", ""),
+                phone=doc.get("phone", ""),
+                residential_area=doc.get("residential_area", ""),
+                firm_name=doc.get("firm_name", ""),
+                designation=doc.get("designation", ""),
+                batting_type=doc.get("batting_type", ""),
+                bowling_type=doc.get("bowling_type", ""),
+                wicket_keeper=doc.get("wicket_keeper", ""),
+                name_on_jersey=doc.get("name_on_jersey", ""),
+                tshirt_size=doc.get("tshirt_size", ""),
+                waist_size=doc.get("waist_size", 0),
+                played_jypl_s7=doc.get("played_jypl_s7", ""),
+                jypl_s7_team=doc.get("jypl_s7_team", ""),
+                registration_status=registration_status,
+                payment_status=payment_status,
+                created_at=created_at.isoformat() if created_at else None,
             )
         )
     
@@ -165,7 +180,10 @@ async def export_players_csv(
     import io
     from fastapi.responses import StreamingResponse
 
-    players = await Player.find_all().to_list()
+    players_collection = Player.get_motor_collection()
+    payments_collection = Payment.get_motor_collection()
+
+    players = await players_collection.find({}).to_list(None)
     
     output = io.StringIO()
     writer = csv.writer(output)
@@ -196,36 +214,52 @@ async def export_players_csv(
     ])
     
     # Optimize N+1 query for CSV export as well
-    player_ids = [player.id for player in players]
-    payments = await Payment.find(In(Payment.player_id, player_ids)).to_list()
-    payment_map = {payment.player_id: payment for payment in payments}
+    player_ids = [player.get("_id") for player in players if player.get("_id")]
+    payments_docs = []
+    if player_ids:
+        payments_docs = await payments_collection.find({"player_id": {"$in": player_ids}}).to_list(None)
+    payment_map = {payment.get("player_id"): payment for payment in payments_docs if payment.get("player_id")}
 
     # Write player data
     for player in players:
-        payment = payment_map.get(player.id)
-        
+        payment = payment_map.get(player.get("_id"))
+        raw_registration_status = player.get("registration_status")
+        registration_status = (
+            raw_registration_status
+            if raw_registration_status in {status.value for status in RegistrationStatus}
+            else "UNKNOWN"
+        )
+        raw_payment_status = payment.get("status") if payment else None
+        payment_status = (
+            raw_payment_status
+            if raw_payment_status in {status.value for status in PaymentStatus}
+            else "N/A"
+        )
+
+        created_at = player.get("created_at")
+
         writer.writerow([
-            str(player.id),
-            player.first_name,
-            player.last_name,
-            player.email,
-            player.phone,
-            player.residential_area,
-            player.firm_name,
-            player.designation,
-            player.batting_type,
-            player.bowling_type,
-            player.wicket_keeper,
-            player.name_on_jersey,
-            player.tshirt_size,
-            player.waist_size,
-            player.played_jypl_s7,
-            player.jypl_s7_team,
-            player.registration_status.value,
-            payment.status.value if payment else "N/A",
-            player.created_at.isoformat() if player.created_at else "",
-            player.photo_url,
-            player.visiting_card_url
+            str(player.get("_id", "")),
+            player.get("first_name", ""),
+            player.get("last_name", ""),
+            player.get("email", ""),
+            player.get("phone", ""),
+            player.get("residential_area", ""),
+            player.get("firm_name", ""),
+            player.get("designation", ""),
+            player.get("batting_type", ""),
+            player.get("bowling_type", ""),
+            player.get("wicket_keeper", ""),
+            player.get("name_on_jersey", ""),
+            player.get("tshirt_size", ""),
+            player.get("waist_size", ""),
+            player.get("played_jypl_s7", ""),
+            player.get("jypl_s7_team", ""),
+            registration_status,
+            payment_status,
+            created_at.isoformat() if created_at else "",
+            player.get("photo_url", ""),
+            player.get("visiting_card_url", "")
         ])
     
     output.seek(0)
