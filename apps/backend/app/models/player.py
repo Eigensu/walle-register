@@ -11,6 +11,7 @@ class RegistrationStatus(str, Enum):
     PENDING_PAYMENT = "PENDING_PAYMENT"
     PAID = "PAID"
     FAILED = "FAILED"
+    APPROVED = "APPROVED"
 
 
 def ist_now() -> datetime:
