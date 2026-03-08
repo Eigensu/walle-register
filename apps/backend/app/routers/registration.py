@@ -1,7 +1,7 @@
 ﻿from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from pymongo.errors import DuplicateKeyError
 
 from app.models.player import Player, RegistrationStatus
@@ -30,7 +30,7 @@ class ResumePaymentResponse(BaseModel):
 
 
 class ResumePaymentRequest(BaseModel):
-    email: str
+    email: EmailStr
 
 
 class PlayerDetailsResponse(BaseModel):
@@ -66,7 +66,7 @@ async def register_player(
     # Personal Details
     first_name: str = Form(...),
     last_name: str = Form(...),
-    email: str = Form(...),
+    email: EmailStr = Form(...),
     phone: str = Form(...),
     residential_area: str = Form(...),
     firm_name: str = Form(...),
@@ -162,7 +162,7 @@ async def update_player(
     # Personal Details
     first_name: str = Form(...),
     last_name: str = Form(...),
-    email: str = Form(...),
+    email: EmailStr = Form(...),
     phone: str = Form(...),
     residential_area: str = Form(...),
     firm_name: str = Form(...),

@@ -152,12 +152,20 @@ export function RegistrationForm({
     const missing = [] as string[];
     if (!values.first_name) missing.push("First name");
     if (!values.last_name) missing.push("Last name");
-    if (!values.email) missing.push("Email");
+    if (
+      !values.email ||
+      !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i.test(values.email)
+    )
+      missing.push("Valid Email");
     if (!values.phone) missing.push("Phone");
     if (!values.residential_area) missing.push("Residential area");
     if (!values.firm_name) missing.push("Firm name");
     if (!values.designation) missing.push("Designation");
-    if (!values.aadhar_number || !/^\d{16}$/.test(values.aadhar_number.replace(/\s/g, ""))) missing.push("Aadhar card number (16 digits)");
+    if (
+      !values.aadhar_number ||
+      !/^\d{16}$/.test(values.aadhar_number.replace(/\s/g, ""))
+    )
+      missing.push("Aadhar card number (16 digits)");
     if (!values.city) missing.push("City");
     if (!values.village) missing.push("Village");
     if (!(values.photo instanceof File)) missing.push("Photo");
@@ -185,12 +193,20 @@ export function RegistrationForm({
       // Personal
       if (!values.first_name) missing.push("First name");
       if (!values.last_name) missing.push("Last name");
-      if (!values.email) missing.push("Email");
+      if (
+        !values.email ||
+        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$/i.test(values.email)
+      )
+        missing.push("Valid Email");
       if (!values.phone) missing.push("Phone");
       if (!values.residential_area) missing.push("Residential area");
       if (!values.firm_name) missing.push("Firm name");
       if (!values.designation) missing.push("Designation");
-      if (!values.aadhar_number || !/^\d{16}$/.test(values.aadhar_number.replace(/\s/g, ""))) missing.push("Aadhar card number (16 digits)");
+      if (
+        !values.aadhar_number ||
+        !/^\d{16}$/.test(values.aadhar_number.replace(/\s/g, ""))
+      )
+        missing.push("Aadhar card number (16 digits)");
       if (!values.city) missing.push("City");
       if (!values.village) missing.push("Village");
       if (!(values.photo instanceof File)) missing.push("Photo");
@@ -487,10 +503,11 @@ export function RegistrationForm({
 
           {statusMessage ? (
             <div
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-medium ${statusMessage.kind === "success"
-                ? "border-green-200 bg-green-50 text-green-900"
-                : "border-red-200 bg-red-50 text-red-900"
-                }`}
+              className={`rounded-xl border-2 px-4 py-3 text-sm font-medium ${
+                statusMessage.kind === "success"
+                  ? "border-green-200 bg-green-50 text-green-900"
+                  : "border-red-200 bg-red-50 text-red-900"
+              }`}
             >
               <div className="flex items-center gap-2">
                 {statusMessage.kind === "success" ? (
@@ -532,16 +549,60 @@ export function RegistrationForm({
               currentStepId === "cricket" ||
               currentStepId === "jersey" ||
               currentStepId === "jmcl2") && (
-                <>
-                  {stepIndex > 0 && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setStepIndex(stepIndex - 1)}
-                      className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:shadow-none"
+              <>
+                {stepIndex > 0 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setStepIndex(stepIndex - 1)}
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:shadow-none"
+                  >
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                      />
+                    </svg>
+                    Back
+                  </Button>
+                )}
+                <Button
+                  type={currentStepId === "details" ? "submit" : "button"}
+                  onClick={
+                    currentStepId === "details"
+                      ? undefined
+                      : currentStepId === "jmcl2"
+                        ? submitDetails
+                        : handleNextStep
+                  }
+                  disabled={isStepDisabled}
+                  className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 dark:shadow-none"
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-2 size-4 animate-spin" />
+                      <span>
+                        {currentStepId === "details"
+                          ? "Saving..."
+                          : "Loading..."}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span>
+                        {currentStepId === "jmcl2"
+                          ? "Complete & Continue to Payment"
+                          : "Next"}
+                      </span>
                       <svg
-                        className="mr-2 h-4 w-4"
+                        className="ml-2 h-4 w-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -550,58 +611,14 @@ export function RegistrationForm({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M11 17l-5-5m0 0l5-5m-5 5h12"
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
                         />
                       </svg>
-                      Back
-                    </Button>
+                    </>
                   )}
-                  <Button
-                    type={currentStepId === "details" ? "submit" : "button"}
-                    onClick={
-                      currentStepId === "details"
-                        ? undefined
-                        : currentStepId === "jmcl2"
-                          ? submitDetails
-                          : handleNextStep
-                    }
-                    disabled={isStepDisabled}
-                    className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 dark:shadow-none"
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 size-4 animate-spin" />
-                        <span>
-                          {currentStepId === "details"
-                            ? "Saving..."
-                            : "Loading..."}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span>
-                          {currentStepId === "jmcl2"
-                            ? "Complete & Continue to Payment"
-                            : "Next"}
-                        </span>
-                        <svg
-                          className="ml-2 h-4 w-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13 7l5 5m0 0l-5 5m5-5H6"
-                          />
-                        </svg>
-                      </>
-                    )}
-                  </Button>
-                </>
-              )}
+                </Button>
+              </>
+            )}
 
             {currentStepId === "payment" && (
               <Button
