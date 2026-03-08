@@ -113,7 +113,7 @@ export default function Home() {
               </h2>
               <p className="max-w-2xl lg:max-w-3xl text-xl leading-relaxed text-blue-700 dark:text-slate-300 lg:text-2xl xl:text-3xl lg:leading-relaxed">
                 Complete your registration in two simple steps. Submit your
-                profile, upload required documents, and secure your spot with
+                profile, upload required documents and secure your spot with
                 instant payment confirmation.
               </p>
             </div>
