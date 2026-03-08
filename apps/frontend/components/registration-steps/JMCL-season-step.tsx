@@ -1,4 +1,4 @@
-import { UseFormReturn } from "react-hook-form";
+﻿import { UseFormReturn } from "react-hook-form";
 import {
   FormControl,
   FormField,
@@ -8,13 +8,13 @@ import {
 } from "@/components/ui/form";
 import { type PlayerFormValues } from "@/lib/validators";
 
-type JyplSeasonStepProps = {
+type JMCLSeasonStepProps = {
   form: UseFormReturn<PlayerFormValues>;
 };
 
-export function JyplSeasonStep({ form }: JyplSeasonStepProps) {
+export function JMCLSeasonStep({ form }: JMCLSeasonStepProps) {
   const yesNoOptions = ["Yes", "No"];
-  const jyplTeams = [
+  const JMCLTeams = [
     "Auric Allstars",
     "Jewelhouse Heroes",
     "SS Lions",
@@ -41,22 +41,21 @@ export function JyplSeasonStep({ form }: JyplSeasonStepProps) {
     <div className="space-y-6">
       <FormField
         control={form.control}
-        name="played_jypl_s7"
+        name="played_JMCL_S2"
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-base font-semibold">
-              Have you played in season 8, 2025?
+              Have you played in Season 1?
             </FormLabel>
             <FormControl>
               <div className="grid gap-3 sm:grid-cols-2">
                 {yesNoOptions.map((option) => (
                   <div
                     key={option}
-                    className={`cursor-pointer rounded-lg border-2 px-4 py-3 text-center transition-all ${
-                      field.value === option.toLowerCase()
+                    className={`cursor-pointer rounded-lg border-2 px-4 py-3 text-center transition-all ${field.value === option.toLowerCase()
                         ? "border-blue-600 bg-blue-50 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-100"
                         : "border-slate-200 bg-white hover:border-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-blue-600"
-                    }`}
+                      }`}
                     onClick={() => field.onChange(option.toLowerCase())}
                   >
                     <input
@@ -82,10 +81,10 @@ export function JyplSeasonStep({ form }: JyplSeasonStepProps) {
         )}
       />
 
-      {form.watch("played_jypl_s7") === "yes" && (
+      {form.watch("played_JMCL_S2") === "yes" && (
         <FormField
           control={form.control}
-          name="jypl_s7_team"
+          name="JMCL_S2_team"
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-base font-semibold">
@@ -93,14 +92,13 @@ export function JyplSeasonStep({ form }: JyplSeasonStepProps) {
               </FormLabel>
               <FormControl>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  {jyplTeams.map((team) => (
+                  {JMCLTeams.map((team) => (
                     <div
                       key={team}
-                      className={`cursor-pointer rounded-lg border-2 px-4 py-3 transition-all ${
-                        field.value === team
+                      className={`cursor-pointer rounded-lg border-2 px-4 py-3 transition-all ${field.value === team
                           ? "border-blue-600 bg-blue-50 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-100"
                           : "border-slate-200 bg-white hover:border-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-blue-600"
-                      }`}
+                        }`}
                       onClick={() => field.onChange(team)}
                     >
                       <input

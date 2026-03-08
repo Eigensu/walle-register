@@ -1,4 +1,4 @@
-import { z } from "zod";
+﻿import { z } from "zod";
 
 const FILE_MAX_BYTES = 10 * 1024 * 1024;
 const PHOTO_MIMES = [
@@ -38,16 +38,20 @@ export const playerSchema = z.object({
   residential_area: z.string(),
   firm_name: z.string(),
   designation: z.string(),
+  aadhar_number: z
+    .string()
+    .regex(/^\d{16}$/, "Aadhar must be exactly 16 digits"),
+  city: z.string(),
+  village: z.string(),
   batting_type: z.string(),
   bowling_type: z.string(),
   wicket_keeper: z.string(),
   name_on_jersey: z.string(),
   tshirt_size: z.string(),
   waist_size: z.coerce.number(),
-  played_jypl_s7: z.string(),
-  jypl_s7_team: z.string(),
+  played_JMCL_S2: z.string(),
+  JMCL_S2_team: z.string(),
   photo: z.union([z.instanceof(File), z.string()]).nullable(),
-  visiting_card: z.union([z.instanceof(File), z.string()]).nullable(),
 });
 
 export type PlayerFormValues = z.infer<typeof playerSchema>;

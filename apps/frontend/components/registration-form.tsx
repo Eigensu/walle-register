@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -20,7 +20,7 @@ import { type PlayerFormValues } from "@/lib/validators";
 import { PersonalDetailsStep } from "@/components/registration-steps/personal-details-step";
 import { CricketDetailsStep } from "@/components/registration-steps/cricket-details-step";
 import { JerseyDetailsStep } from "@/components/registration-steps/jersey-details-step";
-import { JyplSeasonStep } from "@/components/registration-steps/jypl-season-step";
+import { JMCLSeasonStep } from "@/components/registration-steps/JMCL-season-step";
 import { PaymentStep } from "@/components/registration-steps/payment-step";
 import { ConfirmationStep } from "@/components/registration-steps/confirmation-step";
 
@@ -32,7 +32,7 @@ const steps = [
   },
   { id: "cricket", label: "Cricket Details", helper: "Your cricket profile" },
   { id: "jersey", label: "Jersey Details", helper: "Jersey & size info" },
-  { id: "jypl7", label: "JYPL 8 Details", helper: "Season 8 history" },
+  { id: "jmcl2", label: "JMCL S1 Details", helper: "Season 1 history" },
   { id: "payment", label: "Payment", helper: "Complete registration" },
   {
     id: "done",
@@ -60,16 +60,18 @@ export function RegistrationForm({
       residential_area: "",
       firm_name: "",
       designation: "",
+      aadhar_number: "",
+      city: "",
+      village: "",
       batting_type: "",
       bowling_type: "",
       wicket_keeper: "",
       name_on_jersey: "",
       tshirt_size: "",
       waist_size: 0,
-      played_jypl_s7: "",
-      jypl_s7_team: "",
+      played_JMCL_S2: "",
+      JMCL_S2_team: "",
       photo: null,
-      visiting_card: null,
     },
   });
 
@@ -100,16 +102,18 @@ export function RegistrationForm({
           residential_area: playerData.residential_area,
           firm_name: playerData.firm_name,
           designation: playerData.designation,
+          aadhar_number: playerData.aadhar_number,
+          city: playerData.city,
+          village: playerData.village,
           batting_type: playerData.batting_type,
           bowling_type: playerData.bowling_type,
           wicket_keeper: playerData.wicket_keeper,
           name_on_jersey: playerData.name_on_jersey,
           tshirt_size: playerData.tshirt_size,
           waist_size: playerData.waist_size,
-          played_jypl_s7: playerData.played_jypl_s7,
-          jypl_s7_team: playerData.jypl_s7_team,
+          played_JMCL_S2: playerData.played_JMCL_S2,
+          JMCL_S2_team: playerData.JMCL_S2_team,
           photo: playerData.photo_url,
-          visiting_card: playerData.visiting_card_url,
         });
 
         setPlayerId(resumePlayerId);
@@ -153,8 +157,10 @@ export function RegistrationForm({
     if (!values.residential_area) missing.push("Residential area");
     if (!values.firm_name) missing.push("Firm name");
     if (!values.designation) missing.push("Designation");
+    if (!values.aadhar_number || !/^\d{16}$/.test(values.aadhar_number.replace(/\s/g, ""))) missing.push("Aadhar card number (16 digits)");
+    if (!values.city) missing.push("City");
+    if (!values.village) missing.push("Village");
     if (!(values.photo instanceof File)) missing.push("Photo");
-    if (!(values.visiting_card instanceof File)) missing.push("Visiting card");
 
     if (missing.length) {
       setStatusMessage({
@@ -184,9 +190,10 @@ export function RegistrationForm({
       if (!values.residential_area) missing.push("Residential area");
       if (!values.firm_name) missing.push("Firm name");
       if (!values.designation) missing.push("Designation");
+      if (!values.aadhar_number || !/^\d{16}$/.test(values.aadhar_number.replace(/\s/g, ""))) missing.push("Aadhar card number (16 digits)");
+      if (!values.city) missing.push("City");
+      if (!values.village) missing.push("Village");
       if (!(values.photo instanceof File)) missing.push("Photo");
-      if (!(values.visiting_card instanceof File))
-        missing.push("Visiting card");
       // Cricket
       if (!values.batting_type) missing.push("Batting type");
       if (!values.bowling_type) missing.push("Bowling type");
@@ -201,10 +208,10 @@ export function RegistrationForm({
       ) {
         missing.push("Waist size (20-60)");
       }
-      // JYPL7
-      if (!values.played_jypl_s7) missing.push("Played JYPL S8");
-      if (values.played_jypl_s7 === "yes" && !values.jypl_s7_team) {
-        missing.push("JYPL S8 team");
+      // JMCL S1
+      if (!values.played_JMCL_S2) missing.push("Played JMCL S1");
+      if (values.played_JMCL_S2 === "yes" && !values.JMCL_S2_team) {
+        missing.push("JMCL S1 team");
       }
 
       if (missing.length) {
@@ -299,14 +306,14 @@ export function RegistrationForm({
         });
         isStepValid = false;
       }
-    } else if (currentStepId === "jypl7") {
-      if (!values.played_jypl_s7) {
+    } else if (currentStepId === "jmcl2") {
+      if (!values.played_JMCL_S2) {
         setStatusMessage({
           kind: "error",
-          text: "Please select whether you played in JYPL season 8",
+          text: "Please select whether you played in JMCL Season 1",
         });
         isStepValid = false;
-      } else if (values.played_jypl_s7 === "yes" && !values.jypl_s7_team) {
+      } else if (values.played_JMCL_S2 === "yes" && !values.JMCL_S2_team) {
         setStatusMessage({ kind: "error", text: "Please select a team" });
         isStepValid = false;
       }
@@ -393,8 +400,11 @@ export function RegistrationForm({
         values.residential_area &&
         values.firm_name &&
         values.designation &&
-        (values.photo instanceof File || !!values.photo) &&
-        (values.visiting_card instanceof File || !!values.visiting_card)
+        values.aadhar_number &&
+        /^\d{12}$/.test(values.aadhar_number.replace(/\s/g, "")) &&
+        values.city &&
+        values.village &&
+        (values.photo instanceof File || !!values.photo)
       );
     } else if (currentStepId === "cricket") {
       return values.batting_type && values.bowling_type && values.wicket_keeper;
@@ -406,11 +416,11 @@ export function RegistrationForm({
         values.waist_size >= 20 &&
         values.waist_size <= 60
       );
-    } else if (currentStepId === "jypl7") {
+    } else if (currentStepId === "jmcl2") {
       return (
-        values.played_jypl_s7 &&
-        (values.played_jypl_s7 === "no" ||
-          (values.played_jypl_s7 === "yes" && values.jypl_s7_team))
+        values.played_JMCL_S2 &&
+        (values.played_JMCL_S2 === "no" ||
+          (values.played_JMCL_S2 === "yes" && values.JMCL_S2_team))
       );
     }
     return true;
@@ -463,7 +473,7 @@ export function RegistrationForm({
             <JerseyDetailsStep form={form} fieldClass={fieldClass} />
           )}
 
-          {currentStepId === "jypl7" && <JyplSeasonStep form={form} />}
+          {currentStepId === "jmcl2" && <JMCLSeasonStep form={form} />}
 
           {currentStepId === "payment" && (
             <PaymentStep
@@ -477,11 +487,10 @@ export function RegistrationForm({
 
           {statusMessage ? (
             <div
-              className={`rounded-xl border-2 px-4 py-3 text-sm font-medium ${
-                statusMessage.kind === "success"
-                  ? "border-green-200 bg-green-50 text-green-900"
-                  : "border-red-200 bg-red-50 text-red-900"
-              }`}
+              className={`rounded-xl border-2 px-4 py-3 text-sm font-medium ${statusMessage.kind === "success"
+                ? "border-green-200 bg-green-50 text-green-900"
+                : "border-red-200 bg-red-50 text-red-900"
+                }`}
             >
               <div className="flex items-center gap-2">
                 {statusMessage.kind === "success" ? (
@@ -522,61 +531,17 @@ export function RegistrationForm({
             {(currentStepId === "details" ||
               currentStepId === "cricket" ||
               currentStepId === "jersey" ||
-              currentStepId === "jypl7") && (
-              <>
-                {stepIndex > 0 && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setStepIndex(stepIndex - 1)}
-                    className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:shadow-none"
-                  >
-                    <svg
-                      className="mr-2 h-4 w-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+              currentStepId === "jmcl2") && (
+                <>
+                  {stepIndex > 0 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setStepIndex(stepIndex - 1)}
+                      className="border-blue-300 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900/20 dark:shadow-none"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M11 17l-5-5m0 0l5-5m-5 5h12"
-                      />
-                    </svg>
-                    Back
-                  </Button>
-                )}
-                <Button
-                  type={currentStepId === "details" ? "submit" : "button"}
-                  onClick={
-                    currentStepId === "details"
-                      ? undefined
-                      : currentStepId === "jypl7"
-                        ? submitDetails
-                        : handleNextStep
-                  }
-                  disabled={isStepDisabled}
-                  className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 dark:shadow-none"
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 className="mr-2 size-4 animate-spin" />
-                      <span>
-                        {currentStepId === "details"
-                          ? "Saving..."
-                          : "Loading..."}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span>
-                        {currentStepId === "jypl7"
-                          ? "Complete & Continue to Payment"
-                          : "Next"}
-                      </span>
                       <svg
-                        className="ml-2 h-4 w-4"
+                        className="mr-2 h-4 w-4"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -585,14 +550,58 @@ export function RegistrationForm({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                          d="M11 17l-5-5m0 0l5-5m-5 5h12"
                         />
                       </svg>
-                    </>
+                      Back
+                    </Button>
                   )}
-                </Button>
-              </>
-            )}
+                  <Button
+                    type={currentStepId === "details" ? "submit" : "button"}
+                    onClick={
+                      currentStepId === "details"
+                        ? undefined
+                        : currentStepId === "jmcl2"
+                          ? submitDetails
+                          : handleNextStep
+                    }
+                    disabled={isStepDisabled}
+                    className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 dark:shadow-none"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 size-4 animate-spin" />
+                        <span>
+                          {currentStepId === "details"
+                            ? "Saving..."
+                            : "Loading..."}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span>
+                          {currentStepId === "jmcl2"
+                            ? "Complete & Continue to Payment"
+                            : "Next"}
+                        </span>
+                        <svg
+                          className="ml-2 h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 7l5 5m0 0l-5 5m5-5H6"
+                          />
+                        </svg>
+                      </>
+                    )}
+                  </Button>
+                </>
+              )}
 
             {currentStepId === "payment" && (
               <Button

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -43,8 +43,8 @@ interface Player {
   name_on_jersey?: string;
   tshirt_size?: string;
   waist_size?: number;
-  played_jypl_s7?: string;
-  jypl_s7_team?: string;
+  played_JMCL_S2?: string;
+  JMCL_S2_team?: string;
   sr_no?: number;
 }
 
@@ -219,11 +219,10 @@ export default function AdminDashboard() {
       width: 140,
       renderCell: (props: { row: Player }) => (
         <span
-          className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
-            props.row.registration_status === "PAID"
+          className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${props.row.registration_status === "PAID"
               ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
               : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-          }`}
+            }`}
         >
           {props.row.registration_status}
         </span>
@@ -237,11 +236,10 @@ export default function AdminDashboard() {
       renderCell: (props: { row: Player }) =>
         props.row.payment_status ? (
           <span
-            className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
-              props.row.payment_status === "CAPTURED"
+            className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${props.row.payment_status === "CAPTURED"
                 ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                 : "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400"
-            }`}
+              }`}
           >
             {props.row.payment_status}
           </span>
@@ -495,11 +493,10 @@ export default function AdminDashboard() {
           <div className="flex items-center gap-2">
             {regOpen !== null && (
               <span
-                className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${
-                  regOpen
+                className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${regOpen
                     ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                     : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
-                }`}
+                  }`}
               >
                 {regOpen ? "Registration Open" : "Registration Closed"}
               </span>
@@ -771,27 +768,27 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* JYPL Season 8 */}
+              {/* JMCL Season 1 */}
               <div>
                 <h3 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">
-                  JYPL Season 8
+                  JMCL Season 1
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      Played in Season 8
+                      Played in Season 1
                     </p>
                     <p className="mt-1 text-slate-900 dark:text-white capitalize">
-                      {selectedPlayer.played_jypl_s7 || "—"}
+                      {selectedPlayer.played_JMCL_S2 || "—"}
                     </p>
                   </div>
-                  {selectedPlayer.played_jypl_s7 === "yes" && (
+                  {selectedPlayer.played_JMCL_S2 === "yes" && (
                     <div>
                       <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
                         Team Name
                       </p>
                       <p className="mt-1 text-slate-900 dark:text-white">
-                        {selectedPlayer.jypl_s7_team || "—"}
+                        {selectedPlayer.JMCL_S2_team || "—"}
                       </p>
                     </div>
                   )}
@@ -810,11 +807,10 @@ export default function AdminDashboard() {
                     </p>
                     <p className="mt-1">
                       <span
-                        className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${
-                          selectedPlayer.registration_status === "PAID"
+                        className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${selectedPlayer.registration_status === "PAID"
                             ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                             : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
-                        }`}
+                          }`}
                       >
                         {selectedPlayer.registration_status}
                       </span>
@@ -827,11 +823,10 @@ export default function AdminDashboard() {
                     <p className="mt-1">
                       {selectedPlayer.payment_status ? (
                         <span
-                          className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${
-                            selectedPlayer.payment_status === "CAPTURED"
+                          className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ${selectedPlayer.payment_status === "CAPTURED"
                               ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
                               : "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-400"
-                          }`}
+                            }`}
                         >
                           {selectedPlayer.payment_status}
                         </span>

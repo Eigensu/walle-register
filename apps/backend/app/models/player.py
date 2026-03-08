@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+﻿from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from enum import Enum
 
@@ -29,8 +29,10 @@ class Player(Document):
     firm_name: str
     designation: str
     photo_url: str
-    visiting_card_url: str
-    
+    aadhar_number: str
+    city: str
+    village: str
+
     # Cricket Details
     batting_type: str
     bowling_type: str
@@ -41,9 +43,9 @@ class Player(Document):
     tshirt_size: str
     waist_size: int
     
-    # JYPL Season 8 Details
-    played_jypl_s7: str
-    jypl_s7_team: str = ""
+    # JMCL Season 1 Details
+    played_JMCL_S2: str
+    JMCL_S2_team: str = ""
     
     # Registration Status
     registration_status: RegistrationStatus = RegistrationStatus.PENDING_PAYMENT

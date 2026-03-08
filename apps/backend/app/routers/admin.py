@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+﻿from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.core.config import Settings
@@ -38,9 +38,9 @@ class PlayerResponse(BaseModel):
     name_on_jersey: str
     tshirt_size: str
     waist_size: int
-    # JYPL Season 8 Details
-    played_jypl_s7: str
-    jypl_s7_team: str
+    # JMCL Season 1 Details
+    played_JMCL_S2: str
+    JMCL_S2_team: str
     # Registration & Payment
     registration_status: str
     payment_status: str | None
@@ -146,8 +146,8 @@ async def get_all_players(
                 name_on_jersey=doc.get("name_on_jersey", ""),
                 tshirt_size=doc.get("tshirt_size", ""),
                 waist_size=doc.get("waist_size", 0),
-                played_jypl_s7=doc.get("played_jypl_s7", ""),
-                jypl_s7_team=doc.get("jypl_s7_team", ""),
+                played_JMCL_S2=doc.get("played_JMCL_S2", ""),
+                JMCL_S2_team=doc.get("JMCL_S2_team", ""),
                 registration_status=registration_status,
                 payment_status=payment_status,
                 created_at=created_at.isoformat() if created_at else None,
@@ -198,19 +198,21 @@ async def export_players_csv(
         "Residential Area",
         "Firm/Company",
         "Designation",
+        "Aadhar Number",
+        "City",
+        "Village",
         "Batting Type",
         "Bowling Type",
         "Wicket Keeper",
         "Name on Jersey",
         "T-Shirt Size",
         "Waist Size",
-        "Played JYPL S8",
-        "JYPL S8 Team",
+        "Played JMCL S1",
+        "JMCL S1 Team",
         "Registration Status",
         "Payment Status",
         "Created At",
-        "Photo URL",
-        "Visiting Card URL"
+        "Photo URL"
     ])
     
     # Optimize N+1 query for CSV export as well
@@ -247,19 +249,21 @@ async def export_players_csv(
             player.get("residential_area", ""),
             player.get("firm_name", ""),
             player.get("designation", ""),
+            player.get("aadhar_number", ""),
+            player.get("city", ""),
+            player.get("village", ""),
             player.get("batting_type", ""),
             player.get("bowling_type", ""),
             player.get("wicket_keeper", ""),
             player.get("name_on_jersey", ""),
             player.get("tshirt_size", ""),
             player.get("waist_size", ""),
-            player.get("played_jypl_s7", ""),
-            player.get("jypl_s7_team", ""),
+            player.get("played_JMCL_S2", ""),
+            player.get("JMCL_S2_team", ""),
             registration_status,
             payment_status,
             created_at.isoformat() if created_at else "",
-            player.get("photo_url", ""),
-            player.get("visiting_card_url", "")
+            player.get("photo_url", "")
         ])
     
     output.seek(0)

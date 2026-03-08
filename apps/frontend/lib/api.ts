@@ -1,4 +1,4 @@
-export type RegisterResponse = {
+﻿export type RegisterResponse = {
   player_id: string;
   message: string;
 };
@@ -35,15 +35,17 @@ export type PlayerDetailsResponse = {
   firm_name: string;
   designation: string;
   photo_url: string;
-  visiting_card_url: string;
+  aadhar_number: string;
+  city: string;
+  village: string;
   batting_type: string;
   bowling_type: string;
   wicket_keeper: string;
   name_on_jersey: string;
   tshirt_size: string;
   waist_size: number;
-  played_jypl_s7: string;
-  jypl_s7_team: string;
+  played_JMCL_S2: string;
+  JMCL_S2_team: string;
   registration_status: string;
 };
 

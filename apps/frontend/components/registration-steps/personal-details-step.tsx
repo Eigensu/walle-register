@@ -163,6 +163,68 @@ export function PersonalDetailsStep({
             </FormItem>
           )}
         />
+
+        <FormField
+          control={form.control}
+          name="aadhar_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Aadhar Card Number</FormLabel>
+              <FormControl>
+                <Input
+                  className={fieldClass}
+                  placeholder="XXXX XXXX XXXX XXXX"
+                  maxLength={19}
+                  {...field}
+                  onChange={(e) => {
+                    // Strip non-digits, then insert spaces every 4 digits
+                    const digits = e.target.value.replace(/\D/g, "").slice(0, 16);
+                    const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+                    field.onChange(formatted);
+                  }}
+                />
+              </FormControl>
+              <FormDescription>Enter 16-digit Aadhar number</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="city"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>City</FormLabel>
+              <FormControl>
+                <Input
+                  className={fieldClass}
+                  placeholder="Your city"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="village"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Village</FormLabel>
+              <FormControl>
+                <Input
+                  className={fieldClass}
+                  placeholder="Your village"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
@@ -176,26 +238,6 @@ export function PersonalDetailsStep({
                   label="Passport-size photo"
                   description="JPG/PNG/HEIC/HEIF up to 10MB"
                   accept="image/*"
-                  value={field.value instanceof File ? field.value : null}
-                  onChange={(file) => field.onChange(file)}
-                  error={fieldState.error?.message}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="visiting_card"
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormControl>
-                <FileUpload
-                  label="Visiting Card"
-                  description="JPG/PNG/HEIC/HEIF/PDF up to 10MB"
-                  accept="image/*,application/pdf"
                   value={field.value instanceof File ? field.value : null}
                   onChange={(file) => field.onChange(file)}
                   error={fieldState.error?.message}

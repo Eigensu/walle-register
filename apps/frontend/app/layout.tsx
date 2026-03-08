@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/lib/theme-provider";
@@ -18,8 +18,8 @@ export const metadata: Metadata = {
   title: "Walle Registration",
   description: "Two-step registration and payment for Walle Arena",
   icons: {
-    icon: [{ url: "/JYPL Logo.png", sizes: "any", type: "image/png" }],
-    apple: "/JYPL Logo.png",
+    icon: [{ url: "/JMCL_logo_transparent.png", sizes: "any", type: "image/png" }],
+    apple: "/JMCL_logo_transparent.png",
   },
 };
 

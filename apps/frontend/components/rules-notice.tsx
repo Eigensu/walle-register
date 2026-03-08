@@ -34,7 +34,7 @@ export function RulesNotice({ className }: RulesNoticeProps) {
         </li>
         <li>
           Player registration fee is{" "}
-          <span className="italic font-semibold">Rs.15,000/-</span>. Payment
+          <span className="italic font-semibold">Rs.4,500/-</span>. Payment
           will be collected online only. Please ensure to confirm your slot by
           making the correct payment and uploading the corresponding details.
           Any discrepancies can nullify the registration.
@@ -51,7 +51,10 @@ export function RulesNotice({ className }: RulesNoticeProps) {
         </li>
         <li>
           Players are requested to participate only if they are available for
-          practise sessions and during tournament dates i.e. 5-6-7-8 March 2026.
+          practise sessions and during tournament dates i.e.{" "}
+          <span className="italic font-semibold">
+            3rd, 4th, &amp; 5th April 
+          </span>.
         </li>
       </ol>
 
@@ -59,13 +62,10 @@ export function RulesNotice({ className }: RulesNoticeProps) {
 
       <div className="space-y-1 text-center text-sm sm:text-base">
         <p className="font-bold tracking-wide text-red-700 dark:text-red-400">
-          Tournament Schedule:
+          Promesa Reality Cup — Jain Marwadi Champions League Season 2
         </p>
         <p className="font-semibold italic text-red-700 dark:text-red-300">
-          29th January (6pm onwards) Player's Screening (Central Railway Ground)
-        </p>
-        <p className="font-semibold italic text-red-700 dark:text-red-300">
-          5-6-7-8 March Main Tournament (Mumbai)
+          Tournament Schedule: 3rd, 4th, &amp; 5th April — Central Railway Ground, Parel
         </p>
       </div>
     </section>

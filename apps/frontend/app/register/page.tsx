@@ -57,12 +57,6 @@ export default function RegisterPage() {
 
       <div className="relative mx-auto flex max-w-5xl flex-col gap-2 px-4 py-4 sm:py-8 sm:px-8 lg:px-10">
         <header className="relative mb-3 overflow-hidden rounded-2xl border-2 border-blue-400/60 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 p-6 sm:p-8 shadow-lg dark:border-blue-700/50 dark:from-blue-800 dark:via-blue-900 dark:to-indigo-950">
-          {/* Subtle cricket stitches pattern */}
-          <div className="pointer-events-none absolute right-4 top-4 h-16 w-16 opacity-[0.07] sm:h-20 sm:w-20">
-            <div className="absolute left-1/2 top-0 h-full w-0.5 -translate-x-1/2 bg-white" />
-            <div className="absolute left-1/4 top-0 h-full w-px bg-white" />
-            <div className="absolute right-1/4 top-0 h-full w-px bg-white" />
-          </div>
 
           <div className="relative flex flex-col items-center gap-2 text-center sm:gap-3">
             {/* Compact logo */}
@@ -101,7 +95,7 @@ export default function RegisterPage() {
                   className={
                     `h-1.5 w-1.5 animate-pulse rounded-full ` +
                     (config.registration_open &&
-                    !config.registration_cap_reached
+                      !config.registration_cap_reached
                       ? "bg-green-600"
                       : "bg-red-600")
                   }

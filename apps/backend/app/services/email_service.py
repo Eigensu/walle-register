@@ -1,4 +1,4 @@
-"""Email service for sending registration confirmation emails."""
+﻿"""Email service for sending registration confirmation emails."""
 
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from app.core.config import get_settings
@@ -88,7 +88,7 @@ async def send_success_email(
                         ✓ Payment Confirmed
                     </div>
                     
-                    <p>Congratulations! Your registration for <strong>JYPL Season 8</strong> has been successfully completed.</p>
+                    <p>Congratulations! Your registration for <strong>JMCL Season 2</strong> has been successfully completed.</p>
                     
                     <div class="info-box">
                         <h3>Payment Details</h3>
@@ -104,7 +104,7 @@ async def send_success_email(
                     <p>If you have any questions, feel free to reach out to our support team.</p>
                     
                     <div class="footer">
-                        <p><strong>JYPL Season 8 | Jewellery Youth Premier League</strong></p>
+                        <p><strong>JMCL Season 2 | Jewellery Youth Premier League</strong></p>
                         <p>This is an automated email. Please do not reply to this message.</p>
                     </div>
                 </div>
@@ -114,7 +114,7 @@ async def send_success_email(
         """
         
         message = MessageSchema(
-            subject="✅ JYPL Registration Successful - Payment Confirmed",
+            subject="✅ JMCL Registration Successful - Payment Confirmed",
             recipients=[to_email],
             body=html_content,
             subtype=MessageType.html

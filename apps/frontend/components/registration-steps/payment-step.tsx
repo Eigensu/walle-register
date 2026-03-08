@@ -28,7 +28,7 @@ export function PaymentStep({
               Registration Fee
             </p>
             <p className="mt-1 text-3xl font-bold text-blue-900 dark:text-white">
-              ₹{order ? (order.amount / 100).toLocaleString() : "15,000"}
+              ₹{order ? (order.amount / 100).toLocaleString() : "4,500"}
             </p>
           </div>
         </div>

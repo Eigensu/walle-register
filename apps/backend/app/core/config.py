@@ -1,4 +1,4 @@
-"""Application settings and environment bootstrap."""
+﻿"""Application settings and environment bootstrap."""
 
 from functools import lru_cache
 from pathlib import Path
@@ -46,7 +46,7 @@ class Settings(BaseSettings):
 	mail_from: EmailStr = Field(..., alias="MAIL_FROM")
 	mail_port: int = Field(default=465, alias="MAIL_PORT")
 	mail_server: str = Field(default="smtp.gmail.com", alias="MAIL_SERVER")
-	mail_from_name: str = Field(default="JYPL Registration Team", alias="MAIL_FROM_NAME")
+	mail_from_name: str = Field(default="JMCL Registration Team", alias="MAIL_FROM_NAME")
 
 	model_config = SettingsConfigDict(
 		env_file=ROOT_ENV_PATH,
