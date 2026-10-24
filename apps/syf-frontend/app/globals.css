@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+/* Brand values arrive as --brand-* custom properties set on <html> from site.config.ts. */
+@theme inline {
+  --color-navy: var(--brand-navy);
+  --color-navy-raised: var(--brand-navy-raised);
+  --color-navy-line: var(--brand-navy-line);
+  --color-silver: var(--brand-silver);
+  --color-silver-bright: var(--brand-silver-bright);
+  --color-silver-dim: var(--brand-silver-dim);
+  --color-mist: var(--brand-mist);
+  --color-paper: var(--brand-paper);
+  --color-line: var(--brand-line);
+  --color-ink: var(--brand-navy);
+  --color-ink-muted: var(--brand-ink-muted);
+  --color-royal: var(--brand-royal);
+  --color-royal-hover: var(--brand-royal-hover);
+  --color-live: var(--brand-live);
+  --color-tbc: #b45309;
+
+  --font-display: var(--font-display-face), "Times New Roman", serif;
+  --font-sport: var(--font-sport-face), "Arial Narrow", sans-serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-jewel: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* ---------- type scale (SPEC-HOME §4.2) ---------- */
+
+@utility type-display-xl {
+  font-family: var(--font-display);
+  font-size: clamp(3.25rem, 6vw + 1rem, 6.25rem);
+  line-height: 0.94;
+  letter-spacing: -0.015em;
+}
+
+@utility type-display-l {
+  font-family: var(--font-display);
+  font-size: clamp(2.125rem, 3vw + 1rem, 3.75rem);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+}
+
+@utility type-sport-xl {
+  font-family: var(--font-sport);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 4.5vw + 1rem, 5rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+}
+
+@utility type-stat {
+  font-family: var(--font-sport);
+  font-weight: 600;
+  font-size: clamp(2.75rem, 3vw + 1.5rem, 4.25rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+@utility eyebrow {
+  font-family: var(--font-sport);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.2;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* ---------- silver ---------- */
+
+@utility silver-text {
+  color: var(--brand-silver);
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    background-image: linear-gradient(180deg, #f7f9fb 0%, var(--brand-silver) 50%, var(--brand-silver-dim) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@utility ink-text {
+  color: var(--brand-navy);
+  @supports (background-clip: text) or (-webkit-background-clip: text) {
+    background-image: linear-gradient(180deg, var(--brand-ink-muted) 0%, var(--brand-navy) 85%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* Italic accent words keep their overhang inside the gradient box. */
+@utility accent-italic {
+  font-style: italic;
+  padding-inline-end: 0.08em;
+}
+
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@utility container-site {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 1240px;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/* Sections on navy switch the focus ring to silver; everything else uses royal. */
+@utility on-navy {
+  --focus-ring: var(--brand-silver-bright);
+}
+
+/* ---------- base ---------- */
+
+@layer base {
+  html {
+    background-color: var(--brand-navy);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--brand-paper);
+    color: var(--brand-navy);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring, var(--brand-royal));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--brand-royal);
+    color: #fff;
+  }
+
+  [id] {
+    scroll-margin-top: 5rem;
+  }
+}
+
+/* ---------- motion (SPEC-HOME §4.6) ---------- */
+
+@keyframes ring-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes beacon {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 55%, transparent);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, currentColor 0%, transparent);
+  }
+}
+
+@utility animate-ring-turn {
+  animation: ring-turn 140s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@utility animate-beacon {
+  animation: beacon 2s var(--ease-jewel) infinite;
+}
+
+/* Scroll reveal: only hides content once JS is running (the "js" class is set by RevealObserver). */
+.js [data-reveal]:not([data-shown]) {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+[data-reveal] {
+  transition:
+    opacity 450ms var(--ease-jewel) var(--reveal-delay, 0ms),
+    transform 450ms var(--ease-jewel) var(--reveal-delay, 0ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .js [data-reveal]:not([data-shown]) {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Mobile menu (native <dialog>) */
+dialog.mobile-menu {
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+dialog.mobile-menu::backdrop {
+  background: transparent;
+}
+
+/* Hide scrollbars on horizontal snap rows while keeping them scrollable. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
