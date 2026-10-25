@@ -18,9 +18,13 @@ export const site: SiteConfig = {
       "Approve the footer one-liner",
     ),
     logo: field(
-      { onDark: "/brand/syf-logo-light.svg", onLight: "/brand/syf-logo-dark.svg" },
-      false,
-      "Add SYF logo files to public/brand/ and confirm paths",
+      {
+        onDark: "/brand/syf-logo-on-dark.png",
+        onLight: "/brand/syf-logo.png",
+        compact: { onDark: "/brand/syf-logo-compact-on-dark.png" },
+        mark: "/brand/syf-mark.png",
+      },
+      true,
     ),
   },
   siteUrl: field(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001", false, "Domain to be registered in SYF's name"),
@@ -82,7 +86,7 @@ export const site: SiteConfig = {
     sport: "Cricket",
     seasonLabel: "Season 2",
     href: "/nspl",
-    logo: field("/brand/nspl-logo.svg", false, "NSPL logo file needed"),
+    logo: field("/brand/nspl-logo.png", true),
     registration: {
       href: "/register",
       opensAt: field("2026-12-01T10:00:00+05:30", false, "Draft: PDF says early December"),

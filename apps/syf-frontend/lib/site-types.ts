@@ -28,8 +28,11 @@ export type SiteConfig = {
     name: string
     shortName: string
     description: Field<string>
-    /** Paths under public/. onDark is used on navy, onLight on paper/mist. */
-    logo: Field<{ onDark: string; onLight: string }>
+    /**
+     * Paths under public/. onDark is used on navy, onLight on paper/mist. `compact` is the lockup
+     * without its tagline, for small sizes like the header. `mark` is the symbol alone (favicon).
+     */
+    logo: Field<{ onDark: string; onLight: string; compact?: { onDark?: string; onLight?: string }; mark?: string }>
   }
   siteUrl: Field<string>
   locale: string

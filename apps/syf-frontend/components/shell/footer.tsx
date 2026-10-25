@@ -38,7 +38,7 @@ export function Footer() {
       <div className="container-site relative grid gap-12 py-16 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr] lg:py-20">
         <div className="max-w-sm">
           <Link href="/" aria-label={`${org.name}, home`} className="inline-block rounded-sm">
-            <Wordmark tone="onDark" />
+            <Wordmark tone="onDark" height={72} />
           </Link>
           {description && (
             <p className="mt-5 text-[0.9375rem] leading-relaxed text-silver">

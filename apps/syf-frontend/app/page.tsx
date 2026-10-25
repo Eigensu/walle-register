@@ -62,7 +62,8 @@ function JsonLd({ state }: SectionProps) {
   const fee = pub(event.registration.fee)
   const venue = pub(event.season.venue)
   const startDate = pub(event.season.startsAt)
-  const organization = { "@type": "Organization", name: org.name, url, ...(sameAs.length > 0 && { sameAs }) }
+  const logo = pub(org.logo)?.onLight
+  const organization = { "@type": "Organization", name: org.name, url, ...(logo && { logo: `${url}${logo}` }), ...(sameAs.length > 0 && { sameAs }) }
   const graph: object[] = [{ "@context": "https://schema.org", ...organization }]
   if (startDate) {
     graph.push({

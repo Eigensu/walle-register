@@ -120,7 +120,7 @@ NEXT_PUBLIC_FAKE_NOW=                          # optional ISO date for testing p
 
 ### 4.1 Colour tokens
 
-The base comes from the PDF palette. **When the SYF logo files arrive, the logo's own colours override `--royal` (and `--navy` if it has one).** Confirm this with the committee (§16).
+The base comes from the PDF palette. **When the SYF logo files arrive, the logo's own colours override `--royal` (and `--navy` if it has one).** Confirm this with the committee (§16). *Update 2026-10-25: logos received. The NSPL shield's blue already sits close to `--royal`, and the SYF letters are a multi-colour gradient with no single colour to adopt, so the proposal is to keep the palette as is.*
 
 | Token | Hex | Use |
 |---|---|---|
@@ -251,7 +251,7 @@ Notes:
 
 ### 7.1 Header
 
-- **Desktop (≥ 1024 px):** SYF logo left (height 36). Menu centred: About Us · NSPL · Our Sponsors · Committee · Gallery · Contact. **Header CTA** on the right (royal button, label from the phase engine). Height 76.
+- **Desktop (≥ 1024 px):** SYF logo left: the compact lockup without the tagline, 40 px tall (the tagline is unreadable at header size). Menu centred: About Us · NSPL · Our Sponsors · Committee · Gallery · Contact. **Header CTA** on the right (royal button, label from the phase engine). Height 76.
 - **Behaviour:** fixed. Transparent over the hero. After 24 px of scroll it becomes `navy/85` with `backdrop-blur-md`, a hairline and the soft shadow. The active route gets a 1 px silver underline offset 6 px.
 - **Mobile (< 1024 px):** logo plus a menu icon (44×44). Height 60. The header CTA is hidden on mobile because the sticky bar and hero CTA do that job.
 - **Mobile menu:** a full-screen navy sheet. Links are in display serif at 2rem, staggered in. The phase primary CTA is a full-width button at the bottom, with social icons under it. It closes on route change and on Esc. Focus is trapped and returns to the trigger.
@@ -269,7 +269,7 @@ Notes:
 
 Four columns on desktop, stacked on mobile:
 
-1. SYF logo, a one-line description and social icons (Instagram, YouTube; others from config).
+1. The full SYF logo with its "Connect • Collaborate • Celebrate" tagline (72 px tall), a one-line description and social icons (Instagram, YouTube; others from config).
 2. **Explore:** the 6 menu pages plus Register.
 3. **Policies:** Privacy Policy · Terms & Conditions · Refund & Cancellation Policy (PDF p3 and p10).
 4. **Contact:** official email, phone/WhatsApp (`wa.me` link) and address, all from config. Each row shows only once confirmed; with none confirmed the whole column is dropped in production rather than leaving an empty heading.
@@ -547,12 +547,12 @@ Each member: `{ name, firm, designation: field("", false), photo: field(null, fa
 ## 12. SEO, sharing and calendar
 
 - **Metadata** from config: `title` "Silver Youth Forum · NSPL Season 2 registrations open" (follows the phase), `description` ≤ 155 chars, `metadataBase = siteUrl`, canonical `/`.
-- **OG / WhatsApp preview:** `app/opengraph-image.tsx` (next/og, 1200×630). Navy, seam rings, SYF logo, the headline in serif and a "Register for NSPL Season 2" pill. Keep it under 300 KB. WhatsApp caches previews hard, so finalise the image before sharing the link widely.
-- **Favicon and apple-touch-icon** from the SYF logo (seam-rings fallback until then). `theme-color` is `#0E1A2B`.
+- **OG / WhatsApp preview:** `app/opengraph-image.tsx` (next/og, 1200×630). Navy, seam rings, the compact SYF logo top-left, the headline in serif, a "Register for NSPL Season 2" pill and the NSPL shield on the right. Keep it under 300 KB: next/og only renders PNG (≈445 KB with the shield), so the route converts it to JPEG with `sharp` (≈80 KB). WhatsApp caches previews hard, so finalise the image before sharing the link widely.
+- **Favicon and apple-touch-icon** (`app/icon.tsx`, `app/apple-icon.tsx`): the logo's `mark` (the coloured SYF letters) on navy, with the seam rings as fallback when no mark is configured. `theme-color` is `#0E1A2B`.
 - **JSON-LD:** `Organization` (SYF: name, logo, url, sameAs socials) plus `SportsEvent` (NSPL Season 2: startDate, endDate, eventStatus, location, organizer, `offers` with fee, INR, url `/register` and availability from the phase). Emit only confirmed fields.
 - **`sitemap.ts`** (all 8 pages plus policies) and **`robots.ts`** (production allows all; preview disallows all).
 - **`/calendar/[slug].ics?target=…`:** generates a VEVENT from config for `registration_open`, `registration_close`, `season_start` or `next_match` (whichever the countdown shows). An unconfirmed date returns 404 in production. Fires `calendar_add`.
-- **OG fonts:** the image loads Instrument Serif and Barlow Condensed as TTF from Google Fonts at build time and falls back to the default font if offline. The card currently shows the org name as text; swapping in the logo file is a follow-up once SYF supplies it.
+- **OG fonts:** the image loads Instrument Serif and Barlow Condensed as TTF from Google Fonts at build time and falls back to the default font if offline.
 
 ---
 

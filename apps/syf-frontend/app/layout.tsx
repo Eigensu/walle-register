@@ -61,7 +61,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           Skip to content
         </a>
         <Header
-          logo={<Wordmark tone="onDark" priority />}
+          logo={<Wordmark tone="onDark" compact height={40} priority />}
           homeLabel={site.org.name}
           nav={site.nav}
           headerCta={phase.headerCta}

@@ -1,25 +1,35 @@
 import Image from "next/image"
 import { site } from "@/site.config"
 import { pub } from "@/lib/content"
-import { assetExists } from "@/lib/site"
+import { assetExists, logoSize } from "@/lib/site"
 import { cn } from "@/lib/utils"
 import { SeamRings } from "./seam-rings"
 
-type Props = { tone: "onDark" | "onLight"; className?: string; priority?: boolean }
+type Props = {
+  tone: "onDark" | "onLight"
+  /** Use the lockup without its tagline (falls back to the full logo if there isn't one). */
+  compact?: boolean
+  /** Rendered height in px; the width follows the logo's aspect ratio. */
+  height?: number
+  className?: string
+  priority?: boolean
+}
 
 /** The organisation's logo, or a typeset fallback until the logo files are in public/brand/. */
-export function Wordmark({ tone, className, priority }: Props) {
-  const src = pub(site.org.logo)?.[tone]
+export function Wordmark({ tone, compact, height = 36, className, priority }: Props) {
+  const logo = pub(site.org.logo)
+  const src = (compact && logo?.compact?.[tone]) || logo?.[tone]
   if (assetExists(src)) {
+    const size = logoSize(src, height)
     return (
       <Image
         src={src}
         alt={site.org.name}
-        width={160}
-        height={40}
+        {...size}
         priority={priority}
         unoptimized={src.endsWith(".svg")}
-        className={cn("h-9 w-auto", className)}
+        className={className}
+        style={size}
       />
     )
   }

@@ -36,8 +36,15 @@ const missingFiles: string[] = []
 const checkFile = (f: Field<unknown>, file: string | null | undefined, label: string) => {
   if (f.confirmed && file && !existsSync(path.join(publicDir, file))) missingFiles.push(`${label}: public${file}`)
 }
-checkFile(site.org.logo, site.org.logo.value.onDark, "site.org.logo.onDark")
-checkFile(site.org.logo, site.org.logo.value.onLight, "site.org.logo.onLight")
+const orgLogo = site.org.logo.value
+const orgLogoFiles = {
+  onDark: orgLogo.onDark,
+  onLight: orgLogo.onLight,
+  "compact.onDark": orgLogo.compact?.onDark,
+  "compact.onLight": orgLogo.compact?.onLight,
+  mark: orgLogo.mark,
+}
+for (const [key, file] of Object.entries(orgLogoFiles)) checkFile(site.org.logo, file, `site.org.logo.${key}`)
 checkFile(site.event.logo, site.event.logo.value, "site.event.logo")
 
 // Without these, the production site would be missing its identity or contact route.

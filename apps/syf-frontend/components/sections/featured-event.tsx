@@ -4,7 +4,7 @@ import type { CSSProperties } from "react"
 import { ArrowRight } from "lucide-react"
 import { site } from "@/site.config"
 import { isProduction, isTbcSlot, pub } from "@/lib/content"
-import { assetExists } from "@/lib/site"
+import { assetExists, logoSize } from "@/lib/site"
 import { CtaButton } from "@/components/cta-button"
 import { Emphasis } from "@/components/brand/emphasis"
 import { SeamRings } from "@/components/brand/seam-rings"
@@ -33,14 +33,14 @@ export function FeaturedEvent({ state }: SectionProps) {
               <>
                 <Image src={photo} alt={`${event.shortName} match`} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
                 {hasLogo && (
-                  <Image src={logo} alt={event.name} width={72} height={72} unoptimized={logo.endsWith(".svg")} className="absolute bottom-4 left-4 size-16 object-contain" />
+                  <Image src={logo} alt={event.name} {...logoSize(logo, 72)} unoptimized={logo.endsWith(".svg")} className="absolute bottom-4 left-4 h-[72px] w-auto" />
                 )}
               </>
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <SeamRings className="absolute size-[115%] text-silver opacity-[0.16]" />
                 {hasLogo ? (
-                  <Image src={logo} alt={event.name} width={220} height={220} unoptimized={logo.endsWith(".svg")} className="relative h-1/2 w-auto object-contain" />
+                  <Image src={logo} alt={event.name} {...logoSize(logo, 280)} unoptimized={logo.endsWith(".svg")} className="relative h-[70%] w-auto drop-shadow-[0_18px_40px_rgb(0_0_0/0.35)]" />
                 ) : (
                   <>
                     <span className="silver-text relative font-sport text-[5.5rem] font-bold leading-none tracking-tight sm:text-[7.5rem]">

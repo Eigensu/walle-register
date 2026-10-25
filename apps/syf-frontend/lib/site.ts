@@ -1,6 +1,6 @@
 // Server-side glue between site.config.ts and the pure helpers in lib/.
 
-import { existsSync } from "fs"
+import { closeSync, existsSync, openSync, readFileSync, readSync } from "fs"
 import path from "path"
 import { cache } from "react"
 import { site } from "@/site.config"
@@ -47,10 +47,33 @@ export const getSiteState = cache(async () => {
   return { status, phase: getPhase(now(), phaseInput(), status) }
 })
 
+/** Absolute path on disk for a config path like "/brand/logo.png". */
+export function publicFile(publicPath: string): string {
+  return path.join(process.cwd(), "public", publicPath.replace(/^\//, ""))
+}
+
 /** Whether a file referenced by config exists under public/ (logos and photos arrive over time). */
 export function assetExists(publicPath: string | null | undefined): publicPath is string {
   if (!publicPath) return false
-  return existsSync(path.join(process.cwd(), "public", publicPath.replace(/^\//, "")))
+  return existsSync(publicFile(publicPath))
+}
+
+/**
+ * next/image dimensions for a logo shown `height` px tall. The width follows the file's own aspect
+ * ratio (read from the PNG header), so logos of any shape reserve the right space before loading.
+ */
+export function logoSize(publicPath: string, height: number): { width: number; height: number } {
+  if (!publicPath.endsWith(".png")) return { width: height, height }
+  const header = Buffer.alloc(24)
+  const fd = openSync(publicFile(publicPath), "r")
+  readSync(fd, header, 0, 24, 0)
+  closeSync(fd)
+  return { width: Math.round((height * header.readUInt32BE(16)) / header.readUInt32BE(20)), height }
+}
+
+/** A PNG from public/ as a data URL, for next/og images (icons, share card). */
+export function pngDataUrl(publicPath: string): string {
+  return `data:image/png;base64,${readFileSync(publicFile(publicPath)).toString("base64")}`
 }
 
 export function siteUrl(): string {
