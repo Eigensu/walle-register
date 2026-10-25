@@ -103,6 +103,8 @@ apps/syf-frontend/
 
 **Workspace:** add `apps/syf-frontend` to `pnpm-workspace.yaml`. Dev port **3001** (JMCL uses 3000), via `"dev": "next dev -p 3001"`. Run it alone with `pnpm --filter syf-frontend dev`.
 
+**Vercel:** the project builds this folder as its Root Directory and installs with npm (it doesn't pick up the workspace's `pnpm-lock.yaml`). `vercel.json` sets the install command to `rm -rf node_modules && npm install`, because the build cache carried over from when the project built `apps/frontend` makes npm crash ("Cannot read properties of null (reading 'matches')"). Once the project installs through pnpm, or the cache has been cleared with one successful cache-free build, this override can go.
+
 **Env** (`apps/syf-frontend/.env.local`). Unlike JMCL, this app does **not** read the repo-root `.env`.
 
 ```
