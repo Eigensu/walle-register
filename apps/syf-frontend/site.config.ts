@@ -73,7 +73,6 @@ export const site: SiteConfig = {
     committee: { title: "Committee", summary: "The members who run Silver Youth Forum." },
     gallery: { title: "Gallery", summary: "Photos and highlight videos from NSPL and our conclaves." },
     contact: { title: "Contact", summary: "Reach the forum by email, phone or WhatsApp." },
-    register: { title: "Register for NSPL", summary: "Season info, fee, eligibility and the player registration form." },
     "privacy-policy": { title: "Privacy Policy", summary: "What player data we collect, why, who sees it and how long we keep it." },
     terms: { title: "Terms & Conditions", summary: "Tournament rules, eligibility and conduct." },
     "refund-policy": { title: "Refund & Cancellation Policy", summary: "When registration fees are refundable and how long refunds take." },
@@ -94,6 +93,23 @@ export const site: SiteConfig = {
       fee: registrationFee,
       cap: field<number | null>(null, false, "Player cap not decided"),
       waitlist: false,
+      rules: field(
+        [
+          "Registration does not confirm participation. Player slots are limited.",
+          "The registration fee is collected online only. Your slot is held only once the payment goes through, and any discrepancy in your details can cancel the registration.",
+          "Only owners, partners and directors (not top management) of silver jewellery firms or allied industries can take part.",
+          "One entry per player.",
+          "Register only if you can attend the practice sessions and every match day of the season.",
+          "Decisions taken by the organising committee are final and binding.",
+        ],
+        false,
+        "Draft rules adapted from JMCL; SYF to approve",
+      ),
+      previousSeason: {
+        label: "NSPL Season 1",
+        teams: field<string[]>([], false, "NSPL Season 1 team names (until then players type their team)"),
+      },
+      paymentName: "NSPL Season 2 registration",
     },
     season: {
       startsAt: field("2027-02-06T09:00:00+05:30", false, "Draft: PDF says February 2027"),
