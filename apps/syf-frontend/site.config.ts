@@ -67,7 +67,6 @@ export const site: SiteConfig = {
     credit: null,
   },
   stubPages: {
-    about: { title: "About Us", summary: "Who we are, our vision and mission, and the events we run." },
     nspl: { title: "NSPL", summary: "Season 2 overview, format and rules, teams, fixtures, live stream and past seasons." },
     sponsors: { title: "Our Sponsors", summary: "Our title, associate and team sponsors, and how to become one." },
     committee: { title: "Committee", summary: "The members who run Silver Youth Forum." },
