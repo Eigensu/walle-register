@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import {
   ArrowLeft,
+  ArrowRight,
   Play,
   Camera,
   Newspaper,
