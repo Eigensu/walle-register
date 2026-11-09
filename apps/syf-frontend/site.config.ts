@@ -63,21 +63,11 @@ export const site: SiteConfig = {
       { label: "Privacy Policy", href: "/privacy-policy" },
       { label: "Terms & Conditions", href: "/terms" },
       { label: "Refund & Cancellation Policy", href: "/refund-policy" },
+      { label: "Cancellation Policy", href: "/cancellation-policy" },
     ],
     credit: null,
   },
-  stubPages: {
-    about: { title: "About Us", summary: "Who we are, our vision and mission, and the events we run." },
-    nspl: { title: "NSPL", summary: "Season 2 overview, format and rules, teams, fixtures, live stream and past seasons." },
-    sponsors: { title: "Our Sponsors", summary: "Our title, associate and team sponsors, and how to become one." },
-    committee: { title: "Committee", summary: "The members who run Silver Youth Forum." },
-    gallery: { title: "Gallery", summary: "Photos and highlight videos from NSPL and our conclaves." },
-    contact: { title: "Contact", summary: "Reach the forum by email, phone or WhatsApp." },
-    register: { title: "Register for NSPL", summary: "Season info, fee, eligibility and the player registration form." },
-    "privacy-policy": { title: "Privacy Policy", summary: "What player data we collect, why, who sees it and how long we keep it." },
-    terms: { title: "Terms & Conditions", summary: "Tournament rules, eligibility and conduct." },
-    "refund-policy": { title: "Refund & Cancellation Policy", summary: "When registration fees are refundable and how long refunds take." },
-  },
+  stubPages: {},
 
   event: {
     slug: "nspl-s2",
