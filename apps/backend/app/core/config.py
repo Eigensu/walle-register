@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Literal
 
 from dotenv import load_dotenv
-from pydantic import EmailStr, Field, field_validator
+from pydantic import EmailStr, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,15 +14,26 @@ _env_candidates = [p / ".env" for p in Path(__file__).resolve().parents]
 ROOT_ENV_PATH = next((p for p in _env_candidates if p.exists()), Path(".env"))
 load_dotenv(ROOT_ENV_PATH, override=False)
 
+SUPPORTED_GATEWAYS = ("razorpay", "cashfree")
+
 
 class Settings(BaseSettings):
 	mongo_url: str = Field(..., alias="MONGO_URL")
 	mongo_db: str = Field(..., alias="MONGO_DB")
 	cors_origins: str | list[str] = Field(default_factory=list, alias="CORS_ORIGINS")
 
-	razorpay_key_id: str = Field(..., alias="RAZORPAY_KEY_ID")
-	razorpay_key_secret: str = Field(..., alias="RAZORPAY_KEY_SECRET")
+	# Which payment gateways players can use: "razorpay", "cashfree" or "razorpay,cashfree".
+	# Order matters: the first one is shown first on the payment step.
+	payment_gateways: str | list[str] = Field(default="razorpay", alias="PAYMENT_GATEWAYS")
+
+	razorpay_key_id: str | None = Field(default=None, alias="RAZORPAY_KEY_ID")
+	razorpay_key_secret: str | None = Field(default=None, alias="RAZORPAY_KEY_SECRET")
 	razorpay_webhook_secret: str | None = Field(default=None, alias="RAZORPAY_WEBHOOK_SECRET")
+
+	cashfree_app_id: str | None = Field(default=None, alias="CASHFREE_APP_ID")
+	cashfree_secret_key: str | None = Field(default=None, alias="CASHFREE_SECRET_KEY")
+	cashfree_env: Literal["sandbox", "production"] = Field(default="sandbox", alias="CASHFREE_ENV")
+	cashfree_api_version: str = Field(default="2025-01-01", alias="CASHFREE_API_VERSION")
 
 	registration_fee_inr: int = Field(default=15000, alias="REGISTRATION_FEE_INR")
 
@@ -53,6 +64,34 @@ class Settings(BaseSettings):
 		env_file_encoding="utf-8",
 		extra="ignore",
 	)
+
+	@field_validator("payment_gateways", mode="before")
+	@classmethod
+	def parse_payment_gateways(cls, value: str | list[str]) -> list[str]:
+		items = value if isinstance(value, list) else str(value or "").split(",")
+		gateways: list[str] = []
+		for item in items:
+			name = item.strip().lower()
+			if not name:
+				continue
+			if name not in SUPPORTED_GATEWAYS:
+				raise ValueError(
+					f"Unknown payment gateway '{name}' in PAYMENT_GATEWAYS. "
+					f"Use one or both of: {', '.join(SUPPORTED_GATEWAYS)}"
+				)
+			if name not in gateways:
+				gateways.append(name)
+		if not gateways:
+			raise ValueError("PAYMENT_GATEWAYS must enable at least one gateway")
+		return gateways
+
+	@model_validator(mode="after")
+	def check_gateway_credentials(self) -> "Settings":
+		if "razorpay" in self.payment_gateways and not (self.razorpay_key_id and self.razorpay_key_secret):
+			raise ValueError("Razorpay is enabled in PAYMENT_GATEWAYS but RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are missing")
+		if "cashfree" in self.payment_gateways and not (self.cashfree_app_id and self.cashfree_secret_key):
+			raise ValueError("Cashfree is enabled in PAYMENT_GATEWAYS but CASHFREE_APP_ID / CASHFREE_SECRET_KEY are missing")
+		return self
 
 	@field_validator("cors_origins", mode="before")
 	@classmethod

@@ -9,13 +9,18 @@ import { Stepper } from "@/components/stepper";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
+  createCashfreeOrder,
   createOrder,
   getPlayerDetails,
+  getPublicConfig,
   registerPlayer,
   updatePlayer,
+  verifyCashfreePayment,
   verifyPayment,
   type CreateOrderResponse,
+  type PaymentGateway,
 } from "@/lib/api";
+import { openCashfreeCheckout } from "@/lib/cashfree";
 import { type PlayerFormValues } from "@/lib/validators";
 import { PersonalDetailsStep } from "@/components/registration-steps/personal-details-step";
 import { CricketDetailsStep } from "@/components/registration-steps/cricket-details-step";
@@ -83,6 +88,29 @@ export function RegistrationForm({
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [loadingPlayerData, setLoadingPlayerData] = useState(false);
+  // Enabled gateways come from the backend's PAYMENT_GATEWAYS setting.
+  const [gateways, setGateways] = useState<PaymentGateway[]>(["razorpay"]);
+  const [selectedGateway, setSelectedGateway] =
+    useState<PaymentGateway>("razorpay");
+
+  useEffect(() => {
+    let cancelled = false;
+    getPublicConfig()
+      .then((cfg) => {
+        const enabled = cfg.payment_gateways?.length
+          ? cfg.payment_gateways
+          : (["razorpay"] as PaymentGateway[]);
+        if (cancelled) return;
+        setGateways(enabled);
+        setSelectedGateway(enabled[0]);
+      })
+      .catch(() => {
+        // Keep the Razorpay default if config can't be loaded.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Handle resume payment - load player data and jump to payment step
   useEffect(() => {
@@ -340,8 +368,62 @@ export function RegistrationForm({
     }
   };
 
+  const startCashfreePayment = async () => {
+    if (!playerId) return;
+
+    setSubmitting(true);
+    setStatusMessage(null);
+    setPaymentStatus("processing");
+
+    try {
+      // If Cashfree ends in a redirect (some UPI/net-banking flows), the player
+      // lands back on /register?order_id=... where the payment is verified.
+      const cfOrder = await createCashfreeOrder(
+        playerId,
+        `${window.location.origin}/register`,
+      );
+      const result = await openCashfreeCheckout(
+        cfOrder.payment_session_id,
+        cfOrder.mode,
+      );
+      if (result.redirect) return; // browser is navigating to the return URL
+
+      // Never trust the popup result alone: ask the backend, which asks Cashfree.
+      const verification = await verifyCashfreePayment(
+        cfOrder.order_id,
+        playerId,
+      );
+
+      if (verification.status === "CAPTURED") {
+        setStatusMessage({ kind: "success", text: verification.message });
+        setPaymentStatus("paid");
+        setStepIndex(steps.length - 1);
+      } else if (verification.status === "PENDING") {
+        setStatusMessage({ kind: "success", text: verification.message });
+        setPaymentStatus("idle");
+      } else {
+        setStatusMessage({
+          kind: "error",
+          text: result.error?.message || verification.message,
+        });
+        setPaymentStatus("failed");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to start payment";
+      setStatusMessage({ kind: "error", text: message });
+      setPaymentStatus("failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const startPayment = async () => {
     if (!playerId) return;
+    if (selectedGateway === "cashfree") {
+      await startCashfreePayment();
+      return;
+    }
 
     // 1. Disable button immediately for visual feedback
     setSubmitting(true);
@@ -496,6 +578,10 @@ export function RegistrationForm({
               playerName={summary.name}
               order={order}
               onEditDetails={() => setStepIndex(0)}
+              gateways={gateways}
+              selectedGateway={selectedGateway}
+              onSelectGateway={setSelectedGateway}
+              disabled={submitting}
             />
           )}
 

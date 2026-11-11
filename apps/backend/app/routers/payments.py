@@ -1,12 +1,20 @@
+import logging
+import time
+from urllib.parse import urlparse
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
 from pydantic import BaseModel
 from beanie import PydanticObjectId
+from bson.errors import InvalidId
 
 from app.core.config import Settings
-from app.models.payment import Payment, PaymentStatus
+from app.models.payment import Payment, PaymentGateway, PaymentStatus
 from app.models.player import Player, RegistrationStatus
+from app.services.cashfree import CashfreeService, normalize_indian_phone
 from app.services.razorpay import RazorpayService
 from app.services.email_service import send_success_email
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
@@ -39,16 +47,40 @@ async def get_settings(request: Request) -> Settings:
 
 
 async def get_razorpay(request: Request) -> RazorpayService:
-    return request.app.state.razorpay  # type: ignore[attr-defined]
+    razorpay = getattr(request.app.state, "razorpay", None)
+    if razorpay is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Razorpay is not configured")
+    return razorpay
 
 
-@router.post("/create-order", response_model=CreateOrderResponse)
-async def create_order(
-    payload: CreateOrderRequest,
-    settings: Settings = Depends(get_settings),
-    razorpay: RazorpayService = Depends(get_razorpay),
-):
-    player_id = PydanticObjectId(payload.player_id)
+async def get_cashfree(request: Request) -> CashfreeService:
+    cashfree = getattr(request.app.state, "cashfree", None)
+    if cashfree is None:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Cashfree is not configured")
+    return cashfree
+
+
+def ensure_gateway_enabled(settings: Settings, gateway: PaymentGateway) -> None:
+    """New payments may only start on gateways listed in PAYMENT_GATEWAYS.
+
+    Verification and webhooks stay open for any configured gateway so payments that were
+    started before a gateway was switched off still complete.
+    """
+    if gateway.value not in settings.payment_gateways:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"{gateway.value.capitalize()} payments are currently disabled",
+        )
+
+
+def parse_player_id(raw: str) -> PydanticObjectId:
+    try:
+        return PydanticObjectId(raw)
+    except (InvalidId, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found") from exc
+
+
+async def load_payable_player(player_id: PydanticObjectId) -> Player:
     player = await Player.get(player_id)
     if not player:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
@@ -60,11 +92,25 @@ async def create_order(
     if existing_payment:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Payment already captured")
 
+    return player
+
+
+@router.post("/create-order", response_model=CreateOrderResponse)
+async def create_order(
+    payload: CreateOrderRequest,
+    settings: Settings = Depends(get_settings),
+    razorpay: RazorpayService = Depends(get_razorpay),
+):
+    ensure_gateway_enabled(settings, PaymentGateway.RAZORPAY)
+    player_id = parse_player_id(payload.player_id)
+    player = await load_payable_player(player_id)
+
     amount_paise = settings.registration_fee_inr * 100
     order = await razorpay.create_order(amount=amount_paise, currency="INR", receipt=str(player.id))
 
     payment = Payment(
         player_id=player_id,
+        gateway=PaymentGateway.RAZORPAY,
         razorpay_order_id=order.get("id"),
         amount=amount_paise,
         currency="INR",
@@ -86,7 +132,7 @@ async def verify_payment(
     settings: Settings = Depends(get_settings),
     razorpay: RazorpayService = Depends(get_razorpay),
 ):
-    player_id = PydanticObjectId(payload.player_id)
+    player_id = parse_player_id(payload.player_id)
 
     payment = await Payment.find_one(Payment.razorpay_order_id == payload.razorpay_order_id, Payment.player_id == player_id)
     if not payment:
@@ -197,4 +243,237 @@ async def razorpay_webhook(
                 amount=amount_inr
             )
 
+    return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Cashfree
+# ---------------------------------------------------------------------------
+
+
+class CashfreeCreateOrderRequest(BaseModel):
+    player_id: str
+    # Page Cashfree sends the player back to if checkout ends in a redirect
+    # (e.g. some UPI / net-banking flows). "?order_id=<id>" is appended.
+    return_url: str | None = None
+
+
+class CashfreeCreateOrderResponse(BaseModel):
+    order_id: str
+    payment_session_id: str
+    amount: int  # paise, same unit as the Razorpay response
+    currency: str
+    player_id: str
+    mode: str  # "sandbox" | "production", passed to the Cashfree JS SDK
+
+
+class CashfreeVerifyRequest(BaseModel):
+    order_id: str
+    player_id: str | None = None
+
+
+class CashfreeVerifyResponse(BaseModel):
+    status: str  # CAPTURED | PENDING | FAILED | NOT_PAID
+    message: str
+    player_id: str
+
+
+def _build_return_url(base: str | None, order_id: str) -> str | None:
+    if not base:
+        return None
+    parsed = urlparse(base)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc:
+        return None
+    url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}?order_id={order_id}"
+    return url if len(url) <= 250 else None
+
+
+async def _mark_cashfree_captured(
+    payment: Payment, cf_payment_id: str | None, background_tasks: BackgroundTasks
+) -> None:
+    """Mark payment + player as paid. Sends the confirmation email exactly once,
+    whichever of /verify or the webhook gets here first."""
+    collection = Payment.get_motor_collection()
+    update: dict = {"status": PaymentStatus.CAPTURED.value}
+    if cf_payment_id:
+        update["cashfree_payment_id"] = cf_payment_id
+    result = await collection.update_one(
+        {"_id": payment.id, "status": {"$ne": PaymentStatus.CAPTURED.value}},
+        {"$set": update},
+    )
+    newly_captured = result.modified_count == 1
+
+    player = await Player.get(payment.player_id)
+    if not player:
+        return
+    if player.registration_status != RegistrationStatus.PAID:
+        player.registration_status = RegistrationStatus.PAID
+        await player.save()
+
+    if newly_captured:
+        background_tasks.add_task(
+            send_success_email,
+            to_email=player.email,
+            name=f"{player.first_name} {player.last_name}",
+            player_id=str(player.id),
+            amount=payment.amount // 100,
+        )
+
+
+async def _sync_cashfree_order(
+    payment: Payment, cashfree: CashfreeService, background_tasks: BackgroundTasks
+) -> tuple[str, str]:
+    """Ask Cashfree for the real order status (never trust the browser) and update our records."""
+    order = await cashfree.get_order(payment.razorpay_order_id)
+    order_status = order.get("order_status")
+
+    if order_status == "PAID":
+        expected = round(payment.amount / 100, 2)
+        paid = round(float(order.get("order_amount", 0)), 2)
+        if paid != expected or order.get("order_currency") != payment.currency:
+            logger.error(
+                "Cashfree amount mismatch for %s: expected %s %s, got %s %s",
+                payment.razorpay_order_id, expected, payment.currency, paid, order.get("order_currency"),
+            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment amount mismatch")
+
+        cf_payment_id = None
+        try:
+            payments = await cashfree.get_order_payments(payment.razorpay_order_id)
+            success = next((p for p in payments if p.get("payment_status") == "SUCCESS"), None)
+            if success:
+                cf_payment_id = str(success.get("cf_payment_id"))
+        except HTTPException:
+            logger.warning("Could not fetch Cashfree payments for %s", payment.razorpay_order_id)
+
+        await _mark_cashfree_captured(payment, cf_payment_id, background_tasks)
+        return "CAPTURED", "Payment verified"
+
+    # Not paid (yet). Look at the latest attempt to give the player a useful message.
+    latest_status = None
+    try:
+        payments = await cashfree.get_order_payments(payment.razorpay_order_id)
+        if payments:
+            latest = max(payments, key=lambda p: p.get("payment_time") or "")
+            latest_status = latest.get("payment_status")
+    except HTTPException:
+        pass
+
+    if latest_status == "PENDING":
+        return "PENDING", "Your payment is being processed. We'll confirm by email once it completes."
+    if latest_status in ("FAILED", "USER_DROPPED", "CANCELLED", "VOID") or order_status in ("EXPIRED", "TERMINATED"):
+        if payment.status == PaymentStatus.CREATED:
+            payment.status = PaymentStatus.FAILED
+            await payment.save()
+        return "FAILED", "Payment was not completed. Please try again."
+    return "NOT_PAID", "Payment not completed yet."
+
+
+@router.post("/cashfree/create-order", response_model=CashfreeCreateOrderResponse)
+async def cashfree_create_order(
+    payload: CashfreeCreateOrderRequest,
+    settings: Settings = Depends(get_settings),
+    cashfree: CashfreeService = Depends(get_cashfree),
+):
+    ensure_gateway_enabled(settings, PaymentGateway.CASHFREE)
+    player_id = parse_player_id(payload.player_id)
+    player = await load_payable_player(player_id)
+
+    # Cashfree order_id: 3-45 chars, alphanumeric / "_" / "-". Unique per attempt.
+    order_id = f"cf_{player.id}_{int(time.time())}"
+    amount_paise = settings.registration_fee_inr * 100
+
+    order = await cashfree.create_order(
+        order_id=order_id,
+        amount_inr=settings.registration_fee_inr,
+        customer_id=str(player.id),
+        customer_name=f"{player.first_name} {player.last_name}".strip(),
+        customer_email=player.email,
+        customer_phone=normalize_indian_phone(player.phone),
+        return_url=_build_return_url(payload.return_url, order_id),
+        note="Player registration fee",
+    )
+    session_id = order.get("payment_session_id")
+    if not session_id:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Cashfree did not return a payment session")
+
+    payment = Payment(
+        player_id=player_id,
+        gateway=PaymentGateway.CASHFREE,
+        razorpay_order_id=order.get("order_id", order_id),
+        amount=amount_paise,
+        currency="INR",
+        status=PaymentStatus.CREATED,
+    )
+    await payment.insert()
+
+    return CashfreeCreateOrderResponse(
+        order_id=payment.razorpay_order_id,
+        payment_session_id=session_id,
+        amount=amount_paise,
+        currency="INR",
+        player_id=str(player.id),
+        mode=cashfree.env,
+    )
+
+
+@router.post("/cashfree/verify", response_model=CashfreeVerifyResponse)
+async def cashfree_verify(
+    payload: CashfreeVerifyRequest,
+    background_tasks: BackgroundTasks,
+    cashfree: CashfreeService = Depends(get_cashfree),
+):
+    payment = await Payment.find_one(
+        Payment.razorpay_order_id == payload.order_id,
+        Payment.gateway == PaymentGateway.CASHFREE,
+    )
+    if not payment or (payload.player_id and str(payment.player_id) != payload.player_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Payment record not found")
+
+    if payment.status == PaymentStatus.CAPTURED:
+        return CashfreeVerifyResponse(status="CAPTURED", message="Payment verified", player_id=str(payment.player_id))
+
+    result_status, message = await _sync_cashfree_order(payment, cashfree, background_tasks)
+    return CashfreeVerifyResponse(status=result_status, message=message, player_id=str(payment.player_id))
+
+
+@router.post("/cashfree/webhook")
+async def cashfree_webhook(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    cashfree: CashfreeService = Depends(get_cashfree),
+):
+    """Cashfree payment webhooks (PAYMENT_SUCCESS / FAILED / USER_DROPPED).
+
+    Signed with the Cashfree secret key; no separate webhook secret is needed.
+    """
+    signature = request.headers.get("x-webhook-signature")
+    timestamp = request.headers.get("x-webhook-timestamp")
+    if not signature or not timestamp:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Missing signature headers")
+
+    raw_body = await request.body()  # must verify against the raw bytes, not re-serialised JSON
+    if not cashfree.verify_webhook_signature(raw_body, timestamp, signature):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature")
+
+    payload = await request.json()
+    event_type = payload.get("type")
+    order_id = (payload.get("data") or {}).get("order", {}).get("order_id")
+
+    if event_type not in ("PAYMENT_SUCCESS_WEBHOOK", "PAYMENT_FAILED_WEBHOOK", "PAYMENT_USER_DROPPED_WEBHOOK"):
+        return {"status": "ignored", "reason": f"unhandled event {event_type}"}
+    if not order_id:
+        return {"status": "ignored", "reason": "missing order_id"}
+
+    payment = await Payment.find_one(
+        Payment.razorpay_order_id == order_id,
+        Payment.gateway == PaymentGateway.CASHFREE,
+    )
+    if not payment:
+        return {"status": "ignored", "reason": "payment record not found"}
+    if payment.status == PaymentStatus.CAPTURED:
+        return {"status": "ok"}
+
+    # Re-check with the Cashfree API so the final state always comes from Cashfree itself.
+    await _sync_cashfree_order(payment, cashfree, background_tasks)
     return {"status": "ok"}
