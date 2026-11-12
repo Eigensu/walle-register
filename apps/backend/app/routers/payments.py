@@ -1,5 +1,7 @@
 import logging
+import secrets
 import time
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status, BackgroundTasks
@@ -80,7 +82,13 @@ def parse_player_id(raw: str) -> PydanticObjectId:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found") from exc
 
 
-async def load_payable_player(player_id: PydanticObjectId) -> Player:
+# How far back to look for Cashfree orders that might still complete (e.g. a pending UPI payment).
+INFLIGHT_LOOKBACK = timedelta(hours=24)
+INFLIGHT_MAX_ORDERS = 5
+
+
+async def load_payable_player(player_id: PydanticObjectId, cashfree: CashfreeService | None) -> Player:
+    """Load a player who is allowed to start a new payment, on any gateway."""
     player = await Player.get(player_id)
     if not player:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
@@ -92,18 +100,75 @@ async def load_payable_player(player_id: PydanticObjectId) -> Player:
     if existing_payment:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Payment already captured")
 
+    under_review = await Payment.find_one(Payment.player_id == player_id, Payment.status == PaymentStatus.NEEDS_REVIEW)
+    if under_review:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="We received a payment from you that our team is checking. Please contact support instead of paying again.",
+        )
+
+    await ensure_no_inflight_cashfree_payment(player_id, cashfree)
     return player
+
+
+async def ensure_no_inflight_cashfree_payment(player_id: PydanticObjectId, cashfree: CashfreeService | None) -> None:
+    """Refuse a new order (on either gateway) while an earlier Cashfree order could still be paid.
+
+    A UPI payment can sit in PENDING for minutes before it succeeds; letting the player pay
+    again in the meantime would charge them twice. Each recent unpaid Cashfree order is
+    re-checked with Cashfree: a late success is recorded, a pending one blocks the new order.
+    """
+    if cashfree is None:
+        return
+    since = datetime.now(timezone.utc) - INFLIGHT_LOOKBACK
+    recent = (
+        await Payment.find(
+            Payment.player_id == player_id,
+            Payment.gateway == PaymentGateway.CASHFREE,
+            Payment.status == PaymentStatus.CREATED,
+            Payment.created_at >= since,
+        )
+        .sort(-Payment.created_at)
+        .limit(INFLIGHT_MAX_ORDERS)
+        .to_list()
+    )
+    for payment in recent:
+        # This path ends in a 409, and FastAPI skips request background tasks on error
+        # responses, so collect them here and run them ourselves (the confirmation email).
+        own_tasks = BackgroundTasks()
+        try:
+            result_status, _ = await _sync_cashfree_order(payment, cashfree, own_tasks)
+        except HTTPException as exc:
+            # Cashfree unreachable: don't let a Cashfree outage block paying via Razorpay.
+            logger.warning(
+                "Could not re-check Cashfree order %s before new order: %s", payment.razorpay_order_id, exc.detail
+            )
+            continue
+        if result_status == "CAPTURED":
+            await own_tasks()
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Already paid")
+        if result_status == "NEEDS_REVIEW":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="We received a payment from you that our team is checking. Please contact support instead of paying again.",
+            )
+        if result_status == "PENDING":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Your previous payment is still being processed. Please wait a few minutes before trying again.",
+            )
 
 
 @router.post("/create-order", response_model=CreateOrderResponse)
 async def create_order(
     payload: CreateOrderRequest,
+    request: Request,
     settings: Settings = Depends(get_settings),
     razorpay: RazorpayService = Depends(get_razorpay),
 ):
     ensure_gateway_enabled(settings, PaymentGateway.RAZORPAY)
     player_id = parse_player_id(payload.player_id)
-    player = await load_payable_player(player_id)
+    player = await load_payable_player(player_id, getattr(request.app.state, "cashfree", None))
 
     amount_paise = settings.registration_fee_inr * 100
     order = await razorpay.create_order(amount=amount_paise, currency="INR", receipt=str(player.id))
@@ -273,7 +338,7 @@ class CashfreeVerifyRequest(BaseModel):
 
 
 class CashfreeVerifyResponse(BaseModel):
-    status: str  # CAPTURED | PENDING | FAILED | NOT_PAID
+    status: str  # CAPTURED | PENDING | NEEDS_REVIEW | FAILED | NOT_PAID
     message: str
     player_id: str
 
@@ -332,10 +397,18 @@ async def _sync_cashfree_order(
         paid = round(float(order.get("order_amount", 0)), 2)
         if paid != expected or order.get("order_currency") != payment.currency:
             logger.error(
-                "Cashfree amount mismatch for %s: expected %s %s, got %s %s",
+                "Cashfree amount mismatch for %s: expected %s %s, got %s %s. Marked NEEDS_REVIEW.",
                 payment.razorpay_order_id, expected, payment.currency, paid, order.get("order_currency"),
             )
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Payment amount mismatch")
+            # Money may have been taken, so don't treat it as failed; park it for a human.
+            await Payment.get_motor_collection().update_one(
+                {"_id": payment.id, "status": {"$nin": [PaymentStatus.CAPTURED.value, PaymentStatus.NEEDS_REVIEW.value]}},
+                {"$set": {"status": PaymentStatus.NEEDS_REVIEW.value}},
+            )
+            return (
+                "NEEDS_REVIEW",
+                "We received your payment but need to verify it. Our team will contact you shortly; please don't pay again.",
+            )
 
         cf_payment_id = None
         try:
@@ -377,10 +450,11 @@ async def cashfree_create_order(
 ):
     ensure_gateway_enabled(settings, PaymentGateway.CASHFREE)
     player_id = parse_player_id(payload.player_id)
-    player = await load_payable_player(player_id)
+    player = await load_payable_player(player_id, cashfree)
 
     # Cashfree order_id: 3-45 chars, alphanumeric / "_" / "-". Unique per attempt.
-    order_id = f"cf_{player.id}_{int(time.time())}"
+    # e.g. cf_<24-char player id>_<unix ts>_<6 hex> = 44 chars.
+    order_id = f"cf_{player.id}_{int(time.time())}_{secrets.token_hex(3)}"
     amount_paise = settings.registration_fee_inr * 100
 
     order = await cashfree.create_order(
@@ -432,6 +506,12 @@ async def cashfree_verify(
 
     if payment.status == PaymentStatus.CAPTURED:
         return CashfreeVerifyResponse(status="CAPTURED", message="Payment verified", player_id=str(payment.player_id))
+    if payment.status == PaymentStatus.NEEDS_REVIEW:
+        return CashfreeVerifyResponse(
+            status="NEEDS_REVIEW",
+            message="We received your payment but need to verify it. Our team will contact you shortly; please don't pay again.",
+            player_id=str(payment.player_id),
+        )
 
     result_status, message = await _sync_cashfree_order(payment, cashfree, background_tasks)
     return CashfreeVerifyResponse(status=result_status, message=message, player_id=str(payment.player_id))
@@ -456,9 +536,16 @@ async def cashfree_webhook(
     if not cashfree.verify_webhook_signature(raw_body, timestamp, signature):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid webhook signature")
 
-    payload = await request.json()
+    try:
+        payload = await request.json()
+    except ValueError:
+        return {"status": "ignored", "reason": "body is not JSON"}
+    if not isinstance(payload, dict):
+        return {"status": "ignored", "reason": "unexpected payload"}
     event_type = payload.get("type")
-    order_id = (payload.get("data") or {}).get("order", {}).get("order_id")
+    data = payload.get("data")
+    order = data.get("order") if isinstance(data, dict) else None
+    order_id = order.get("order_id") if isinstance(order, dict) else None
 
     if event_type not in ("PAYMENT_SUCCESS_WEBHOOK", "PAYMENT_FAILED_WEBHOOK", "PAYMENT_USER_DROPPED_WEBHOOK"):
         return {"status": "ignored", "reason": f"unhandled event {event_type}"}
@@ -471,7 +558,7 @@ async def cashfree_webhook(
     )
     if not payment:
         return {"status": "ignored", "reason": "payment record not found"}
-    if payment.status == PaymentStatus.CAPTURED:
+    if payment.status in (PaymentStatus.CAPTURED, PaymentStatus.NEEDS_REVIEW):
         return {"status": "ok"}
 
     # Re-check with the Cashfree API so the final state always comes from Cashfree itself.

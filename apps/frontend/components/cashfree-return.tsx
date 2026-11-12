@@ -46,7 +46,9 @@ export function CashfreeReturn({ orderId }: { orderId: string }) {
   }
 
   const message = error ?? result?.message ?? "Payment not completed.";
-  const pending = result?.status === "PENDING";
+  // Pending or under review: money may already be taken, so don't offer to pay again.
+  const pending =
+    result?.status === "PENDING" || result?.status === "NEEDS_REVIEW";
 
   return (
     <div className="space-y-4">

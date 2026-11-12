@@ -10,7 +10,7 @@ type PaymentStepProps = {
   order: CreateOrderResponse | null;
   onEditDetails: () => void;
   gateways: PaymentGateway[];
-  selectedGateway: PaymentGateway;
+  selectedGateway: PaymentGateway | null;
   onSelectGateway: (gateway: PaymentGateway) => void;
   disabled?: boolean;
 };
@@ -24,7 +24,9 @@ export function PaymentStep({
   onSelectGateway,
   disabled,
 }: PaymentStepProps) {
-  const selectedName = GATEWAY_INFO[selectedGateway].name;
+  const selectedName = selectedGateway
+    ? GATEWAY_INFO[selectedGateway].name
+    : "payment";
 
   return (
     <div className="space-y-6">

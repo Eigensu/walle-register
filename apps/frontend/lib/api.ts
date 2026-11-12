@@ -70,7 +70,7 @@ export type CashfreeOrderResponse = {
 };
 
 export type CashfreeVerifyResponse = {
-  status: "CAPTURED" | "PENDING" | "FAILED" | "NOT_PAID";
+  status: "CAPTURED" | "PENDING" | "NEEDS_REVIEW" | "FAILED" | "NOT_PAID";
   message: string;
   player_id: string;
 };

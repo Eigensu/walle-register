@@ -12,6 +12,9 @@ class PaymentStatus(str, Enum):
     CREATED = "CREATED"
     CAPTURED = "CAPTURED"
     FAILED = "FAILED"
+    # Gateway says the order was paid, but the amount/currency didn't match what we charged.
+    # Money may have been taken: an admin must check it manually before acting.
+    NEEDS_REVIEW = "NEEDS_REVIEW"
 
 
 def ist_now() -> datetime:
