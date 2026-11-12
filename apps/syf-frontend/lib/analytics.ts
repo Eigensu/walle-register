@@ -7,6 +7,9 @@ export type AnalyticsEvent =
   | "live_stream_click"
   | "calendar_add"
   | "nav_click"
+  | "registration_step"
+  | "registration_saved"
+  | "registration_paid"
 
 export type AnalyticsProps = Record<string, string | number | boolean | undefined>
 

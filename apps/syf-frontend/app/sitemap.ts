@@ -18,6 +18,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   ]
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
+    { url: `${base}${site.event.registration.href}`, changeFrequency: "daily", priority: 0.9 },
     ...realPages.map((slug) => ({
       url: `${base}${slug}`,
       changeFrequency: "weekly" as const,

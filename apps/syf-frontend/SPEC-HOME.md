@@ -110,7 +110,8 @@ apps/syf-frontend/
 ```
 NEXT_PUBLIC_SITE_URL=http://localhost:3001     # prod: https://<syf-domain>
 NEXT_PUBLIC_SITE_ENV=development               # development | preview | production
-REGISTRATION_API_URL=http://127.0.0.1:8001              # SYF backend instance; server-only
+REGISTRATION_API_URL=http://127.0.0.1:8001              # SYF backend instance; server-only. /register's /api/* is proxied here
+NEXT_PUBLIC_RAZORPAY_KEY_ID=                   # SYF's own Razorpay key id, for the /register checkout
 NEXT_PUBLIC_FAKE_NOW=                          # optional ISO date for testing phases (ignored in production)
 ```
 
