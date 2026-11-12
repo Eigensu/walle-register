@@ -6,7 +6,6 @@ import Image from "next/image"
 import {
   ArrowLeft,
   ArrowRight,
-  Download,
   Send,
   CheckCircle2,
   ExternalLink,
@@ -32,67 +31,24 @@ export default function SponsorsPage() {
     tier: "team",
     message: "",
   })
-  const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
   const titleSponsor = sponsors.find((s) => s.tier === "title")
   const associateSponsors = sponsors.filter((s) => s.tier === "associate")
   const teamSponsors = sponsors.filter((s) => s.tier === "team" || s.tier === "partner")
 
+  const contactEmail = pub(site.contact.email)
+  const partners = sponsors.filter((x) => x.tier !== "title" && (x.confirmed || !isProduction))
+  const tierLabel: Record<string, string> = { associate: "Associate Partner", team: "Team Sponsor", partner: "Official Partner" }
+
+  // No enquiry backend yet: the form opens the visitor's email app with the details filled in,
+  // and nothing is reported as received until they send it themselves.
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitting(true)
-    setTimeout(() => {
-      setSubmitting(false)
-      setSubmitted(true)
-    }, 800)
-  }
-
-  const handleDownloadDeck = () => {
-    const deckContent = `
-=====================================================
-NATIONAL SILVER PREMIER LEAGUE (NSPL SEASON 2)
-OFFICIAL SPONSORSHIP & PARTNERSHIP PROSPECTUS
-Organised by Silver Youth Forum (SYF)
-=====================================================
-
-Title Sponsor: Silver Show of India (SSI)
-Season 2 Dates: February 2027
-Venue: Leading Cricket Stadium, Mumbai
-
-SPONSORSHIP TIERS:
-1. TITLE PARTNER
-   - Maximum brand prominence across all trophies, boundary banners, and broadcasts.
-   - Logo in tournament official name: "[Title Sponsor] NSPL Season 2"
-
-2. ASSOCIATE PARTNERS
-   - Official team kit logo placement, pitch-mat placement, media backdrop presence.
-   - VIP hospitality passes for corporate guests and business leaders.
-
-3. FRANCHISE TEAM OWNERS
-   - Own and draft a team of top silver jewellery players in the live auction.
-   - Exclusive jersey naming rights and team branding.
-
-4. OFFICIAL PARTNERS (Beverage, Kit, Streaming, Awards)
-   - Specialized category exclusivity.
-
-AUDIENCE & REACH:
-- 5,000+ Silver Jewellery Manufacturers, Bullion Traders, Wholesalers, and Retailers.
-- 500,000+ Digital impressions and live broadcast views across YouTube & social channels.
-- High-level business networking conclave alongside sports extravaganza.
-
-CONTACT FOR SPONSORSHIP:
-Email: contact@silveryouthforum.in
-Helpline: +91 98200 12345
-=====================================================
-`
-    const blob = new Blob([deckContent], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "NSPL-Season2-Sponsorship-Deck.txt"
-    a.click()
-    URL.revokeObjectURL(url)
+    if (!contactEmail) return
+    const body = [form.message, "", `Name: ${form.name}`, `Firm: ${form.firm}`, `Email: ${form.email}`, form.phone ? `Phone: ${form.phone}` : ""].join("\n")
+    window.location.href = `mailto:${contactEmail}?subject=${encodeURIComponent(`NSPL sponsorship enquiry: ${form.tier}`)}&body=${encodeURIComponent(body)}`
+    setSubmitted(true)
   }
 
   return (
@@ -122,9 +78,6 @@ Helpline: +91 98200 12345
               el?.scrollIntoView({ behavior: "smooth" })
             }}>
               Become a Sponsor <ArrowRight className="size-4" />
-            </Button>
-            <Button variant="outlineDark" size="md" onClick={handleDownloadDeck}>
-              <Download className="size-4" /> Download Sponsorship Deck
             </Button>
           </div>
         </div>
@@ -181,6 +134,7 @@ Helpline: +91 98200 12345
         )}
 
         {/* ASSOCIATE & TEAM SPONSORS GRID */}
+        {partners.length > 0 && (
         <div className="rounded-2xl border border-line bg-paper p-6 sm:p-10 shadow-sm">
           <div className="border-b border-line pb-6">
             <h2 className="text-2xl font-bold text-navy">Associate &amp; Team Partners</h2>
@@ -190,28 +144,19 @@ Helpline: +91 98200 12345
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { name: "Silbells Jewellery", type: "Associate Partner", cat: "Fine Silver Jewellery" },
-              { name: "Queens & Kings", type: "Team Sponsor", cat: "Royal Silver Ornaments" },
-              { name: "Richezza Royal 925", type: "Associate Partner", cat: "Sterling Silver Articles" },
-              { name: "RS Bullion", type: "Team Sponsor", cat: "Bullion & Refining" },
-              { name: "Arihant 925 (AJPL)", type: "Team Sponsor", cat: "Export Craftsmanship" },
-              { name: "Divine Silver", type: "Team Sponsor", cat: "Designer Silverware" },
-              { name: "JewelBuzz", type: "Media Partner", cat: "Industry Publications" },
-              { name: "Tresorie", type: "Official Partner", cat: "Luxury Silver Retail" },
-            ].map((p, idx) => (
+            {partners.map((p, idx) => (
               <div
                 key={idx}
                 className="group flex flex-col justify-between rounded-xl border border-line bg-mist/40 p-5 transition-all hover:border-royal/40 hover:bg-white hover:shadow-sm"
               >
                 <div>
                   <span className="text-[10px] font-bold uppercase tracking-wider text-royal">
-                    {p.type}
+                    {tierLabel[p.tier]}
                   </span>
                   <h3 className="mt-2 text-base font-bold text-navy group-hover:text-royal transition-colors">
                     {p.name}
                   </h3>
-                  <p className="mt-1 text-xs text-silver-dim">{p.cat}</p>
+                  
                 </div>
                 <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between text-[11px] text-ink-muted">
                   <span>NSPL Season 2</span>
@@ -221,6 +166,7 @@ Helpline: +91 98200 12345
             ))}
           </div>
         </div>
+        )}
 
         {/* WHY SPONSOR NSPL (METRICS & VALUE) */}
         <div className="rounded-2xl border border-line bg-paper p-6 sm:p-10 shadow-sm">
@@ -274,7 +220,7 @@ Helpline: +91 98200 12345
             <span className="eyebrow text-royal">Partner With Us</span>
             <h2 className="text-2xl font-bold text-navy sm:text-3xl mt-1">Become a Sponsor for Season 2</h2>
             <p className="mt-2 text-sm text-ink-muted">
-              Submit your inquiry below to receive our detailed sponsorship prospectus and commercial rate card.
+              Fill in your details below and the form will open in your email app, ready to send to the sponsorship committee.
             </p>
           </div>
 
@@ -283,19 +229,20 @@ Helpline: +91 98200 12345
               <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                 <CheckCircle2 className="size-8" />
               </div>
-              <h3 className="mt-4 text-xl font-bold text-navy">Thank You for Your Interest!</h3>
+              <h3 className="mt-4 text-xl font-bold text-navy">Almost there</h3>
               <p className="mt-2 text-sm text-ink-muted max-w-md mx-auto">
-                Our sponsorship committee has received your submission. We will reach out to <strong>{form.email}</strong> with the comprehensive commercial deck.
+                Your email app should have opened with your enquiry ready to go. Press send there to deliver it. Nothing is sent until you do.
               </p>
               <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                 <Button variant="outlineLight" size="sm" onClick={() => setSubmitted(false)}>
                   Submit Another Inquiry
                 </Button>
-                <Button variant="primary" size="sm" onClick={handleDownloadDeck}>
-                  <Download className="size-4" /> Download Deck Now
-                </Button>
               </div>
             </div>
+          ) : !contactEmail ? (
+            <p className="mt-8 rounded-xl border border-line bg-mist/60 p-6 text-sm text-ink-muted">
+              The sponsorship enquiry form opens once the forum&rsquo;s contact email is confirmed. Please check back soon.
+            </p>
           ) : (
             <form onSubmit={handleSubmit} className="mt-8 space-y-6">
               <div className="grid gap-6 sm:grid-cols-2">
@@ -397,20 +344,8 @@ Helpline: +91 98200 12345
               </div>
 
               <div className="flex flex-wrap items-center gap-4 pt-2">
-                <Button type="submit" variant="primary" size="lg" disabled={submitting}>
-                  {submitting ? (
-                    <>
-                      <span className="size-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Submitting Proposal...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="size-4" /> Submit Sponsorship Enquiry
-                    </>
-                  )}
-                </Button>
-                <Button type="button" variant="outlineLight" size="lg" onClick={handleDownloadDeck}>
-                  <Download className="size-4" /> Download Deck
+                <Button type="submit" variant="primary" size="lg">
+                  <Send className="size-4" /> Open Enquiry in Email
                 </Button>
               </div>
             </form>

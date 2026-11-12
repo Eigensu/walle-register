@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/sponsors",
     "/gallery",
     "/contact",
-    "/register",
     "/privacy-policy",
     "/terms",
     "/refund-policy",

@@ -67,7 +67,10 @@ export const site: SiteConfig = {
     ],
     credit: null,
   },
-  stubPages: {},
+  // /register stays a "coming soon" page until the real registration form (PR #10) lands.
+  stubPages: {
+    register: { title: "Register for NSPL", summary: "Season info, fee, eligibility and the player registration form." },
+  },
 
   event: {
     slug: "nspl-s2",
