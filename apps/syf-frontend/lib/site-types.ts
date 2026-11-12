@@ -63,6 +63,12 @@ export type SiteConfig = {
       fee: Field<number | null>
       cap: Field<number | null>
       waitlist: boolean
+      /** Shown above the form. Plain sentences, one per rule. */
+      rules: Field<string[]>
+      /** The "did you play last season?" step. Teams empty → the form asks for the team as free text. */
+      previousSeason: { label: string; teams: Field<string[]> }
+      /** Shown on the Razorpay checkout. */
+      paymentName: string
     }
     season: {
       startsAt: Field<string>
