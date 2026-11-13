@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 
@@ -9,13 +9,18 @@ import { Stepper } from "@/components/stepper";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import {
+  createCashfreeOrder,
   createOrder,
   getPlayerDetails,
+  getPublicConfig,
   registerPlayer,
   updatePlayer,
+  verifyCashfreePayment,
   verifyPayment,
   type CreateOrderResponse,
+  type PaymentGateway,
 } from "@/lib/api";
+import { openCashfreeCheckout } from "@/lib/cashfree";
 import { type PlayerFormValues } from "@/lib/validators";
 import { PersonalDetailsStep } from "@/components/registration-steps/personal-details-step";
 import { CricketDetailsStep } from "@/components/registration-steps/cricket-details-step";
@@ -83,6 +88,43 @@ export function RegistrationForm({
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>("idle");
   const [submitting, setSubmitting] = useState(false);
   const [loadingPlayerData, setLoadingPlayerData] = useState(false);
+  // Enabled gateways come from the backend's PAYMENT_GATEWAYS setting. Payment stays
+  // disabled until they load, so we never guess a gateway that may be switched off.
+  const [gateways, setGateways] = useState<PaymentGateway[] | null>(null);
+  const [selectedGateway, setSelectedGateway] =
+    useState<PaymentGateway | null>(null);
+  const [gatewaysError, setGatewaysError] = useState(false);
+
+  const loadGateways = useCallback(async (isCancelled: () => boolean) => {
+    setGatewaysError(false);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const cfg = await getPublicConfig();
+        // An older backend without payment_gateways only supports Razorpay.
+        const enabled = cfg.payment_gateways?.length
+          ? cfg.payment_gateways
+          : (["razorpay"] as PaymentGateway[]);
+        if (isCancelled()) return;
+        setGateways(enabled);
+        setSelectedGateway((current) =>
+          current && enabled.includes(current) ? current : enabled[0],
+        );
+        return;
+      } catch {
+        if (isCancelled()) return;
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+      }
+    }
+    if (!isCancelled()) setGatewaysError(true);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadGateways(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [loadGateways]);
 
   // Handle resume payment - load player data and jump to payment step
   useEffect(() => {
@@ -340,8 +382,69 @@ export function RegistrationForm({
     }
   };
 
+  const startCashfreePayment = async () => {
+    if (!playerId) return;
+
+    setSubmitting(true);
+    setStatusMessage(null);
+    setPaymentStatus("processing");
+
+    try {
+      // If Cashfree ends in a redirect (some UPI/net-banking flows), the player
+      // lands back on /register?order_id=... where the payment is verified.
+      const cfOrder = await createCashfreeOrder(
+        playerId,
+        `${window.location.origin}/register`,
+      );
+      const result = await openCashfreeCheckout(
+        cfOrder.payment_session_id,
+        cfOrder.mode,
+      );
+      if (result.redirect) return; // browser is navigating to the return URL
+
+      // Never trust the popup result alone: ask the backend, which asks Cashfree.
+      const verification = await verifyCashfreePayment(
+        cfOrder.order_id,
+        playerId,
+      );
+
+      if (verification.status === "CAPTURED") {
+        setStatusMessage({ kind: "success", text: verification.message });
+        setPaymentStatus("paid");
+        setStepIndex(steps.length - 1);
+      } else if (
+        verification.status === "PENDING" ||
+        verification.status === "NEEDS_REVIEW"
+      ) {
+        setStatusMessage({ kind: "success", text: verification.message });
+        setPaymentStatus("idle");
+      } else {
+        setStatusMessage({
+          kind: "error",
+          text: result.error?.message || verification.message,
+        });
+        setPaymentStatus("failed");
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to start payment";
+      setStatusMessage({ kind: "error", text: message });
+      setPaymentStatus("failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const startPayment = async () => {
     if (!playerId) return;
+    if (!selectedGateway) {
+      if (gatewaysError) void loadGateways(() => false);
+      return;
+    }
+    if (selectedGateway === "cashfree") {
+      await startCashfreePayment();
+      return;
+    }
 
     // 1. Disable button immediately for visual feedback
     setSubmitting(true);
@@ -496,6 +599,10 @@ export function RegistrationForm({
               playerName={summary.name}
               order={order}
               onEditDetails={() => setStepIndex(0)}
+              gateways={gateways ?? []}
+              selectedGateway={selectedGateway}
+              onSelectGateway={setSelectedGateway}
+              disabled={submitting}
             />
           )}
 
@@ -623,13 +730,24 @@ export function RegistrationForm({
               <Button
                 type="button"
                 onClick={startPayment}
-                disabled={submitting || paymentStatus === "processing"}
+                disabled={
+                  submitting ||
+                  paymentStatus === "processing" ||
+                  (!selectedGateway && !gatewaysError)
+                }
                 className="bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-200 disabled:bg-slate-400 disabled:cursor-not-allowed dark:shadow-none dark:disabled:bg-slate-600"
               >
                 {submitting ? (
                   <>
                     <Loader2 className="mr-2 size-4 animate-spin" />
                     <span>Processing Order...</span>
+                  </>
+                ) : !selectedGateway && gatewaysError ? (
+                  <span>Couldn&apos;t load payment options. Retry</span>
+                ) : !selectedGateway ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <span>Loading payment options...</span>
                   </>
                 ) : (
                   <>

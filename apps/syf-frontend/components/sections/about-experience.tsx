@@ -53,10 +53,12 @@ const story = [
   { number: "08", eyebrow: "The innings continues", title: "One Fraternity. A Stronger Future.", body: "Be part of a community shaping the future of India's silver jewellery industry." },
 ]
 
-const cricketVideoSrc = "/vids/gemini_generated_video_538335ae.mp4"
-const batVideoSrc = "/vids/bat.mp4"
+const cricketVideoSrc = "/videos/ball.mp4"
+const batVideoSrc = "/videos/bat.mp4"
 const scrollSliceCount = 1_000_000
 const cricketVideoFps = 24
+// Story labels are positioned on this timeline clock; keep the video and progress tween aligned.
+const storyTimelineDuration = 7.5
 
 function CricketVideo({
   videoRef,
@@ -67,6 +69,35 @@ function CricketVideo({
   className: string
   src?: string
 }) {
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    // Decorative video only loads when the desktop scroll experience is enabled.
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)")
+    const syncSource = () => {
+      if (desktopMotion.matches) {
+        if (video.getAttribute("src") !== src) {
+          video.src = src
+          video.load()
+        }
+      } else if (video.hasAttribute("src")) {
+        video.pause()
+        video.removeAttribute("src")
+        video.load()
+      }
+    }
+
+    syncSource()
+    desktopMotion.addEventListener("change", syncSource)
+    return () => {
+      desktopMotion.removeEventListener("change", syncSource)
+      video.pause()
+      video.removeAttribute("src")
+      video.load()
+    }
+  }, [src, videoRef])
+
   return (
     <div className={`about-film ${className}`}>
       <video
@@ -75,11 +106,10 @@ function CricketVideo({
         muted
         playsInline
         loop
-        preload="auto"
+        preload="none"
+        poster={src === batVideoSrc ? "/videos/bat-poster.webp" : "/videos/ball-poster.webp"}
         tabIndex={-1}
-      >
-        <source src={src} type="video/mp4" />
-      </video>
+      />
       <span className="about-film-wash" />
       <span className="about-film-vignette" />
     </div>
@@ -95,16 +125,18 @@ function StorySequence() {
     const video = videoRef.current
     if (!section || !video) return
 
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)")
     let isInView = false
     let isScrollControlled = false
     let latestFrame = 0
     let requestedFrame = -1
     let isSeeking = false
+    let seekFailed = false
+    let seekTimeout: number | undefined
     const maxFrame = () => Math.max(0, Math.floor(video.duration * cricketVideoFps) - 1)
 
     const syncPlayback = () => {
-      if (motionPreference.matches) {
+      if (!desktopMotion.matches) {
         video.pause()
         if (video.readyState >= HTMLMediaElement.HAVE_METADATA && video.currentTime !== 0) video.currentTime = 0
       } else if (isInView && !isScrollControlled && video.readyState >= HTMLMediaElement.HAVE_METADATA) {
@@ -122,7 +154,7 @@ function StorySequence() {
       video.pause()
     }
     const seekLatestFrame = () => {
-      if (!isScrollControlled || isSeeking || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
+      if (!isScrollControlled || isSeeking || seekFailed || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) return
       const frame = Math.min(latestFrame, maxFrame())
       const time = frame / cricketVideoFps
       if (Math.abs(video.currentTime - time) < 0.5 / cricketVideoFps) {
@@ -132,11 +164,30 @@ function StorySequence() {
 
       requestedFrame = frame
       isSeeking = true
-      video.currentTime = time
+      try {
+        video.currentTime = time
+        seekTimeout = window.setTimeout(() => {
+          isSeeking = false
+          seekTimeout = undefined
+          if (latestFrame !== requestedFrame) seekLatestFrame()
+        }, 1800)
+      } catch {
+        isSeeking = false
+        seekFailed = true
+      }
     }
     const handleSeeked = () => {
+      if (seekTimeout !== undefined) window.clearTimeout(seekTimeout)
+      seekTimeout = undefined
       isSeeking = false
       if (latestFrame !== requestedFrame) seekLatestFrame()
+    }
+    const handleVideoError = () => {
+      if (seekTimeout !== undefined) window.clearTimeout(seekTimeout)
+      seekTimeout = undefined
+      isSeeking = false
+      if (!desktopMotion.matches || !video.hasAttribute("src")) return
+      seekFailed = true
     }
     const setVideoSlice = (slice: number) => {
       const normalized = Math.min(scrollSliceCount - 1, Math.max(0, Math.round(slice))) / (scrollSliceCount - 1)
@@ -149,8 +200,9 @@ function StorySequence() {
       syncPlayback()
     }, { threshold: 0.01 })
     observer.observe(section)
-    motionPreference.addEventListener("change", syncPlayback)
+    desktopMotion.addEventListener("change", syncPlayback)
     video.addEventListener("seeked", handleSeeked)
+    video.addEventListener("error", handleVideoError)
 
     gsap.registerPlugin(ScrollTrigger)
     const media = gsap.matchMedia()
@@ -205,7 +257,7 @@ function StorySequence() {
           const playhead = { slice: 0 }
           timeline.to(playhead, {
             slice: scrollSliceCount - 1,
-            duration: 7.5,
+            duration: storyTimelineDuration,
             ease: "none",
             onUpdate: () => setVideoSlice(playhead.slice),
           }, "stance")
@@ -229,7 +281,7 @@ function StorySequence() {
           changeStep(7, "impact+=0.08")
           timeline.to(flare, { autoAlpha: 0.56, scale: 1.08, duration: 0.18, ease: "power1.out" }, "impact")
             .to(flare, { autoAlpha: 0, scale: 1.28, duration: 0.5, ease: "power1.out" }, "impact+=0.18")
-            .to(progress, { scaleX: 1, duration: 7.5, ease: "none" }, "stance")
+            .to(progress, { scaleX: 1, duration: storyTimelineDuration, ease: "none" }, "stance")
             .addLabel("closing", "impact+=0.08")
 
           return () => {
@@ -250,8 +302,10 @@ function StorySequence() {
       context?.revert()
       media.revert()
       observer.disconnect()
-      motionPreference.removeEventListener("change", syncPlayback)
+      desktopMotion.removeEventListener("change", syncPlayback)
       video.removeEventListener("seeked", handleSeeked)
+      video.removeEventListener("error", handleVideoError)
+      if (seekTimeout !== undefined) window.clearTimeout(seekTimeout)
       video.pause()
     }
   }, [])
@@ -272,7 +326,7 @@ function StorySequence() {
                 <p className="mt-5 max-w-lg text-base leading-8 text-silver md:text-lg">{item.body}</p>
                 {item.number === "06" && (
                   <div className="about-story-links mt-5 flex flex-wrap gap-3">
-                    <Button asChild size="md"><Link href="/gallery">Business Conclaves <ArrowRight aria-hidden="true" /></Link></Button>
+                    <Button asChild size="md"><Link href="/gallery?category=conclave">Business Conclaves <ArrowRight aria-hidden="true" /></Link></Button>
                     <Button asChild variant="outlineDark" size="md"><Link href="/nspl">Discover NSPL <ArrowRight aria-hidden="true" /></Link></Button>
                   </div>
                 )}
@@ -301,11 +355,10 @@ export function AboutExperience() {
     const video = heroVideoRef.current
     if (!video) return
 
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)")
+    const desktopMotion = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)")
     const syncPlayback = () => {
-      if (motionPreference.matches) {
+      if (!desktopMotion.matches) {
         video.pause()
-        video.currentTime = 0
         return
       }
 
@@ -313,9 +366,11 @@ export function AboutExperience() {
     }
 
     syncPlayback()
-    motionPreference.addEventListener("change", syncPlayback)
+    desktopMotion.addEventListener("change", syncPlayback)
+    video.addEventListener("loadedmetadata", syncPlayback)
     return () => {
-      motionPreference.removeEventListener("change", syncPlayback)
+      desktopMotion.removeEventListener("change", syncPlayback)
+      video.removeEventListener("loadedmetadata", syncPlayback)
       video.pause()
     }
   }, [])

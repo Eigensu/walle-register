@@ -12,6 +12,9 @@ class PaymentStatus(str, Enum):
     CREATED = "CREATED"
     CAPTURED = "CAPTURED"
     FAILED = "FAILED"
+    # Gateway says the order was paid, but the amount/currency didn't match what we charged.
+    # Money may have been taken: an admin must check it manually before acting.
+    NEEDS_REVIEW = "NEEDS_REVIEW"
 
 
 def ist_now() -> datetime:
@@ -19,11 +22,21 @@ def ist_now() -> datetime:
     return datetime.now(ZoneInfo("Asia/Kolkata"))
 
 
+class PaymentGateway(str, Enum):
+    RAZORPAY = "razorpay"
+    CASHFREE = "cashfree"
+
+
 class Payment(Document):
     player_id: PydanticObjectId
+    # Existing records predate multi-gateway support, so they default to Razorpay.
+    gateway: PaymentGateway = PaymentGateway.RAZORPAY
+    # Gateway order id. Kept under its original name (and unique index) so existing data and
+    # indexes keep working. For Cashfree this holds our Cashfree order_id (prefixed "cf_").
     razorpay_order_id: Indexed(str, unique=True)  # type: ignore[assignment]
     razorpay_payment_id: str | None = None
     razorpay_signature: str | None = None
+    cashfree_payment_id: str | None = None
     status: PaymentStatus = PaymentStatus.CREATED
     amount: int
     currency: str = "INR"

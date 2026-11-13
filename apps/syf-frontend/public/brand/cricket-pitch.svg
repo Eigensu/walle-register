@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="100%" height="100%">
+  <defs>
+    <radialGradient id="turfGrad" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1b4d24" />
+      <stop offset="45%" stop-color="#143c1b" />
+      <stop offset="80%" stop-color="#0e2913" />
+      <stop offset="100%" stop-color="#07170a" />
+    </radialGradient>
+    <linearGradient id="pitchClay" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#b8935c" />
+      <stop offset="30%" stop-color="#c9a76d" />
+      <stop offset="50%" stop-color="#d4b47e" />
+      <stop offset="70%" stop-color="#c9a76d" />
+      <stop offset="100%" stop-color="#b8935c" />
+    </linearGradient>
+    <pattern id="mowingPattern" width="160" height="1080" patternUnits="userSpaceOnUse">
+      <rect width="80" height="1080" fill="#ffffff" opacity="0.03" />
+      <rect x="80" width="80" height="1080" fill="#000000" opacity="0.04" />
+    </pattern>
+  </defs>
+
+  <!-- Outfield Grass Base -->
+  <rect width="1920" height="1080" fill="url(#turfGrad)" />
+  <rect width="1920" height="1080" fill="url(#mowingPattern)" />
+
+  <!-- Stadium Field Ring (30-Yard Circle) -->
+  <ellipse cx="960" cy="540" rx="720" ry="460" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-dasharray="14 10" opacity="0.25" />
+
+  <!-- Cricket Pitch Rectangle (22 Yards) -->
+  <g transform="translate(860, 240)">
+    <!-- Pitch Clay Texture -->
+    <rect width="200" height="600" rx="10" fill="url(#pitchClay)" opacity="0.9" filter="drop-shadow(0 15px 30px rgba(0,0,0,0.5))" />
+    
+    <!-- Bowling Crease Top -->
+    <line x1="20" y1="90" x2="180" y2="90" stroke="#ffffff" stroke-width="3" opacity="0.95" />
+    <!-- Popping Crease Top -->
+    <line x1="5" y1="130" x2="195" y2="130" stroke="#ffffff" stroke-width="3.5" opacity="0.95" />
+    <!-- Return Creases Top -->
+    <line x1="20" y1="50" x2="20" y2="130" stroke="#ffffff" stroke-width="2.5" opacity="0.9" />
+    <line x1="180" y1="50" x2="180" y2="130" stroke="#ffffff" stroke-width="2.5" opacity="0.9" />
+    
+    <!-- Stumps Top (3 Stumps) -->
+    <circle cx="85" cy="90" r="3" fill="#ffffff" />
+    <circle cx="100" cy="90" r="3" fill="#ffffff" />
+    <circle cx="115" cy="90" r="3" fill="#ffffff" />
+
+    <!-- Pitch Centre Line -->
+    <line x1="100" y1="140" x2="100" y2="460" stroke="#ffffff" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.2" />
+
+    <!-- Bowling Crease Bottom -->
+    <line x1="20" y1="510" x2="180" y2="510" stroke="#ffffff" stroke-width="3" opacity="0.95" />
+    <!-- Popping Crease Bottom -->
+    <line x1="5" y1="470" x2="195" y2="470" stroke="#ffffff" stroke-width="3.5" opacity="0.95" />
+    <!-- Return Creases Bottom -->
+    <line x1="20" y1="470" x2="20" y2="550" stroke="#ffffff" stroke-width="2.5" opacity="0.9" />
+    <line x1="180" y1="470" x2="180" y2="550" stroke="#ffffff" stroke-width="2.5" opacity="0.9" />
+
+    <!-- Stumps Bottom (3 Stumps) -->
+    <circle cx="85" cy="510" r="3" fill="#ffffff" />
+    <circle cx="100" cy="510" r="3" fill="#ffffff" />
+    <circle cx="115" cy="510" r="3" fill="#ffffff" />
+  </g>
+
+  <!-- Ambient Floodlight Glow -->
+  <circle cx="960" cy="540" r="500" fill="#ffffff" opacity="0.04" filter="blur(60px)" />
+</svg>

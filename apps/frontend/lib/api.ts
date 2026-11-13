@@ -49,11 +49,30 @@ export type PlayerDetailsResponse = {
   registration_status: string;
 };
 
+export type PaymentGateway = "razorpay" | "cashfree";
+
 export type PublicConfig = {
   registration_open: boolean;
   registration_cap_reached: boolean;
   current_registrations: number;
   registration_cap: number;
+  /** Gateways enabled on the backend via PAYMENT_GATEWAYS, in display order. */
+  payment_gateways?: PaymentGateway[];
+};
+
+export type CashfreeOrderResponse = {
+  order_id: string;
+  payment_session_id: string;
+  amount: number; // paise
+  currency: string;
+  player_id: string;
+  mode: "sandbox" | "production";
+};
+
+export type CashfreeVerifyResponse = {
+  status: "CAPTURED" | "PENDING" | "NEEDS_REVIEW" | "FAILED" | "NOT_PAID";
+  message: string;
+  player_id: string;
 };
 export type AdminConfig = { registration_open: boolean };
 
@@ -107,6 +126,32 @@ export async function verifyPayment(payload: {
   });
 
   return handleJson<VerifyPaymentResponse>(res);
+}
+
+export async function createCashfreeOrder(
+  playerId: string,
+  returnUrl?: string,
+): Promise<CashfreeOrderResponse> {
+  const res = await fetch("/api/payments/cashfree/create-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ player_id: playerId, return_url: returnUrl }),
+  });
+
+  return handleJson<CashfreeOrderResponse>(res);
+}
+
+export async function verifyCashfreePayment(
+  orderId: string,
+  playerId?: string,
+): Promise<CashfreeVerifyResponse> {
+  const res = await fetch("/api/payments/cashfree/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ order_id: orderId, player_id: playerId }),
+  });
+
+  return handleJson<CashfreeVerifyResponse>(res);
 }
 
 export async function resumePayment(email: string): Promise<ResumePaymentResponse> {
