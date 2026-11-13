@@ -83,6 +83,14 @@ class Settings(BaseSettings):
 		# Simple comma-separated list
 		return [v.strip() for v in value.split(",") if v.strip()]
 
+	@field_validator("mail_support_email", mode="before")
+	@classmethod
+	def blank_support_email_is_unset(cls, value: str | None) -> str | None:
+		"""Treat an empty MAIL_SUPPORT_EMAIL as unset instead of failing startup."""
+		if isinstance(value, str) and not value.strip():
+			return None
+		return value
+
 
 @lru_cache
 def get_settings() -> Settings:

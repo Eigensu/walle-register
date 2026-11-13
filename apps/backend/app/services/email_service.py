@@ -136,6 +136,13 @@ def build_success_email(
     else:
         support_html = ""
 
+    # With a support address, Reply-To routes replies there, so don't tell people not to reply.
+    automated_note = (
+        "This is an automated email."
+        if support
+        else "This is an automated email. Please do not reply to this message."
+    )
+
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,7 +205,7 @@ def build_success_email(
           <tr>
             <td bgcolor="#FFFFFF" style="background-color:#FFFFFF;padding:20px 32px 28px;border:1px solid {LINE};border-top:1px solid {LINE};border-radius:0 0 12px 12px;">
               {support_html}<p style="margin:0 0 4px;font-family:{FONT_BODY};font-size:12px;line-height:18px;color:{SILVER_DIM};"><strong>{e(organiser)}</strong> &middot; {e(event_label)}</p>
-              <p style="margin:0;font-family:{FONT_BODY};font-size:12px;line-height:18px;color:{SILVER_DIM};">This is an automated email. Please do not reply to this message.</p>
+              <p style="margin:0;font-family:{FONT_BODY};font-size:12px;line-height:18px;color:{SILVER_DIM};">{e(automated_note)}</p>
             </td>
           </tr>
 
@@ -231,7 +238,7 @@ def build_success_email(
     text_lines.append("")
     if support:
         text_lines.append(f"Questions? Write to {support}.")
-    text_lines.append("This is an automated email. Please do not reply to this message.")
+    text_lines.append(automated_note)
 
     return subject, html_body, "\n".join(text_lines) + "\n"
 
