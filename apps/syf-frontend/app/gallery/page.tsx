@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { useSearchParams } from "next/navigation"
 import {
   ArrowLeft,
   ArrowRight,
@@ -28,6 +29,7 @@ interface GalleryItem {
   subtitle: string
   src: string | null
   videoSrc?: string
+  youtubeId?: string
   date: string
   outlet?: string
   link?: string
@@ -35,37 +37,56 @@ interface GalleryItem {
 
 const GALLERY_ITEMS: GalleryItem[] = [
   {
-    id: "v1",
+    id: "nspl-day-1-part-1",
     type: "video",
     category: "nspl",
-    title: "Cricket Highlights",
-    subtitle: "A moment from the Silver Youth Forum cricket experience.",
+    title: "NSPL Season 1 · Day 1 · Part 1",
+    subtitle: "Full opening-day coverage from the National Silver Premier League, streamed by JewelBuzz.",
     src: null,
-    videoSrc: "/videos/bat.mp4",
-    date: "Cricket",
+    youtubeId: "Q-bCamxC8Ys",
+    date: "NSPL · Season 1",
   },
   {
-    id: "v2",
+    id: "nspl-day-1-part-2",
     type: "video",
     category: "nspl",
-    title: "On the Field",
-    subtitle: "A glimpse of the game that brings the fraternity together.",
+    title: "NSPL Season 1 · Day 1 · Part 2",
+    subtitle: "Continued opening-day match coverage from JewelBuzz.",
     src: null,
-    videoSrc: "/videos/ball.mp4",
-    date: "Cricket",
+    youtubeId: "JvbVZX_tO9c",
+    date: "NSPL · Season 1",
+  },
+  {
+    id: "nspl-final-day-part-1",
+    type: "video",
+    category: "nspl",
+    title: "NSPL Season 1 · Final Day · Part 1",
+    subtitle: "Final-day coverage from the National Silver Premier League, streamed by JewelBuzz.",
+    src: null,
+    youtubeId: "yOuBxruXpG8",
+    date: "NSPL · Season 1",
+  },
+  {
+    id: "nspl-final-day-part-2",
+    type: "video",
+    category: "nspl",
+    title: "NSPL Season 1 · Final Day · Part 2",
+    subtitle: "Continued final-day match coverage from JewelBuzz.",
+    src: null,
+    youtubeId: "I0YkTVcjevM",
+    date: "NSPL · Season 1",
   },
 ]
 
-export default function GalleryPage() {
-  const [activeFilter, setActiveFilter] = useState<FilterCategory>("all")
+function GalleryContent() {
+  const searchParams = useSearchParams()
+  const queryCategory = searchParams.get("category")
+  const initialCategory: FilterCategory = queryCategory === "conclave" || queryCategory === "nspl" || queryCategory === "videos" || queryCategory === "press"
+    ? queryCategory
+    : "all"
+  const [selectedFilter, setSelectedFilter] = useState<FilterCategory | null>(null)
+  const activeFilter = selectedFilter ?? initialCategory
   const [selectedVideo, setSelectedVideo] = useState<GalleryItem | null>(null)
-
-  useEffect(() => {
-    const category = new URLSearchParams(window.location.search).get("category")
-    if (category === "conclave" || category === "nspl" || category === "videos" || category === "press") {
-      setActiveFilter(category)
-    }
-  }, [])
 
   const filteredItems = GALLERY_ITEMS.filter((item) => {
     if (activeFilter === "all") return true
@@ -110,7 +131,7 @@ export default function GalleryPage() {
                 <button
                   key={f.id}
                   type="button"
-                  onClick={() => setActiveFilter(f.id as FilterCategory)}
+                  onClick={() => setSelectedFilter(f.id as FilterCategory)}
                   className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold tracking-wider transition-all ${
                     active
                       ? "bg-royal text-white shadow-sm"
@@ -142,20 +163,31 @@ export default function GalleryPage() {
                 >
                   {/* Media Viewport */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-navy">
-                    {isVideo && item.videoSrc ? (
+                    {isVideo && (item.videoSrc || item.youtubeId) ? (
                       <div
                         onClick={() => setSelectedVideo(item)}
-                        className="relative size-full cursor-pointer group-hover:scale-105 transition-transform duration-500"
+                        className="relative size-full cursor-pointer transition-transform duration-500 group-hover:scale-105"
                       >
-                        <video
-                          src={item.videoSrc}
-                          muted
-                          playsInline
-                          loop
-                          preload="none"
-                          poster={item.videoSrc === "/videos/bat.mp4" ? "/videos/bat-poster.webp" : "/videos/ball-poster.webp"}
-                          className="size-full object-cover opacity-80"
-                        />
+                        {item.youtubeId ? (
+                          // YouTube's public thumbnail endpoint keeps the gallery lightweight.
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={`https://i.ytimg.com/vi/${item.youtubeId}/hqdefault.jpg`}
+                            alt=""
+                            className="size-full object-cover opacity-80"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <video
+                            src={item.videoSrc}
+                            muted
+                            playsInline
+                            loop
+                            preload="none"
+                            poster={item.videoSrc === "/videos/bat.mp4" ? "/videos/bat-poster.webp" : "/videos/ball-poster.webp"}
+                            className="size-full object-cover opacity-80"
+                          />
+                        )}
                         <div className="absolute inset-0 flex items-center justify-center bg-navy/40 transition-colors group-hover:bg-navy/20">
                           <div className="flex size-14 items-center justify-center rounded-full bg-royal text-white shadow-lg transition-transform group-hover:scale-110">
                             <Play className="size-6 ml-0.5 fill-current" />
@@ -244,7 +276,7 @@ export default function GalleryPage() {
       </section>
 
       {/* Video Modal Player */}
-      {selectedVideo && selectedVideo.videoSrc && (
+      {selectedVideo && (selectedVideo.videoSrc || selectedVideo.youtubeId) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/90 p-4 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-navy-line bg-navy shadow-2xl">
             <div className="flex items-center justify-between border-b border-navy-line px-5 py-4 text-silver-bright">
@@ -259,13 +291,24 @@ export default function GalleryPage() {
               </button>
             </div>
             <div className="relative aspect-video w-full bg-black">
-              <video
-                src={selectedVideo.videoSrc}
-                controls
-                autoPlay
-                preload="metadata"
-                className="size-full object-contain"
-              />
+              {selectedVideo.youtubeId ? (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${selectedVideo.youtubeId}?autoplay=1&rel=0`}
+                  title={selectedVideo.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="size-full"
+                />
+              ) : (
+                <video
+                  src={selectedVideo.videoSrc}
+                  controls
+                  autoPlay
+                  preload="metadata"
+                  className="size-full object-contain"
+                />
+              )}
             </div>
             <div className="p-4 text-xs text-silver">
               <p>{selectedVideo.subtitle}</p>
@@ -274,5 +317,13 @@ export default function GalleryPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function GalleryPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-mist" aria-label="Loading gallery" />}>
+      <GalleryContent />
+    </Suspense>
   )
 }
