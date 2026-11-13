@@ -383,6 +383,7 @@ async def _mark_cashfree_captured(
             name=f"{player.first_name} {player.last_name}",
             player_id=str(player.id),
             amount=payment.amount // 100,
+            payment_id=cf_payment_id,
         )
 
 
