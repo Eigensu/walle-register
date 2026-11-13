@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
 import { AboutExperience } from "@/components/sections/about-experience"
 
-export const revalidate = 60
-
 export const metadata: Metadata = {
   title: "About Silver Youth Forum",
   description:
