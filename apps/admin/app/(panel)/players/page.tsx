@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Download, Search, X } from "lucide-react"
 import { downloadPlayersCsv, getPlayer, listPlayers, type PlayerDetail, type PlayerRow } from "@/lib/api"
 import { formatAmount, formatDateTime, humanize } from "@/lib/utils"
@@ -31,13 +31,19 @@ export default function PlayersPage() {
     return () => clearTimeout(t)
   }, [searchInput])
 
+  // Only the newest request may update the list, so a slow earlier response can't overwrite it.
+  const latestRequest = useRef(0)
+
   const load = useCallback(async () => {
+    const request = ++latestRequest.current
     try {
       const res = await listPlayers({ page, limit: LIMIT, search, registration_status: statusFilter })
+      if (request !== latestRequest.current) return
       setRows(res.players)
       setTotal(res.total)
       setError("")
     } catch (err) {
+      if (request !== latestRequest.current) return
       setError(handleError(err))
     }
   }, [page, search, statusFilter, handleError])

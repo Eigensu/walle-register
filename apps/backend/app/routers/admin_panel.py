@@ -5,8 +5,10 @@ new event's form can add or rename fields without changes here. Every route exce
 an `Authorization: Bearer <token>` header from /login.
 """
 
+import asyncio
 import csv
 import io
+import json
 import re
 from datetime import datetime, timezone
 from typing import Any
@@ -15,6 +17,7 @@ from beanie.odm.fields import PydanticObjectId
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
+from pymongo.errors import DuplicateKeyError
 
 from app.models.admin import Admin
 from app.models.config import AppConfig
@@ -24,8 +27,10 @@ from app.services.admin_auth import (
     AdminIdentity,
     CurrentAdmin,
     authenticate,
+    finish_login_attempt,
     hash_password,
     issue_token,
+    start_login_attempt,
 )
 
 router = APIRouter(prefix="/api/admin-panel", tags=["admin-panel"])
@@ -65,14 +70,18 @@ def _jsonable(value: Any) -> Any:
     return value
 
 
+# Which payment represents a player when they have several attempts: a captured one wins, then one
+# that needs a manual check (money may have been taken), then the most recent attempt.
+_PAYMENT_RANK = {PaymentStatus.CAPTURED.value: 2, PaymentStatus.NEEDS_REVIEW.value: 1}
+
+
 def _payment_summary(payments: list[dict]) -> dict | None:
-    """The captured payment if any, otherwise the most recent attempt."""
-    chosen = None
-    for doc in sorted(payments, key=lambda d: d.get("created_at") or datetime.min):
-        if chosen is None or chosen.get("status") != PaymentStatus.CAPTURED.value:
-            chosen = doc
-    if chosen is None:
+    """The captured payment if any, else one needing review, else the most recent attempt."""
+    if not payments:
         return None
+    newest_first = sorted(payments, key=lambda d: d.get("created_at") or datetime.min, reverse=True)
+    # max() keeps the first of equal ranks, which is the newest.
+    chosen = max(newest_first, key=lambda d: _PAYMENT_RANK.get(d.get("status"), 0))
     return {
         "status": chosen.get("status"),
         "gateway": chosen.get("gateway", "razorpay"),
@@ -90,6 +99,23 @@ async def _payments_by_player(player_ids: list) -> dict:
     for doc in docs:
         grouped.setdefault(doc.get("player_id"), []).append(doc)
     return {pid: _payment_summary(items) for pid, items in grouped.items()}
+
+
+# Players type these values into a public form, and the CSV gets opened in Excel or Sheets, where a
+# cell starting with one of these characters can run as a formula (e.g. =HYPERLINK(...)).
+_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
+# Phone numbers like "+91 98765-43210" start with "+" but can't hold a formula, so leave them alone.
+_PLAIN_NUMBER = re.compile(r"[+\-]?[\d\s().\-]+")
+
+
+def _csv_cell(value: Any) -> Any:
+    if value is None:
+        return ""
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False)
+    if isinstance(value, str) and value.startswith(_FORMULA_PREFIXES) and not _PLAIN_NUMBER.fullmatch(value):
+        return "'" + value
+    return value
 
 
 def _player_query(search: str | None, registration_status: str | None) -> dict:
@@ -128,9 +154,13 @@ class LoginRequest(BaseModel):
 @router.post("/login")
 async def login(payload: LoginRequest, request: Request):
     settings = request.app.state.settings  # type: ignore[attr-defined]
+    # Behind a proxy, run uvicorn with FORWARDED_ALLOW_IPS set so this is the real client IP.
+    client_ip = request.client.host if request.client else "unknown"
+    attempt = start_login_attempt(client_ip, payload.username)
     identity = await authenticate(payload.username, payload.password, settings)
     if identity is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong username or password")
+    finish_login_attempt(client_ip, payload.username, attempt)
     return {
         "token": issue_token(identity, settings),
         "username": identity.username,
@@ -249,7 +279,7 @@ async def export_players(
     writer = csv.DictWriter(out, fieldnames=columns, extrasaction="ignore")
     writer.writeheader()
     for row in rows:
-        writer.writerow({k: "" if row.get(k) is None else row.get(k) for k in columns})
+        writer.writerow({k: _csv_cell(row.get(k)) for k in columns})
     filename = f"players-{datetime.now().strftime('%Y-%m-%d')}.csv"
     return StreamingResponse(
         iter([out.getvalue()]),
@@ -297,6 +327,14 @@ class AdminCreate(BaseModel):
             raise ValueError("Use letters, numbers, dots, dashes, underscores or @ only")
         return value
 
+    @field_validator("password")
+    @classmethod
+    def check_password_bytes(cls, value: str) -> str:
+        # bcrypt only uses the first 72 bytes (and newer versions refuse longer input outright).
+        if len(value.encode()) > 72:
+            raise ValueError("Password can be at most 72 bytes (about 72 characters)")
+        return value
+
 
 @router.get("/admins")
 async def list_admins(request: Request, admin: AdminIdentity = CurrentAdmin):
@@ -327,10 +365,14 @@ async def create_admin(payload: AdminCreate, request: Request, admin: AdminIdent
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That username is already taken")
     new_admin = Admin(
         username=payload.username,
-        password_hash=hash_password(payload.password),
+        password_hash=await asyncio.to_thread(hash_password, payload.password),
         created_by=admin.username,
     )
-    await new_admin.insert()
+    try:
+        await new_admin.insert()
+    except DuplicateKeyError:
+        # Two requests for the same username at once: the unique index let only one through.
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="That username is already taken")
     return {"username": new_admin.username, "is_owner": False, "created_by": admin.username, "created_at": _jsonable(new_admin.created_at)}
 
 

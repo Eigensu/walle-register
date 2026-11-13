@@ -37,8 +37,16 @@ code, no changes needed for a new event.
   can't be removed from the panel (use it to recover access).
 - Other admins are stored in the backend's `admins` collection (bcrypt-hashed passwords) and are
   managed from the Admins page. Removing one signs them out immediately.
-- Sign-in returns a token valid for 12 hours. It's signed with `ADMIN_JWT_SECRET` on the backend,
-  or, if that's unset, a key derived from `ADMIN_PASSWORD`. Changing either signs everyone out.
+- **`ADMIN_JWT_SECRET` is required on the backend** (32+ random characters, e.g.
+  `openssl rand -hex 32`). Until it's set, the panel's sign-in returns 503 and nothing else in the
+  backend is affected.
+- Sign-in returns a token valid for 12 hours, signed with `ADMIN_JWT_SECRET`. Changing the secret
+  signs everyone out. A token also stops working when its owner's password changes
+  (`ADMIN_USERNAME` / `ADMIN_PASSWORD` for the owner) or its admin is removed.
+- Sign-in is rate limited: 10 attempts per username and 50 per IP in any 15 minutes (then 429),
+  counted in each backend process's memory. If the backend runs behind a proxy, start uvicorn with
+  `FORWARDED_ALLOW_IPS` set to the proxy so the limit sees real client IPs.
+- Passwords for added admins can be at most 72 bytes (a bcrypt limit).
 
 ## Backend API
 
