@@ -12,6 +12,7 @@ from app.models.payment import Payment
 from app.models.player import Player
 from app.models.config import AppConfig
 from app.routers import payments, registration, admin
+from app.services.cashfree import CashfreeService
 from app.services.razorpay import RazorpayService
 from app.services.storage import build_storage_service
 
@@ -34,11 +35,29 @@ async def lifespan(app: FastAPI):
         cloudinary_api_secret=settings.cloudinary_api_secret,
         cloudinary_folder=settings.cloudinary_folder
     )
-    razorpay = RazorpayService(settings.razorpay_key_id, settings.razorpay_key_secret)
+    # A gateway client is built whenever its keys are present, even if it is not in
+    # PAYMENT_GATEWAYS, so payments started before it was switched off can still be
+    # verified and their webhooks processed. PAYMENT_GATEWAYS only controls new payments.
+    razorpay = (
+        RazorpayService(settings.razorpay_key_id, settings.razorpay_key_secret)
+        if settings.razorpay_key_id and settings.razorpay_key_secret
+        else None
+    )
+    cashfree = (
+        CashfreeService(
+            settings.cashfree_app_id,
+            settings.cashfree_secret_key,
+            env=settings.cashfree_env,
+            api_version=settings.cashfree_api_version,
+        )
+        if settings.cashfree_app_id and settings.cashfree_secret_key
+        else None
+    )
 
     app.state.storage = storage
     app.state.settings = settings
     app.state.razorpay = razorpay
+    app.state.cashfree = cashfree
     # Ensure default app config exists
     cfg = await AppConfig.find_one({})
     if cfg is None:
@@ -47,7 +66,10 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    await razorpay.aclose()
+    if razorpay:
+        await razorpay.aclose()
+    if cashfree:
+        await cashfree.aclose()
     client.close()
 
 

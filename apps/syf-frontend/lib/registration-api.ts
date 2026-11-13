@@ -107,3 +107,35 @@ export const verifyPayment = (payload: {
   razorpay_payment_id: string
   razorpay_signature: string
 }) => request<{ status: string; message: string }>("/payments/verify", json(payload))
+
+export type PaymentGateway = "razorpay" | "cashfree"
+
+/** Gateways the backend accepts (its PAYMENT_GATEWAYS setting), in display order. */
+export async function getPaymentGateways(): Promise<PaymentGateway[]> {
+  const config = await request<{ payment_gateways?: string[] }>("/config", { cache: "no-store" })
+  const gateways = (config.payment_gateways ?? ["razorpay"]).filter((g): g is PaymentGateway => g === "razorpay" || g === "cashfree")
+  return gateways.length ? gateways : ["razorpay"]
+}
+
+export type CashfreeOrderResponse = {
+  order_id: string
+  payment_session_id: string
+  /** Paise, like the Razorpay order. */
+  amount: number
+  currency: string
+  player_id: string
+  mode: string
+}
+
+/** CAPTURED is paid. PENDING and NEEDS_REVIEW may already have taken money, so don't offer to pay again. */
+export type CashfreeStatus = "CAPTURED" | "PENDING" | "NEEDS_REVIEW" | "FAILED" | "NOT_PAID"
+
+export type CashfreeVerifyResponse = { status: CashfreeStatus; message: string; player_id: string }
+
+/** returnUrl is where Cashfree sends the payer back after a bank or UPI redirect; "?order_id=…" is appended. */
+export const createCashfreeOrder = (playerId: string, returnUrl: string) =>
+  request<CashfreeOrderResponse>("/payments/cashfree/create-order", json({ player_id: playerId, return_url: returnUrl }))
+
+/** Asks the backend to confirm the order with Cashfree; the browser's own result proves nothing. */
+export const verifyCashfreePayment = (orderId: string, playerId?: string) =>
+  request<CashfreeVerifyResponse>("/payments/cashfree/verify", json({ order_id: orderId, player_id: playerId }))

@@ -5,14 +5,20 @@ import { ArrowLeft, ArrowRight, CircleCheck, CircleAlert, Loader2, LockKeyhole, 
 import { Button } from "@/components/ui/button"
 import { track } from "@/lib/analytics"
 import { formatInr } from "@/lib/format"
+import { payWithCashfree } from "@/lib/cashfree"
 import { payWithRazorpay } from "@/lib/razorpay"
 import {
+  createCashfreeOrder,
   createOrder,
+  getPaymentGateways,
   getPlayer,
   registerPlayer,
   updatePlayer,
+  verifyCashfreePayment,
   verifyPayment,
+  type CashfreeVerifyResponse,
   type CreateOrderResponse,
+  type PaymentGateway,
   type PlayerForm,
 } from "@/lib/registration-api"
 import {
@@ -32,6 +38,8 @@ import { Stepper } from "./stepper"
 type Props = {
   /** Player id from /register?resume=…, to finish paying for a saved registration. */
   resumeId: string | null
+  /** Cashfree order id from /register?order_id=…, when checkout came back from a bank or UPI redirect. */
+  returnOrderId: string | null
   previousSeason: { label: string; teams: string[] }
   /** "NSPL Season 2" */
   eventLabel: string
@@ -41,6 +49,11 @@ type Props = {
 
 type Errors = Partial<Record<keyof PlayerForm, string>>
 type Notice = { kind: "success" | "error"; text: string } | null
+
+const gatewayLabels: Record<PaymentGateway, string> = { razorpay: "Razorpay", cashfree: "Cashfree" }
+
+/** A Cashfree payment that may already have taken money: never offer to pay again. */
+const inFlight = (status: CashfreeVerifyResponse["status"]) => status === "PENDING" || status === "NEEDS_REVIEW"
 
 const empty: PlayerForm = {
   first_name: "",
@@ -115,17 +128,67 @@ function validate(step: RegistrationStepId, v: PlayerForm): Errors {
 
 const formSteps: RegistrationStepId[] = ["details", "cricket", "jersey", "history"]
 
-export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabel, payment }: Props) {
+export function RegistrationForm({ resumeId, returnOrderId, previousSeason, eventLabel, feeLabel, payment }: Props) {
   const [values, setValues] = useState<PlayerForm>(empty)
   const [errors, setErrors] = useState<Errors>({})
   const [step, setStep] = useState<RegistrationStepId>("details")
   const [playerId, setPlayerId] = useState<string | null>(null)
   const [order, setOrder] = useState<CreateOrderResponse | null>(null)
+  const [gateways, setGateways] = useState<PaymentGateway[] | null>(null)
+  const [gateway, setGateway] = useState<PaymentGateway | null>(null)
+  // Set when a Cashfree payment is still processing or under review, so the player can't pay twice.
+  const [payLocked, setPayLocked] = useState(false)
   const [notice, setNotice] = useState<Notice>(null)
   const [busy, setBusy] = useState(false)
-  const [loading, setLoading] = useState(Boolean(resumeId))
+  const [loading, setLoading] = useState(Boolean(resumeId || returnOrderId))
   const headingRef = useRef<HTMLHeadingElement>(null)
   const firstRender = useRef(true)
+
+  // Which gateways the backend accepts right now (PAYMENT_GATEWAYS). The first one is preselected.
+  useEffect(() => {
+    let cancelled = false
+    getPaymentGateways()
+      .catch((): PaymentGateway[] => ["razorpay"])
+      .then((list) => {
+        if (cancelled) return
+        setGateways(list)
+        setGateway((current) => (current && list.includes(current) ? current : list[0]))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Back from a Cashfree bank or UPI redirect: confirm the order with the backend, then show the result.
+  useEffect(() => {
+    if (!returnOrderId || resumeId) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const result = await verifyCashfreePayment(returnOrderId)
+        const player = await getPlayer(result.player_id)
+        if (cancelled) return
+        setValues(player)
+        setPlayerId(result.player_id)
+        setGateway("cashfree")
+        if (result.status === "CAPTURED") {
+          track("registration_paid", { gateway: "cashfree" })
+          setStep("done")
+          return
+        }
+        setStep("payment")
+        setPayLocked(inFlight(result.status))
+        setNotice({ kind: "error", text: inFlight(result.status) ? result.message : `${result.message} Your details are saved.` })
+      } catch (err) {
+        if (!cancelled) setNotice({ kind: "error", text: (err as Error).message })
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [returnOrderId, resumeId])
 
   // Resuming: load the saved registration and go straight to payment.
   useEffect(() => {
@@ -199,27 +262,12 @@ export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabe
   }
 
   async function pay() {
-    if (!playerId) return
+    if (!playerId || !gateway || payLocked) return
     setBusy(true)
     setNotice(null)
     try {
-      const created = order ?? (await createOrder(playerId))
-      setOrder(created)
-      const result = await payWithRazorpay({
-        order: created,
-        name: payment.name,
-        description: payment.description,
-        color: payment.color,
-        prefill: { name: `${values.first_name} ${values.last_name}`.trim(), email: values.email, contact: values.phone },
-      })
-      if (!result) {
-        setNotice({ kind: "error", text: "Payment wasn't completed. Your details are saved, so you can try again whenever you're ready." })
-        return
-      }
-      await verifyPayment({ player_id: playerId, ...result })
-      track("registration_paid")
-      setNotice(null)
-      setStep("done")
+      if (gateway === "cashfree") await payByCashfree(playerId)
+      else await payByRazorpay(playerId)
     } catch (err) {
       // A used-up order can't be paid again; get a fresh one on the next try.
       setOrder(null)
@@ -227,6 +275,44 @@ export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabe
     } finally {
       setBusy(false)
     }
+  }
+
+  async function payByCashfree(id: string) {
+    // Cashfree appends "?order_id=…" to this when a bank or UPI page sends the payer back.
+    const returnUrl = `${window.location.origin}${window.location.pathname}`
+    const created = await createCashfreeOrder(id, returnUrl)
+    if ((await payWithCashfree(created)) === "redirected") return
+    const result = await verifyCashfreePayment(created.order_id, id)
+    if (result.status === "CAPTURED") {
+      track("registration_paid", { gateway: "cashfree" })
+      setStep("done")
+      return
+    }
+    if (inFlight(result.status)) {
+      setPayLocked(true)
+      setNotice({ kind: "error", text: result.message })
+      return
+    }
+    setNotice({ kind: "error", text: "Payment wasn't completed. Your details are saved, so you can try again whenever you're ready." })
+  }
+
+  async function payByRazorpay(id: string) {
+    const created = order ?? (await createOrder(id))
+    setOrder(created)
+    const result = await payWithRazorpay({
+      order: created,
+      name: payment.name,
+      description: payment.description,
+      color: payment.color,
+      prefill: { name: `${values.first_name} ${values.last_name}`.trim(), email: values.email, contact: values.phone },
+    })
+    if (!result) {
+      setNotice({ kind: "error", text: "Payment wasn't completed. Your details are saved, so you can try again whenever you're ready." })
+      return
+    }
+    await verifyPayment({ player_id: id, ...result })
+    track("registration_paid", { gateway: "razorpay" })
+    setStep("done")
   }
 
   function next() {
@@ -246,6 +332,7 @@ export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabe
     setErrors({})
     setPlayerId(null)
     setOrder(null)
+    setPayLocked(false)
     setNotice(null)
     setStep("details")
   }
@@ -254,7 +341,7 @@ export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabe
     return (
       <div role="status" className="flex flex-col items-center gap-3 py-20 text-ink-muted">
         <Loader2 className="size-7 animate-spin text-royal" aria-hidden="true" />
-        Loading your registration…
+        {returnOrderId && !resumeId ? "Confirming your payment…" : "Loading your registration…"}
       </div>
     )
   }
@@ -477,9 +564,22 @@ export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabe
                 </div>
                 <p className="flex max-w-xs items-start gap-2 text-sm text-silver">
                   <LockKeyhole className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                  Secure checkout by Razorpay. Pay by UPI, card or net banking. Your slot is confirmed once the payment goes through.
+                  Secure checkout{gateway ? ` by ${gatewayLabels[gateway]}` : ""}. Pay by UPI, card or net banking. Your slot is confirmed once the payment goes
+                  through.
                 </p>
               </div>
+              {gateways && gateways.length > 1 && (
+                <ChoiceGroup
+                  name="payment_gateway"
+                  legend="Pay with"
+                  options={gateways.map((g) => gatewayLabels[g])}
+                  value={gateway ? gatewayLabels[gateway] : ""}
+                  onValue={(label) => {
+                    const picked = gateways.find((g) => gatewayLabels[g] === label)
+                    if (picked) setGateway(picked)
+                  }}
+                />
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -558,7 +658,7 @@ export function RegistrationForm({ resumeId, previousSeason, eventLabel, feeLabe
             </>
           )}
           {step === "payment" && (
-            <Button type="button" onClick={pay} disabled={busy || !playerId} className="sm:ml-auto">
+            <Button type="button" onClick={pay} disabled={busy || !playerId || !gateway || payLocked} className="sm:ml-auto">
               {busy ? (
                 <>
                   <Loader2 className="animate-spin" aria-hidden="true" />

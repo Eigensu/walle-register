@@ -15,7 +15,7 @@ export default function RefundPolicy() {
               Walle Arena (&quot;we&quot;, &quot;our&quot;, or &quot;us&quot;)
               processes refunds for tournament registration fees. This policy
               complies with the Consumer Protection (E-commerce) Rules, 2020 and
-              guidelines set forth by our payment partner, Razorpay.
+              guidelines set forth by our payment partners, Razorpay and Cashfree.
             </p>
           </section>
 
@@ -98,7 +98,7 @@ export default function RefundPolicy() {
                 <ul className="list-disc pl-6 mt-2 space-y-1">
                   <li>Full name as registered</li>
                   <li>Player ID or Registration ID</li>
-                  <li>Razorpay Payment ID</li>
+                  <li>Payment ID (Razorpay or Cashfree)</li>
                   <li>Reason for refund request</li>
                   <li>
                     Supporting documents (if applicable - medical certificate,
@@ -127,7 +127,7 @@ export default function RefundPolicy() {
               5. Source Refund Policy
             </h2>
             <p className="mb-4">
-              In compliance with Razorpay&apos;s guidelines and to prevent fraud
+              In compliance with our payment partners&apos; guidelines and to prevent fraud
               and money laundering, all approved refunds will be processed back
               to the <strong>original payment method</strong> used during
               registration. We do not issue refunds to alternative bank accounts
@@ -168,7 +168,8 @@ export default function RefundPolicy() {
               </li>
               <li>
                 <strong>Processing:</strong> The refund will be processed
-                through Razorpay within 24-48 hours of initiation
+                through the payment gateway you paid with (Razorpay or Cashfree)
+                within 24-48 hours of initiation
               </li>
               <li>
                 <strong>Bank Processing:</strong> After processing, it may take
@@ -236,13 +237,13 @@ export default function RefundPolicy() {
                 &quot;unpaid&quot;, contact us immediately at{" "}
                 <strong>support@wallearena.com</strong> with:
                 <ul className="list-disc pl-6 mt-2 space-y-1">
-                  <li>Razorpay Payment ID or Transaction ID</li>
+                  <li>Razorpay / Cashfree Payment ID or Transaction ID</li>
                   <li>Payment screenshot showing deduction</li>
                   <li>Your registered email and player ID</li>
                 </ul>
               </li>
               <li>
-                We will verify with Razorpay and either confirm your
+                We will verify with the payment gateway and either confirm your
                 registration or initiate a refund within 3-5 business days
               </li>
             </ul>
@@ -250,18 +251,18 @@ export default function RefundPolicy() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">
-              9. Razorpay Payment Processing
+              9. Payment Processing (Razorpay and Cashfree)
             </h2>
             <p className="mb-4">
-              All payments are processed securely through Razorpay, a PCI-DSS
-              Level 1 compliant payment gateway. Walle Arena does not store your
+              All payments are processed securely through Razorpay or Cashfree,
+              both PCI-DSS Level 1 compliant payment gateways. Walle Arena does not store your
               credit card, debit card, or net banking credentials. All payment
-              transactions are subject to Razorpay&apos;s Terms and Conditions
-              and Privacy Policy.
+              transactions are subject to the Terms and Conditions and Privacy
+              Policy of the gateway used for that payment.
             </p>
             <p className="mb-4">
-              For payment-related queries or disputes with Razorpay, you may
-              also contact Razorpay support at:{" "}
+              For payment-related queries or disputes, you may also contact the
+              gateway you paid with. Razorpay support:{" "}
               <a
                 href="https://razorpay.com/support/"
                 className="text-blue-600 hover:underline"
@@ -269,6 +270,15 @@ export default function RefundPolicy() {
                 rel="noopener noreferrer"
               >
                 https://razorpay.com/support/
+              </a>
+              . Cashfree support:{" "}
+              <a
+                href="https://www.cashfree.com/en/support/"
+                className="text-blue-600 hover:underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                https://www.cashfree.com/en/support/
               </a>
             </p>
           </section>
