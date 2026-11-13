@@ -194,7 +194,8 @@ async def razorpay_webhook(
                 to_email=player.email,
                 name=full_name,
                 player_id=str(player.id),
-                amount=amount_inr
+                amount=amount_inr,
+                payment_id=payment_id
             )
 
     return {"status": "ok"}
