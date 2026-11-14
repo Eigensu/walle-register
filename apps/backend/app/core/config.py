@@ -50,6 +50,9 @@ class Settings(BaseSettings):
 
 	admin_username: str = Field(default="admin", alias="ADMIN_USERNAME")
 	admin_password: str = Field(..., alias="ADMIN_PASSWORD")
+	# Signs admin-panel sessions (32+ random characters). Optional so the rest of the backend boots
+	# without it, but the admin panel's sign-in is disabled (503) until it is set.
+	admin_jwt_secret: str | None = Field(default=None, alias="ADMIN_JWT_SECRET")
 
 	# Email Settings
 	mail_username: str = Field(..., alias="MAIL_USERNAME")
