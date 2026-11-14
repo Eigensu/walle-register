@@ -305,7 +305,8 @@ async def razorpay_webhook(
                 to_email=player.email,
                 name=full_name,
                 player_id=str(player.id),
-                amount=amount_inr
+                amount=amount_inr,
+                payment_id=payment_id
             )
 
     return {"status": "ok"}
@@ -382,6 +383,7 @@ async def _mark_cashfree_captured(
             name=f"{player.first_name} {player.last_name}",
             player_id=str(player.id),
             amount=payment.amount // 100,
+            payment_id=cf_payment_id,
         )
 
 

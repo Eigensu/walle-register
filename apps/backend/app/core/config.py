@@ -57,7 +57,15 @@ class Settings(BaseSettings):
 	mail_from: EmailStr = Field(..., alias="MAIL_FROM")
 	mail_port: int = Field(default=465, alias="MAIL_PORT")
 	mail_server: str = Field(default="smtp.gmail.com", alias="MAIL_SERVER")
-	mail_from_name: str = Field(default="JMCL Registration Team", alias="MAIL_FROM_NAME")
+	mail_from_name: str = Field(default="NSPL Registration Team", alias="MAIL_FROM_NAME")
+	# Shown in the footer and used as Reply-To when set; leave unset until the event has an official address.
+	mail_support_email: EmailStr | None = Field(default=None, alias="MAIL_SUPPORT_EMAIL")
+
+	# Event branding used in the confirmation email
+	organiser_name: str = Field(default="Silver Youth Forum", alias="ORGANISER_NAME")
+	event_name: str = Field(default="National Silver Premier League", alias="EVENT_NAME")
+	event_short_name: str = Field(default="NSPL", alias="EVENT_SHORT_NAME")
+	event_season: str = Field(default="Season 2", alias="EVENT_SEASON")
 
 	model_config = SettingsConfigDict(
 		env_file=ROOT_ENV_PATH,
@@ -113,6 +121,14 @@ class Settings(BaseSettings):
 			return [v.strip().strip('"\'') for v in inner.split(",") if v.strip()]
 		# Simple comma-separated list
 		return [v.strip() for v in value.split(",") if v.strip()]
+
+	@field_validator("mail_support_email", mode="before")
+	@classmethod
+	def blank_support_email_is_unset(cls, value: str | None) -> str | None:
+		"""Treat an empty MAIL_SUPPORT_EMAIL as unset instead of failing startup."""
+		if isinstance(value, str) and not value.strip():
+			return None
+		return value
 
 
 @lru_cache
