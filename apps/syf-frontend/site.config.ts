@@ -134,7 +134,7 @@ export const site: SiteConfig = {
         "Draft sub copy for SYF approval",
       ),
       photo: field<string | null>("/photos/nspl-season-1/opening-day/03_img_8147.webp", true),
-      secondaryCta: { label: "About SYF", href: "/about" },
+      secondaryCta: { label: "About Us", href: "/about" },
       showSpotsLeft: false,
     },
     stats: { minimumToShow: 3 },

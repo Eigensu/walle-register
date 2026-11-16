@@ -412,7 +412,8 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
               />
               <TextField
                 name="residential_area"
-                label="Residential area"
+                label="Residential Area (Eg. Lalbaug, Malad, Parel)"
+                placeholder="Eg. Lalbaug, Malad, Parel"
                 autoComplete="address-level3"
                 value={values.residential_area}
                 error={errors.residential_area}
