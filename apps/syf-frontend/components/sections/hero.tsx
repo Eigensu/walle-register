@@ -78,6 +78,9 @@ export function Hero({ state }: SectionProps) {
             <Button asChild variant="outlineDark" size="lg">
               <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
             </Button>
+            {phase.headerCta.kind === "register" && phase.primaryCta.kind !== "register" && (
+              <CtaButton cta={phase.headerCta} location="hero" size="lg" />
+            )}
           </div>
           <p className="mt-7 flex items-center gap-2.5 text-sm text-silver">
             <span
