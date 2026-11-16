@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft, ShieldCheck, Mail, MapPin } from "lucide-react"
-import { site } from "@/site.config"
 import { SeamRings } from "@/components/brand/seam-rings"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Silver Youth Forum collects, uses, and protects player and member data under DPDP standards.",
+  description: "Draft information about how Silver Youth Forum collects, uses, and protects player and member data.",
   alternates: { canonical: "/privacy-policy" },
 }
 
@@ -34,7 +33,7 @@ export default function PrivacyPolicyPage() {
             <span>&bull;</span>
             <span className="inline-flex items-center gap-1.5 text-silver">
               <ShieldCheck className="size-4 text-royal" />
-              Aligned with India DPDP Rules
+              Draft for SYF review
             </span>
           </div>
         </div>
@@ -43,6 +42,10 @@ export default function PrivacyPolicyPage() {
       {/* Main Content */}
       <section className="container-site py-12 lg:py-16">
         <div className="mx-auto max-w-4xl space-y-10 rounded-2xl border border-line bg-paper p-6 sm:p-10 shadow-sm">
+
+          <div className="rounded-xl border border-amber-500/30 bg-amber-50 p-5 text-sm leading-relaxed text-amber-950">
+            <strong>Draft caution:</strong> This page reflects the current website materials and must be checked by SYF before publication. Confirm actual data access, providers, retention period, and grievance contact before relying on these statements.
+          </div>
           
           {/* DPDP Highlight Callout */}
           <div className="rounded-xl border border-royal/20 bg-royal/5 p-5 sm:p-6">

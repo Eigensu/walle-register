@@ -48,6 +48,26 @@ interface Player {
   sr_no?: number;
 }
 
+const BOWLING_TYPE_LABELS: Record<string, string> = {
+  right_arm: "Right Arm Bowler",
+  left_arm: "Left Arm Bowler",
+  none: "None of the above",
+};
+
+const TSHIRT_SIZE_LABELS: Record<string, string> = {
+  XS: "34 - XS",
+  S: "36 - S",
+  M: "38 - M",
+  L: "40 - L",
+  XL: "42 - XL",
+  XXL: "44 - XXL",
+  XXXL: "46 - XXXL",
+  XXXXL: "48 - XXXXL",
+};
+
+const bowlingTypeLabel = (value?: string) => BOWLING_TYPE_LABELS[value ?? ""] ?? value ?? "—";
+const tshirtSizeLabel = (value?: string) => TSHIRT_SIZE_LABELS[value ?? ""] ?? value ?? "—";
+
 export default function AdminDashboard() {
   const router = useRouter();
   const [players, setPlayers] = useState<Player[]>([]);
@@ -719,7 +739,7 @@ export default function AdminDashboard() {
                       Bowling Type
                     </p>
                     <p className="mt-1 text-slate-900 dark:text-white capitalize">
-                      {selectedPlayer.bowling_type || "—"}
+                      {bowlingTypeLabel(selectedPlayer.bowling_type)}
                     </p>
                   </div>
                   <div>
@@ -752,7 +772,7 @@ export default function AdminDashboard() {
                       T-Shirt Size
                     </p>
                     <p className="mt-1 text-slate-900 dark:text-white">
-                      {selectedPlayer.tshirt_size || "—"}
+                      {tshirtSizeLabel(selectedPlayer.tshirt_size)}
                     </p>
                   </div>
                   <div>

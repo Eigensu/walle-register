@@ -64,23 +64,28 @@ function CricketVideo({
   videoRef,
   className,
   src = cricketVideoSrc,
+  mobilePlayback = false,
 }: {
   videoRef: RefObject<HTMLVideoElement | null>
   className: string
   src?: string
+  mobilePlayback?: boolean
 }) {
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
 
-    // Decorative video only loads when the desktop scroll experience is enabled.
+    // Story footage stays desktop-only; the hero opts into muted mobile playback.
     const desktopMotion = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)")
+    const mobileMotion = window.matchMedia("(max-width: 767px) and (prefers-reduced-motion: no-preference)")
     const syncSource = () => {
-      if (desktopMotion.matches) {
+      const shouldLoad = desktopMotion.matches || (mobilePlayback && mobileMotion.matches)
+      if (shouldLoad) {
         if (video.getAttribute("src") !== src) {
           video.src = src
           video.load()
         }
+        if (mobilePlayback && !desktopMotion.matches) void video.play().catch(() => undefined)
       } else if (video.hasAttribute("src")) {
         video.pause()
         video.removeAttribute("src")
@@ -90,13 +95,15 @@ function CricketVideo({
 
     syncSource()
     desktopMotion.addEventListener("change", syncSource)
+    mobileMotion.addEventListener("change", syncSource)
     return () => {
       desktopMotion.removeEventListener("change", syncSource)
+      mobileMotion.removeEventListener("change", syncSource)
       video.pause()
       video.removeAttribute("src")
       video.load()
     }
-  }, [src, videoRef])
+  }, [mobilePlayback, src, videoRef])
 
   return (
     <div className={`about-film ${className}`}>
@@ -356,8 +363,9 @@ export function AboutExperience() {
     if (!video) return
 
     const desktopMotion = window.matchMedia("(min-width: 768px) and (prefers-reduced-motion: no-preference)")
+    const mobileMotion = window.matchMedia("(max-width: 767px) and (prefers-reduced-motion: no-preference)")
     const syncPlayback = () => {
-      if (!desktopMotion.matches) {
+      if (!desktopMotion.matches && !mobileMotion.matches) {
         video.pause()
         return
       }
@@ -367,9 +375,11 @@ export function AboutExperience() {
 
     syncPlayback()
     desktopMotion.addEventListener("change", syncPlayback)
+    mobileMotion.addEventListener("change", syncPlayback)
     video.addEventListener("loadedmetadata", syncPlayback)
     return () => {
       desktopMotion.removeEventListener("change", syncPlayback)
+      mobileMotion.removeEventListener("change", syncPlayback)
       video.removeEventListener("loadedmetadata", syncPlayback)
       video.pause()
     }
@@ -386,15 +396,15 @@ export function AboutExperience() {
               <span className="silver-text accent-italic">Driven by a Shared Vision.</span>
             </h1>
             <p className="mt-7 max-w-xl text-lg leading-8 text-silver">Bringing together young entrepreneurs and leaders to strengthen India&apos;s silver jewellery fraternity.</p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Button asChild size="lg"><a href="#our-story">Discover Our Story <ArrowRight aria-hidden="true" /></a></Button>
-              <Button asChild variant="outlineDark" size="lg"><Link href="/nspl">Explore NSPL <ArrowUpRight aria-hidden="true" /></Link></Button>
+            <div className="about-hero-actions mt-9 flex flex-wrap gap-3 max-[767px]:grid max-[767px]:max-w-[22rem] max-[767px]:grid-cols-1">
+              <Button asChild size="lg" className="max-[767px]:w-full"><a href="#our-story">Discover Our Story <ArrowRight aria-hidden="true" /></a></Button>
+              <Button asChild variant="outlineDark" size="lg" className="max-[767px]:w-full"><Link href="/nspl">Explore NSPL <ArrowUpRight aria-hidden="true" /></Link></Button>
             </div>
           </div>
           <div className="about-hero-art" aria-hidden="true">
             <div className="about-orbit about-orbit-one" />
             <div className="about-orbit about-orbit-two" />
-            <CricketVideo videoRef={heroVideoRef} className="about-film-hero" />
+            <CricketVideo videoRef={heroVideoRef} className="about-film-hero" mobilePlayback />
             <span className="about-hero-art-caption eyebrow">Ready for what comes next</span>
           </div>
           <a href="#our-story" className="about-scroll-cue"><span className="about-scroll-icon"><ArrowDown size={15} /></span><span className="eyebrow">Scroll to begin</span></a>

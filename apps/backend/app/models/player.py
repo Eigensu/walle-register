@@ -14,6 +14,23 @@ class RegistrationStatus(str, Enum):
     APPROVED = "APPROVED"
 
 
+class BowlingType(str, Enum):
+    RIGHT_ARM = "right_arm"
+    LEFT_ARM = "left_arm"
+    NONE = "none"
+
+
+class TshirtSize(str, Enum):
+    XS = "XS"
+    S = "S"
+    M = "M"
+    L = "L"
+    XL = "XL"
+    XXL = "XXL"
+    XXXL = "XXXL"
+    XXXXL = "XXXXL"
+
+
 def ist_now() -> datetime:
     """Return current time in Indian Standard Time (IST)"""
     return datetime.now(ZoneInfo("Asia/Kolkata"))

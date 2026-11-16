@@ -29,6 +29,13 @@ export type CreateOrderResponse = { razorpay_order_id: string; amount: number; c
 
 type PlayerDetails = Omit<PlayerForm, "photo" | "waist_size"> & { player_id: string; photo_url: string; waist_size: number }
 
+function currentBowlingValue(value: string): string {
+  if (value === "Non-Bowler") return "none"
+  if (value.startsWith("Right Arm ")) return "right_arm"
+  if (value.startsWith("Left Arm ")) return "left_arm"
+  return value
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
@@ -86,10 +93,12 @@ export async function getPlayer(playerId: string): Promise<PlayerForm> {
     city: p.city,
     village: p.village,
     batting_type: p.batting_type,
-    bowling_type: p.bowling_type,
+    bowling_type: currentBowlingValue(p.bowling_type),
     wicket_keeper: p.wicket_keeper,
     name_on_jersey: p.name_on_jersey,
-    tshirt_size: p.tshirt_size,
+    // The previous 4XL option corresponds to the vendor's XXXXL label.
+    // Keep unknown historical sizes (such as 5XL) visible to validation so the player can choose a supported size.
+    tshirt_size: p.tshirt_size === "4XL" ? "XXXXL" : p.tshirt_size,
     waist_size: String(p.waist_size),
     played_JMCL_S2: p.played_JMCL_S2,
     JMCL_S2_team: p.JMCL_S2_team,

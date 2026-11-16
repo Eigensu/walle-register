@@ -9,15 +9,14 @@ import {
   ArrowRight,
   Play,
   Camera,
-  Newspaper,
   Film,
   Sparkles,
   X,
   ExternalLink,
 } from "lucide-react"
 import { SeamRings } from "@/components/brand/seam-rings"
-import { PhotoPlaceholder } from "@/components/brand/photo-placeholder"
 import { Button } from "@/components/ui/button"
+import { gallery as eventPhotos } from "@/content/gallery"
 
 type FilterCategory = "all" | "nspl" | "conclave" | "videos" | "press"
 
@@ -35,7 +34,7 @@ interface GalleryItem {
   link?: string
 }
 
-const GALLERY_ITEMS: GalleryItem[] = [
+const VIDEO_ITEMS: GalleryItem[] = [
   {
     id: "nspl-day-1-part-1",
     type: "video",
@@ -76,6 +75,19 @@ const GALLERY_ITEMS: GalleryItem[] = [
     youtubeId: "I0YkTVcjevM",
     date: "NSPL · Season 1",
   },
+]
+
+const GALLERY_ITEMS: GalleryItem[] = [
+  ...eventPhotos.map((photo, index) => ({
+    id: `nspl-photo-${index + 1}`,
+    type: "photo" as const,
+    category: "nspl" as const,
+    title: photo.alt,
+    subtitle: `NSPL Season 1 · ${photo.tag}`,
+    src: photo.src.value,
+    date: photo.tag,
+  })),
+  ...VIDEO_ITEMS,
 ]
 
 function GalleryContent() {
@@ -122,8 +134,6 @@ function GalleryContent() {
               { id: "all", label: "All Moments", icon: Sparkles },
               { id: "nspl", label: "NSPL Cricket", icon: Camera },
               { id: "videos", label: "Highlight Reels", icon: Film },
-              { id: "conclave", label: "Business Conclaves", icon: Sparkles },
-              { id: "press", label: "Press Mentions", icon: Newspaper },
             ].map((f) => {
               const Icon = f.icon
               const active = activeFilter === f.id
@@ -201,9 +211,7 @@ function GalleryContent() {
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
-                    ) : (
-                      <PhotoPlaceholder label={item.title} className="absolute inset-0" />
-                    )}
+                    ) : null}
 
                     {/* Tag Badge */}
                     <div className="absolute top-3 left-3 rounded-full bg-navy/80 px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase text-silver-bright backdrop-blur-sm">

@@ -33,7 +33,7 @@ export default function TermsPage() {
             <span>&bull;</span>
             <span className="inline-flex items-center gap-1.5 text-silver">
               <Scale className="size-4 text-royal" />
-              Official SYF Committee Rules
+              Draft for SYF review
             </span>
           </div>
         </div>
@@ -42,6 +42,10 @@ export default function TermsPage() {
       {/* Main Content */}
       <section className="container-site py-12 lg:py-16">
         <div className="mx-auto max-w-4xl space-y-10 rounded-2xl border border-line bg-paper p-6 sm:p-10 shadow-sm">
+
+          <div className="rounded-xl border border-amber-500/30 bg-amber-50 p-5 text-sm leading-relaxed text-amber-950">
+            <strong>Draft caution:</strong> The blueprint calls for terms covering eligibility, conduct, and the organiser&rsquo;s final decision. SYF must confirm that the rules below match its approved tournament rules before publication.
+          </div>
           
           <div className="rounded-xl border border-line bg-mist/60 p-5 sm:p-6">
             <h3 className="font-semibold text-navy text-base flex items-center gap-2">

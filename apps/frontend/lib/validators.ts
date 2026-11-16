@@ -15,6 +15,14 @@ const CARD_MIMES = [
   "application/pdf",
 ] as const;
 
+const bowlingValues = ["right_arm", "left_arm", "none"] as const;
+const tshirtValues = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL"] as const;
+const legacyBowlingValues = [
+  "Right Arm Fast", "Left Arm Fast", "Right Arm Medium", "Left Arm Medium",
+  "Right Arm Spin (Off)", "Right Arm Spin (Leg)", "Left Arm Spin (Orthodox)",
+  "Left Arm Spin (Chinaman)", "Non-Bowler",
+] as const;
+
 
 const fileSchema = (allowed: readonly string[]) =>
   z
@@ -44,10 +52,16 @@ export const playerSchema = z.object({
   city: z.string(),
   village: z.string(),
   batting_type: z.string(),
-  bowling_type: z.string(),
+  bowling_type: z.string().refine(
+    (value) => !value || bowlingValues.includes(value as (typeof bowlingValues)[number]) || legacyBowlingValues.includes(value as (typeof legacyBowlingValues)[number]),
+    "Choose a supported bowling option",
+  ),
   wicket_keeper: z.string(),
   name_on_jersey: z.string(),
-  tshirt_size: z.string(),
+  tshirt_size: z.string().refine(
+    (value) => !value || tshirtValues.includes(value as (typeof tshirtValues)[number]) || value === "4XL" || value === "5XL",
+    "Choose a supported T-shirt size",
+  ),
   waist_size: z.coerce.number(),
   played_JMCL_S2: z.string(),
   JMCL_S2_team: z.string(),
