@@ -63,7 +63,6 @@ export const site: SiteConfig = {
       { label: "Privacy Policy", href: "/privacy-policy" },
       { label: "Terms & Conditions", href: "/terms" },
       { label: "Refund & Cancellation Policy", href: "/refund-policy" },
-      { label: "Cancellation Policy", href: "/cancellation-policy" },
     ],
     credit: null,
   },
@@ -79,7 +78,7 @@ export const site: SiteConfig = {
     logo: field("/brand/nspl-logo.png", true),
     registration: {
       href: "/register",
-      opensAt: field("2026-12-01T10:00:00+05:30", false, "Draft: PDF says early December"),
+      opensAt: field("2026-11-18T18:00:00+05:30", true),
       closesAt: field("2026-12-20T23:59:00+05:30", false, "Draft: deadline not decided"),
       fee: registrationFee,
       cap: field<number | null>(null, false, "Player cap not decided"),
@@ -134,7 +133,7 @@ export const site: SiteConfig = {
         false,
         "Draft sub copy for SYF approval",
       ),
-      photo: field<string | null>(null, false, "NSPL Season 1 action photo"),
+      photo: field<string | null>("/photos/nspl-season-1/opening-day/03_img_8147.webp", true),
       secondaryCta: { label: "About SYF", href: "/about" },
       showSpotsLeft: false,
     },
@@ -147,7 +146,7 @@ export const site: SiteConfig = {
         true,
       ),
       pillars: ["Knowledge sharing", "Networking", "Industry development"],
-      photo: field<string | null>(null, false, "Group photo of the forum"),
+      photo: field<string | null>("/photos/nspl-season-1/player-auction/05_303a5213.webp", true),
       link: { label: "Read more about SYF", href: "/about" },
     },
     featuredEvent: {
@@ -160,10 +159,8 @@ export const site: SiteConfig = {
       facts: [
         { label: "When", value: field("February 2027", true) },
         { label: "Title sponsor", value: field("Silver Show of India", true) },
-        { label: "Format", value: field("", false, "Format not confirmed") },
-        { label: "Registration fee", value: mapField(registrationFee, (n) => (n == null ? "" : formatInr(n))) },
       ],
-      photo: field<string | null>(null, false, "NSPL action photo"),
+      photo: field<string | null>("/photos/nspl-season-1/match-action/03_img_8366.webp", true),
       link: { label: "Explore NSPL", href: "/nspl" },
     },
     sponsors: {
@@ -190,7 +187,7 @@ export const site: SiteConfig = {
     email: field("", false, "Official SYF email"),
     phone: field("", false, "Official SYF phone"),
     whatsapp: field("", false, "WhatsApp number, digits with country code, e.g. 919800000000"),
-    address: field("", false, "Official address"),
+    address: field("OFFICE NO. 2, 1ST FLOOR, RAJBAUG ESTATE, 47/55, ABOVE B. BHAGAT TARACHAND, PYDHONIE, TAMBAKATA, MUMBAI 400003", true),
   },
   social: [
     { label: "Instagram", url: field("", false, "Instagram handle URL") },

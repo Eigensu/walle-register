@@ -14,7 +14,6 @@ import {
   TrendingUp,
   Eye,
   Tv,
-  Check,
 } from "lucide-react"
 import { site } from "@/site.config"
 import { sponsors } from "@/content/sponsors"
@@ -34,9 +33,6 @@ export default function SponsorsPage() {
   const [submitted, setSubmitted] = useState(false)
 
   const titleSponsor = sponsors.find((s) => s.tier === "title")
-  const associateSponsors = sponsors.filter((s) => s.tier === "associate")
-  const teamSponsors = sponsors.filter((s) => s.tier === "team" || s.tier === "partner")
-
   const contactEmail = pub(site.contact.email)
   const partners = sponsors.filter((x) => x.tier !== "title" && (x.confirmed || !isProduction))
   const tierLabel: Record<string, string> = { associate: "Associate Partner", team: "Team Sponsor", partner: "Official Partner" }
@@ -89,8 +85,8 @@ export default function SponsorsPage() {
         {/* TITLE SPONSOR SECTION (Prominent Stage) */}
         {titleSponsor && (
           <div className="overflow-hidden rounded-2xl border-2 border-royal/30 bg-paper p-8 sm:p-12 shadow-md">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="space-y-4 text-center md:text-left flex-1">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="space-y-4 text-center md:text-left flex-1 md:pr-4">
                 <div className="inline-flex items-center gap-2 rounded-full bg-royal/10 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-royal">
                   <Award className="size-4" />
                   Official Title Sponsor
@@ -99,11 +95,11 @@ export default function SponsorsPage() {
                   {titleSponsor.name}
                 </h2>
                 <p className="text-sm leading-relaxed text-ink-muted max-w-xl">
-                  Silver Show of India (SSI) is India&rsquo;s premier B2B silver jewellery exhibition, bringing together top manufacturers, wholesalers, and designers under one grand pavilion. As title partner for NSPL Season 2, SSI champions unity and sporting camaraderie across the trade.
+                  Silver Show of India is the confirmed title sponsor of NSPL Season 2.
                 </p>
                 <div className="pt-2">
                   <a
-                    href="https://silvershowofindia.com"
+                    href={pub(titleSponsor.url) ?? "https://silvershowofindia.com"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-royal hover:underline"
@@ -114,14 +110,14 @@ export default function SponsorsPage() {
               </div>
 
               {/* Logo Card */}
-              <div className="flex w-full md:w-80 h-44 items-center justify-center rounded-2xl border border-line bg-gradient-to-br from-mist to-white p-6 shadow-sm">
+              <div className="flex w-full md:w-[44%] h-52 sm:h-60 items-center justify-center overflow-hidden rounded-2xl border border-line bg-gradient-to-br from-mist to-white p-2 shadow-sm">
                 {Boolean(titleSponsor.logo) ? (
                   <Image
                     src={titleSponsor.logo}
                     alt={titleSponsor.name}
-                    width={240}
-                    height={100}
-                    className="max-h-24 w-auto object-contain"
+                    width={620}
+                    height={320}
+                    className="h-full w-full object-contain"
                   />
                 ) : (
                   <span className="font-display text-2xl font-bold text-navy text-center">
@@ -156,7 +152,22 @@ export default function SponsorsPage() {
                   <h3 className="mt-2 text-base font-bold text-navy group-hover:text-royal transition-colors">
                     {p.name}
                   </h3>
-                  
+                  <div className="mt-4 flex h-36 items-center justify-center overflow-hidden rounded-lg bg-white px-4 py-3">
+                    {p.logo ? (
+                      <Image
+                        src={p.logo}
+                        alt={`${p.name} logo`}
+                        width={360}
+                        height={180}
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-line bg-mist/50 px-3 text-center text-royal">
+                        <Award className="size-7" aria-hidden="true" />
+                        <span className="text-sm font-bold tracking-wide">{p.name}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="mt-4 pt-3 border-t border-line/60 flex items-center justify-between text-[11px] text-ink-muted">
                   <span>NSPL Season 2</span>
@@ -172,7 +183,7 @@ export default function SponsorsPage() {
         <div className="rounded-2xl border border-line bg-paper p-6 sm:p-10 shadow-sm">
           <h2 className="text-2xl font-bold text-navy text-center">Why Sponsor NSPL?</h2>
           <p className="mt-1 text-sm text-ink-muted text-center max-w-xl mx-auto">
-            Directly connect your brand with active decision-makers in India&rsquo;s booming silver jewellery market.
+            Explore sponsorship roles across NSPL&rsquo;s cricket, event, and media activities. Specific deliverables should be confirmed with SYF.
           </p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -180,36 +191,36 @@ export default function SponsorsPage() {
               <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-royal/10 text-royal mb-4">
                 <Eye className="size-6" />
               </div>
-              <span className="type-stat text-navy">5,000+</span>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Fraternity Reach</p>
-              <p className="mt-2 text-xs text-ink-muted">Proprietors, directors, and top buyers across major Indian jewellery hubs.</p>
+              <span className="type-stat text-navy">Industry</span>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Silver Fraternity</p>
+              <p className="mt-2 text-xs text-ink-muted">An opportunity to support a forum for India&rsquo;s silver jewellery community.</p>
             </div>
 
             <div className="rounded-xl border border-line bg-mist/30 p-6 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-royal/10 text-royal mb-4">
                 <Tv className="size-6" />
               </div>
-              <span className="type-stat text-navy">500K+</span>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Digital Broadcast Views</p>
-              <p className="mt-2 text-xs text-ink-muted">High-definition multi-camera live YouTube streams and highlight reels.</p>
+              <span className="type-stat text-navy">Digital</span>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Media Presence</p>
+              <p className="mt-2 text-xs text-ink-muted">Media-partner roles are available; reach and placements require confirmation.</p>
             </div>
 
             <div className="rounded-xl border border-line bg-mist/30 p-6 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-royal/10 text-royal mb-4">
                 <TrendingUp className="size-6" />
               </div>
-              <span className="type-stat text-navy">100%</span>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">B2B Silver Focus</p>
-              <p className="mt-2 text-xs text-ink-muted">Zero wasted marketing spend; every viewer is involved in the jewellery fraternity.</p>
+              <span className="type-stat text-navy">On Pitch</span>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Event Association</p>
+              <p className="mt-2 text-xs text-ink-muted">Support match-day activities through the available sponsor roles.</p>
             </div>
 
             <div className="rounded-xl border border-line bg-mist/30 p-6 text-center">
               <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-royal/10 text-royal mb-4">
                 <Award className="size-6" />
               </div>
-              <span className="type-stat text-navy">16+</span>
-              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Franchise Teams</p>
-              <p className="mt-2 text-xs text-ink-muted">Custom branded kits, stadium boundary naming, and high-impact auction visibility.</p>
+              <span className="type-stat text-navy">Partner</span>
+              <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-silver-dim">Role-Based Options</p>
+              <p className="mt-2 text-xs text-ink-muted">Discuss role scope, placement, and deliverables with the SYF team.</p>
             </div>
           </div>
         </div>

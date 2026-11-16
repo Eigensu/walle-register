@@ -80,7 +80,7 @@ type SelectFieldProps = {
   name: string
   label: string
   value: string
-  options: (string | number)[]
+  options: readonly (string | number | { value: string | number; label: string })[]
   placeholder: string
   error?: string
   hint?: string
@@ -106,11 +106,15 @@ export function SelectField({ name, label, value, options, placeholder, error, h
         }}
       >
         <option value="">{placeholder}</option>
-        {options.map((o) => (
-          <option key={o} value={String(o)}>
-            {o}
+        {options.map((option) => {
+          const value = typeof option === "object" ? option.value : option
+          const label = typeof option === "object" ? option.label : option
+          return (
+          <option key={value} value={String(value)}>
+            {label}
           </option>
-        ))}
+          )
+        })}
       </select>
       <Message id={id} error={error} hint={hint} />
     </div>
@@ -120,7 +124,7 @@ export function SelectField({ name, label, value, options, placeholder, error, h
 type ChoiceGroupProps = {
   name: string
   legend: string
-  options: string[]
+  options: readonly (string | { value: string; label: string })[]
   value: string
   error?: string
   /** Tailwind grid classes for the option tiles. */
@@ -136,10 +140,12 @@ export function ChoiceGroup({ name, legend, options, value, error, columns = "sm
       <legend className="mb-3 text-sm font-semibold text-navy">{legend}</legend>
       <div className={cn("grid grid-cols-1 gap-2.5", columns)}>
         {options.map((option, i) => {
-          const checked = value === option
+          const optionValue = typeof option === "string" ? option : option.value
+          const optionLabel = typeof option === "string" ? option : option.label
+          const checked = value === optionValue
           return (
             <label
-              key={option}
+              key={optionValue}
               className={cn(
                 "relative flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border bg-paper px-4 py-3 text-[0.9375rem] font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-royal",
                 checked ? "border-royal bg-royal/[0.06] text-navy" : "border-line text-ink-muted hover:border-silver-dim hover:text-navy",
@@ -150,9 +156,9 @@ export function ChoiceGroup({ name, legend, options, value, error, columns = "sm
                 type="radio"
                 id={i === 0 ? id : undefined}
                 name={name}
-                value={option}
+                value={optionValue}
                 checked={checked}
-                onChange={() => onValue(option)}
+                onChange={() => onValue(optionValue)}
                 className="sr-only"
               />
               <span
@@ -164,7 +170,7 @@ export function ChoiceGroup({ name, legend, options, value, error, columns = "sm
               >
                 {checked && <Check className="size-3" strokeWidth={3} />}
               </span>
-              {option}
+              {optionLabel}
             </label>
           )
         })}

@@ -50,6 +50,9 @@ type PaymentStatus = "idle" | "processing" | "paid" | "failed";
 
 type StatusMessage = { kind: "success" | "error"; text: string } | null;
 
+const supportedBowlingValues = new Set(["right_arm", "left_arm", "none"]);
+const supportedTshirtSizes = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL"]);
+
 export function RegistrationForm({
   resumePlayerId,
 }: {
@@ -254,11 +257,11 @@ export function RegistrationForm({
       if (!(values.photo instanceof File)) missing.push("Photo");
       // Cricket
       if (!values.batting_type) missing.push("Batting type");
-      if (!values.bowling_type) missing.push("Bowling type");
+      if (!supportedBowlingValues.has(values.bowling_type)) missing.push("Bowling type");
       if (!values.wicket_keeper) missing.push("Wicket keeper");
       // Jersey
       if (!values.name_on_jersey) missing.push("Name on jersey");
-      if (!values.tshirt_size) missing.push("T-shirt size");
+      if (!supportedTshirtSizes.has(values.tshirt_size)) missing.push("T-shirt size");
       if (
         !values.waist_size ||
         values.waist_size < 20 ||
@@ -330,7 +333,7 @@ export function RegistrationForm({
           text: "Please select your batting type",
         });
         isStepValid = false;
-      } else if (!values.bowling_type) {
+      } else if (!supportedBowlingValues.has(values.bowling_type)) {
         setStatusMessage({
           kind: "error",
           text: "Please select your bowling type",
@@ -347,7 +350,7 @@ export function RegistrationForm({
       if (!values.name_on_jersey) {
         setStatusMessage({ kind: "error", text: "Name on jersey is required" });
         isStepValid = false;
-      } else if (!values.tshirt_size) {
+      } else if (!supportedTshirtSizes.has(values.tshirt_size)) {
         setStatusMessage({
           kind: "error",
           text: "Please select a t-shirt size",

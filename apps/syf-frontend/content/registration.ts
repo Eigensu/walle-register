@@ -15,20 +15,23 @@ export type RegistrationStepId = (typeof registrationSteps)[number]["id"]
 export const battingTypes = ["Right-Hand", "Left-Hand"]
 
 export const bowlingTypes = [
-  "Right Arm Fast",
-  "Left Arm Fast",
-  "Right Arm Medium",
-  "Left Arm Medium",
-  "Right Arm Spin (Off)",
-  "Right Arm Spin (Leg)",
-  "Left Arm Spin (Orthodox)",
-  "Left Arm Spin (Chinaman)",
-  "Non-Bowler",
-]
+  { value: "right_arm", label: "Right Arm Bowler" },
+  { value: "left_arm", label: "Left Arm Bowler" },
+  { value: "none", label: "None of the above" },
+] as const
 
 export const yesNo = ["Yes", "No"]
 
-export const tshirtSizes = ["S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL"]
+export const tshirtSizes = [
+  { value: "XS", label: "34 - XS" },
+  { value: "S", label: "36 - S" },
+  { value: "M", label: "38 - M" },
+  { value: "L", label: "40 - L" },
+  { value: "XL", label: "42 - XL" },
+  { value: "XXL", label: "44 - XXL" },
+  { value: "XXXL", label: "46 - XXXL" },
+  { value: "XXXXL", label: "48 - XXXXL" },
+] as const
 
 export const waistSizes = [28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]
 

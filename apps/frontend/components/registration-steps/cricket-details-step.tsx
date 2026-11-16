@@ -15,15 +15,9 @@ type CricketDetailsStepProps = {
 export function CricketDetailsStep({ form }: CricketDetailsStepProps) {
   const battingTypes = ["Right-Hand", "Left-Hand"];
   const bowlingTypes = [
-    "Right Arm Fast",
-    "Left Arm Fast",
-    "Right Arm Medium",
-    "Left Arm Medium",
-    "Right Arm Spin (Off)",
-    "Right Arm Spin (Leg)",
-    "Left Arm Spin (Orthodox)",
-    "Left Arm Spin (Chinaman)",
-    "Non-Bowler",
+    { value: "right_arm", label: "Right Arm Bowler" },
+    { value: "left_arm", label: "Left Arm Bowler" },
+    { value: "none", label: "None of the above" },
   ];
   const wicketKeeperOptions = ["Yes", "No"];
 
@@ -78,33 +72,33 @@ export function CricketDetailsStep({ form }: CricketDetailsStepProps) {
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-base font-semibold">
-              Bowling Type
+              Bowling
             </FormLabel>
             <FormControl>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {bowlingTypes.map((type) => (
+                {bowlingTypes.map(({ value, label }) => (
                   <div
-                    key={type}
+                    key={value}
                     className={`cursor-pointer rounded-lg border-2 px-4 py-3 text-center transition-all ${
-                      field.value === type
+                      field.value === value
                         ? "border-blue-600 bg-blue-50 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-100"
                         : "border-slate-200 bg-white hover:border-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-blue-600"
                     }`}
-                    onClick={() => field.onChange(type)}
+                    onClick={() => field.onChange(value)}
                   >
                     <input
                       type="radio"
-                      id={`bowling_${type}`}
-                      value={type}
-                      checked={field.value === type}
+                      id={`bowling_${value}`}
+                      value={value}
+                      checked={field.value === value}
                       onChange={field.onChange}
                       className="sr-only"
                     />
                     <label
-                      htmlFor={`bowling_${type}`}
+                      htmlFor={`bowling_${value}`}
                       className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300"
                     >
-                      {type}
+                      {label}
                     </label>
                   </div>
                 ))}

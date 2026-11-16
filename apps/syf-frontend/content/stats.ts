@@ -5,8 +5,8 @@ import { field } from "../lib/content"
 import type { Stat } from "../lib/site-types"
 
 export const stats: Stat[] = [
-  { value: field("", false, "Number of member firms"), label: "Member firms" },
-  { value: field("", false, "Number of events held"), label: "Events held" },
-  { value: field("", false, "Number of NSPL teams"), label: "NSPL teams" },
-  { value: field("", false, "Number of NSPL players"), label: "Players" },
+  { value: field("250+", true), label: "Member firms" },
+  { value: field("03", true), label: "Events held" },
+  { value: field("14", true), label: "NSPL teams" },
+  { value: field("182", true), label: "Players" },
 ]

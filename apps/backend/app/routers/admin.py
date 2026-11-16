@@ -61,6 +61,27 @@ def _latest_payment_per_player(payments_docs: list[dict]) -> dict:
     return result
 
 
+def display_bowling_type(value: str) -> str:
+    return {
+        "right_arm": "Right Arm Bowler",
+        "left_arm": "Left Arm Bowler",
+        "none": "None of the above",
+    }.get(value, value)
+
+
+def display_tshirt_size(value: str) -> str:
+    return {
+        "XS": "34 - XS",
+        "S": "36 - S",
+        "M": "38 - M",
+        "L": "40 - L",
+        "XL": "42 - XL",
+        "XXL": "44 - XXL",
+        "XXXL": "46 - XXXL",
+        "XXXXL": "48 - XXXXL",
+    }.get(value, value)
+
+
 async def get_settings(request: Request) -> Settings:
     return request.app.state.settings  # type: ignore[attr-defined]
 
@@ -155,10 +176,10 @@ async def get_all_players(
                 firm_name=doc.get("firm_name", ""),
                 designation=doc.get("designation", ""),
                 batting_type=doc.get("batting_type", ""),
-                bowling_type=doc.get("bowling_type", ""),
+                bowling_type=display_bowling_type(doc.get("bowling_type", "")),
                 wicket_keeper=doc.get("wicket_keeper", ""),
                 name_on_jersey=doc.get("name_on_jersey", ""),
-                tshirt_size=doc.get("tshirt_size", ""),
+                tshirt_size=display_tshirt_size(doc.get("tshirt_size", "")),
                 waist_size=doc.get("waist_size", 0),
                 played_JMCL_S2=doc.get("played_JMCL_S2", ""),
                 JMCL_S2_team=doc.get("JMCL_S2_team", ""),
@@ -269,10 +290,10 @@ async def export_players_csv(
             player.get("city", ""),
             player.get("village", ""),
             player.get("batting_type", ""),
-            player.get("bowling_type", ""),
+            display_bowling_type(player.get("bowling_type", "")),
             player.get("wicket_keeper", ""),
             player.get("name_on_jersey", ""),
-            player.get("tshirt_size", ""),
+            display_tshirt_size(player.get("tshirt_size", "")),
             player.get("waist_size", ""),
             player.get("played_JMCL_S2", ""),
             player.get("JMCL_S2_team", ""),

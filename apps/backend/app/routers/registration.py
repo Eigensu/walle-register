@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Uplo
 from pydantic import BaseModel, EmailStr
 from pymongo.errors import DuplicateKeyError
 
-from app.models.player import Player, RegistrationStatus
+from app.models.player import BowlingType, Player, RegistrationStatus, TshirtSize
 from app.models.config import AppConfig
 from app.services.storage import StorageService
 
@@ -77,11 +77,11 @@ async def register_player(
     photo: UploadFile = File(...),
     # Cricket Details
     batting_type: str = Form(...),
-    bowling_type: str = Form(...),
+    bowling_type: BowlingType = Form(...),
     wicket_keeper: str = Form(...),
     # Jersey Details
     name_on_jersey: str = Form(...),
-    tshirt_size: str = Form(...),
+    tshirt_size: TshirtSize = Form(...),
     waist_size: int = Form(...),
     # JMCL Season 1 Details
     played_JMCL_S2: str = Form(...),
@@ -135,11 +135,11 @@ async def register_player(
         village=village,
         # Cricket Details
         batting_type=batting_type,
-        bowling_type=bowling_type,
+        bowling_type=bowling_type.value,
         wicket_keeper=wicket_keeper,
         # Jersey Details
         name_on_jersey=name_on_jersey,
-        tshirt_size=tshirt_size,
+        tshirt_size=tshirt_size.value,
         waist_size=waist_size,
         # JMCL Season 1 Details
         played_JMCL_S2=played_JMCL_S2,
@@ -173,11 +173,11 @@ async def update_player(
     photo: UploadFile = File(None),
     # Cricket Details
     batting_type: str = Form(...),
-    bowling_type: str = Form(...),
+    bowling_type: BowlingType = Form(...),
     wicket_keeper: str = Form(...),
     # Jersey Details
     name_on_jersey: str = Form(...),
-    tshirt_size: str = Form(...),
+    tshirt_size: TshirtSize = Form(...),
     waist_size: int = Form(...),
     # JMCL Season 1 Details
     played_JMCL_S2: str = Form(...),
@@ -231,10 +231,10 @@ async def update_player(
     player.city = city
     player.village = village
     player.batting_type = batting_type
-    player.bowling_type = bowling_type
+    player.bowling_type = bowling_type.value
     player.wicket_keeper = wicket_keeper
     player.name_on_jersey = name_on_jersey
-    player.tshirt_size = tshirt_size
+    player.tshirt_size = tshirt_size.value
     player.waist_size = waist_size
     player.played_JMCL_S2 = played_JMCL_S2
     player.JMCL_S2_team = JMCL_S2_team

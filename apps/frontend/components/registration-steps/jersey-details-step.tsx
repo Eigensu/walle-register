@@ -18,7 +18,16 @@ export function JerseyDetailsStep({
   form,
   fieldClass,
 }: JerseyDetailsStepProps) {
-  const tshirtSizes = ["S", "M", "L", "XL", "XXL", "XXXL", "4XL", "5XL"];
+  const tshirtSizes = [
+    { value: "XS", label: "34 - XS" },
+    { value: "S", label: "36 - S" },
+    { value: "M", label: "38 - M" },
+    { value: "L", label: "40 - L" },
+    { value: "XL", label: "42 - XL" },
+    { value: "XXL", label: "44 - XXL" },
+    { value: "XXXL", label: "46 - XXXL" },
+    { value: "XXXXL", label: "48 - XXXXL" },
+  ];
   const waistOptions = [28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50];
 
   return (
@@ -51,34 +60,16 @@ export function JerseyDetailsStep({
           <FormItem>
             <FormLabel>T-Shirt Size</FormLabel>
             <FormControl>
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-                {tshirtSizes.map((size) => (
-                  <div
-                    key={size}
-                    className={`cursor-pointer rounded-lg border-2 px-4 py-3 text-center transition-all ${
-                      field.value === size
-                        ? "border-blue-600 bg-blue-50 text-blue-900 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-100"
-                        : "border-slate-200 bg-white hover:border-blue-300 dark:border-slate-600 dark:bg-slate-800 dark:hover:border-blue-600"
-                    }`}
-                    onClick={() => field.onChange(size)}
-                  >
-                    <input
-                      type="radio"
-                      id={`size_${size}`}
-                      value={size}
-                      checked={field.value === size}
-                      onChange={field.onChange}
-                      className="sr-only"
-                    />
-                    <label
-                      htmlFor={`size_${size}`}
-                      className="cursor-pointer font-bold text-slate-700 dark:text-slate-300"
-                    >
-                      {size}
-                    </label>
-                  </div>
+              <select
+                {...field}
+                value={field.value ?? ""}
+                className={`${fieldClass} w-full min-w-0 cursor-pointer`}
+              >
+                <option value="">Select T-shirt size</option>
+                {tshirtSizes.map(({ value, label }) => (
+                  <option key={value} value={value}>{label}</option>
                 ))}
-              </div>
+              </select>
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -92,7 +83,7 @@ export function JerseyDetailsStep({
           <FormItem>
             <FormLabel>Waist Size</FormLabel>
             <FormControl>
-              <select {...field} className={`${fieldClass} cursor-pointer`}>
+              <select {...field} className={`${fieldClass} w-full min-w-0 cursor-pointer`}>
                 <option value="">Select waist size</option>
                 {waistOptions.map((size) => (
                   <option key={size} value={size}>

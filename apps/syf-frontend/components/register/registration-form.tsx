@@ -111,12 +111,12 @@ function validate(step: RegistrationStepId, v: PlayerForm): Errors {
   }
   if (step === "cricket") {
     need("batting_type", "Choose your batting style")
-    need("bowling_type", "Choose your bowling style")
+    if (!bowlingTypes.some((option) => option.value === v.bowling_type)) e.bowling_type = "Choose your bowling style"
     need("wicket_keeper", "Tell us whether you keep wicket")
   }
   if (step === "jersey") {
     need("name_on_jersey", "Enter the name for your jersey")
-    need("tshirt_size", "Choose a T-shirt size")
+    if (!tshirtSizes.some((option) => option.value === v.tshirt_size)) e.tshirt_size = "Choose a T-shirt size"
     need("waist_size", "Choose a waist size")
   }
   if (step === "history") {
@@ -475,38 +475,34 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
 
           {step === "jersey" && (
             <div className="flex flex-col gap-9">
-              <div className="max-w-md">
-                <TextField
-                  name="name_on_jersey"
-                  label="Name on jersey"
-                  maxLength={15}
-                  value={values.name_on_jersey}
-                  error={errors.name_on_jersey}
-                  hint={`${values.name_on_jersey.length}/15 characters`}
-                  className="font-sport text-lg uppercase tracking-wider"
-                  onValue={(v) => set("name_on_jersey", v)}
-                />
-              </div>
-              <ChoiceGroup
+              <TextField
+                name="name_on_jersey"
+                label="Name on jersey"
+                maxLength={15}
+                value={values.name_on_jersey}
+                error={errors.name_on_jersey}
+                hint={`${values.name_on_jersey.length}/15 characters`}
+                className="font-sport text-lg uppercase tracking-wider"
+                onValue={(v) => set("name_on_jersey", v)}
+              />
+              <SelectField
                 name="tshirt_size"
-                legend="T-shirt size"
+                label="T-shirt size"
+                placeholder="Select T-shirt size"
                 options={tshirtSizes}
-                columns="grid-cols-4 sm:grid-cols-8"
                 value={values.tshirt_size}
                 error={errors.tshirt_size}
                 onValue={(v) => set("tshirt_size", v)}
               />
-              <div className="max-w-xs">
-                <SelectField
-                  name="waist_size"
-                  label="Waist size (inches)"
-                  placeholder="Select waist size"
-                  options={waistSizes}
-                  value={values.waist_size}
-                  error={errors.waist_size}
-                  onValue={(v) => set("waist_size", v)}
-                />
-              </div>
+              <SelectField
+                name="waist_size"
+                label="Waist size (inches)"
+                placeholder="Select waist size"
+                options={waistSizes}
+                value={values.waist_size}
+                error={errors.waist_size}
+                onValue={(v) => set("waist_size", v)}
+              />
             </div>
           )}
 

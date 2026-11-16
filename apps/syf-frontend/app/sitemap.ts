@@ -14,7 +14,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/privacy-policy",
     "/terms",
     "/refund-policy",
-    "/cancellation-policy",
   ]
   return [
     { url: base, changeFrequency: "daily", priority: 1 },
