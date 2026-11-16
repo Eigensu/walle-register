@@ -141,7 +141,7 @@ export default function Home() {
                     Secure Payment
                   </p>
                   <p className="text-sm lg:text-base text-blue-600 dark:text-blue-400">
-                    Via Razorpay
+                    Via Razorpay or Cashfree
                   </p>
                 </div>
               </div>

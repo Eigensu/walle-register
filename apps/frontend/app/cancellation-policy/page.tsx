@@ -70,7 +70,7 @@ export default function CancellationPolicy() {
                   <li>Your full name and player ID</li>
                   <li>Registered email address and phone number</li>
                   <li>Reason for cancellation</li>
-                  <li>Razorpay payment ID (if applicable for refund)</li>
+                  <li>Razorpay or Cashfree payment ID (if applicable for refund)</li>
                 </ul>
               </li>
               <li>

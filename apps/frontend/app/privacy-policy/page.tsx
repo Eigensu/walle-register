@@ -86,9 +86,9 @@ export default function PrivacyPolicy() {
             <p className="mb-4 bg-blue-50 border border-blue-200 p-3 rounded">
               <strong>Important:</strong> We do NOT store your complete credit
               card, debit card, CVV, or net banking credentials on our servers.
-              All payment information is processed securely through Razorpay, a
-              PCI-DSS Level 1 compliant payment gateway. Razorpay encrypts and
-              handles sensitive payment data according to international security
+              All payment information is processed securely through Razorpay or
+              Cashfree, both PCI-DSS Level 1 compliant payment gateways, which
+              encrypt and handle sensitive payment data according to international security
               standards (PCI-DSS).
             </p>
 
@@ -129,7 +129,7 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>Third-Party Services:</strong> Information received from
-                Razorpay (payment status), Cloudinary (file upload
+                Razorpay and Cashfree (payment status), Cloudinary (file upload
                 confirmations)
               </li>
               <li>
@@ -156,7 +156,8 @@ export default function PrivacyPolicy() {
               </li>
               <li>
                 <strong>Payment Processing:</strong> To process payments through
-                Razorpay, send payment confirmations, and handle refunds
+                Razorpay or Cashfree, send payment confirmations, and handle
+                refunds
               </li>
               <li>
                 <strong>Communication:</strong> To send registration
@@ -218,6 +219,22 @@ export default function PrivacyPolicy() {
                 >
                   {" "}
                   https://razorpay.com/privacy/
+                </a>
+              </li>
+              <li>
+                <strong>Cashfree (Payment Processing):</strong> Handles payment
+                transactions including credit/debit cards, UPI, net banking,
+                and wallets. Cashfree is PCI-DSS Level 1 compliant and does not
+                share your sensitive payment data with us. Your payment
+                information is subject to Cashfree&apos;s privacy policy:
+                <a
+                  href="https://www.cashfree.com/privacypolicy/"
+                  className="text-blue-600 hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {" "}
+                  https://www.cashfree.com/privacypolicy/
                 </a>
               </li>
               <li>
@@ -300,7 +317,7 @@ export default function PrivacyPolicy() {
             <p className="mb-4">
               We do NOT share your sensitive personal data (financial
               information, passwords) with third parties except for payment
-              processing through Razorpay.
+              processing through Razorpay or Cashfree.
             </p>
           </section>
 

@@ -1,16 +1,33 @@
-import { type CreateOrderResponse } from "@/lib/api";
+﻿import { type CreateOrderResponse, type PaymentGateway } from "@/lib/api";
+
+const GATEWAY_INFO: Record<PaymentGateway, { name: string; helper: string }> = {
+  razorpay: { name: "Razorpay", helper: "UPI, cards, net banking & wallets" },
+  cashfree: { name: "Cashfree", helper: "UPI, cards, net banking & wallets" },
+};
 
 type PaymentStepProps = {
   playerName: string;
   order: CreateOrderResponse | null;
   onEditDetails: () => void;
+  gateways: PaymentGateway[];
+  selectedGateway: PaymentGateway | null;
+  onSelectGateway: (gateway: PaymentGateway) => void;
+  disabled?: boolean;
 };
 
 export function PaymentStep({
   playerName,
   order,
   onEditDetails,
+  gateways,
+  selectedGateway,
+  onSelectGateway,
+  disabled,
 }: PaymentStepProps) {
+  const selectedName = selectedGateway
+    ? GATEWAY_INFO[selectedGateway].name
+    : "payment";
+
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50 p-6 shadow-lg dark:border-blue-900/40 dark:from-blue-950/20 dark:via-slate-800/30 dark:to-slate-800/20">
@@ -34,6 +51,46 @@ export function PaymentStep({
         </div>
       </div>
 
+      {gateways.length > 1 && (
+        <fieldset className="space-y-3" disabled={disabled}>
+          <legend className="mb-3 text-sm font-semibold text-slate-900 dark:text-white">
+            Choose a payment method
+          </legend>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {gateways.map((gateway) => {
+              const checked = gateway === selectedGateway;
+              return (
+                <label
+                  key={gateway}
+                  className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-4 transition-colors ${
+                    checked
+                      ? "border-blue-600 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/40"
+                      : "border-slate-200 bg-white/80 hover:border-blue-300 dark:border-slate-700 dark:bg-slate-800/40 dark:hover:border-blue-800"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="payment_gateway"
+                    value={gateway}
+                    checked={checked}
+                    onChange={() => onSelectGateway(gateway)}
+                    className="size-4 accent-blue-600"
+                  />
+                  <span>
+                    <span className="block font-semibold text-slate-900 dark:text-white">
+                      Pay with {GATEWAY_INFO[gateway].name}
+                    </span>
+                    <span className="block text-xs text-slate-600 dark:text-slate-300">
+                      {GATEWAY_INFO[gateway].helper}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
+
       <div className="rounded-xl border-2 border-blue-200 bg-blue-50/50 p-4 dark:border-blue-900/40 dark:bg-blue-950/20">
         <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white dark:bg-blue-600">
@@ -56,8 +113,8 @@ export function PaymentStep({
               Ready to complete payment
             </p>
             <p className="mt-1 text-blue-700 dark:text-white">
-              Click proceed to open the secure Razorpay checkout. You will
-              return here for confirmation after payment.
+              Click proceed to open the secure {selectedName} checkout. You
+              will return here for confirmation after payment.
             </p>
           </div>
         </div>

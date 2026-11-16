@@ -323,10 +323,11 @@ class PublicConfigResponse(BaseModel):
     registration_cap_reached: bool
     current_registrations: int
     registration_cap: int
+    payment_gateways: list[str]
 
 
 @router.get("/config", response_model=PublicConfigResponse)
-async def get_public_config():
+async def get_public_config(request: Request):
     """Public endpoint: expose registration open/closed status for frontend."""
     cfg = await AppConfig.find_one({})
     registration_cap = cfg.registration_cap if cfg else 174
@@ -336,5 +337,6 @@ async def get_public_config():
         registration_open=cfg.registration_open if cfg else True,
         registration_cap_reached=current_count >= registration_cap,
         current_registrations=current_count,
-        registration_cap=registration_cap
+        registration_cap=registration_cap,
+        payment_gateways=request.app.state.settings.payment_gateways,  # type: ignore[attr-defined]
     )

@@ -44,7 +44,21 @@ class PlayerResponse(BaseModel):
     # Registration & Payment
     registration_status: str
     payment_status: str | None
+    payment_gateway: str | None = None
     created_at: str | None
+
+
+def _latest_payment_per_player(payments_docs: list[dict]) -> dict:
+    """One payment per player: the captured one if any, otherwise the most recent attempt."""
+    result: dict = {}
+    for doc in sorted(payments_docs, key=lambda d: d.get("created_at") or 0):
+        player_id = doc.get("player_id")
+        if not player_id:
+            continue
+        current = result.get(player_id)
+        if current is None or current.get("status") != PaymentStatus.CAPTURED.value:
+            result[player_id] = doc
+    return result
 
 
 async def get_settings(request: Request) -> Settings:
@@ -108,7 +122,7 @@ async def get_all_players(
     if player_ids:
         payments_docs = await payments_collection.find({"player_id": {"$in": player_ids}}).to_list(None)
 
-    payment_map = {doc.get("player_id"): doc for doc in payments_docs if doc.get("player_id")}
+    payment_map = _latest_payment_per_player(payments_docs)
 
     result = []
     for doc in players_docs:
@@ -150,6 +164,7 @@ async def get_all_players(
                 JMCL_S2_team=doc.get("JMCL_S2_team", ""),
                 registration_status=registration_status,
                 payment_status=payment_status,
+                payment_gateway=payment_doc.get("gateway", "razorpay") if payment_doc else None,
                 created_at=created_at.isoformat() if created_at else None,
             )
         )
@@ -211,6 +226,7 @@ async def export_players_csv(
         "JMCL S1 Team",
         "Registration Status",
         "Payment Status",
+        "Payment Gateway",
         "Created At",
         "Photo URL"
     ])
@@ -220,7 +236,7 @@ async def export_players_csv(
     payments_docs = []
     if player_ids:
         payments_docs = await payments_collection.find({"player_id": {"$in": player_ids}}).to_list(None)
-    payment_map = {payment.get("player_id"): payment for payment in payments_docs if payment.get("player_id")}
+    payment_map = _latest_payment_per_player(payments_docs)
 
     # Write player data
     for player in players:
@@ -262,6 +278,7 @@ async def export_players_csv(
             player.get("JMCL_S2_team", ""),
             registration_status,
             payment_status,
+            payment.get("gateway", "razorpay") if payment else "",
             created_at.isoformat() if created_at else "",
             player.get("photo_url", "")
         ])

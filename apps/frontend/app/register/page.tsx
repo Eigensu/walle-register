@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { RegistrationForm } from "@/components/registration-form";
+import { CashfreeReturn } from "@/components/cashfree-return";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { SponsorStrip } from "@/components/sponsor-strip";
 import { getPublicConfig, resumePayment, type PublicConfig } from "@/lib/api";
@@ -160,6 +161,7 @@ export default function RegisterPage() {
 function RegisterContent({ config }: { config: PublicConfig | null }) {
   const searchParams = useSearchParams();
   const resumePlayerId = searchParams.get("resume");
+  const cashfreeOrderId = searchParams.get("order_id");
   const router = useRouter();
 
   const [resumeEmail, setResumeEmail] = useState("");
@@ -183,6 +185,11 @@ function RegisterContent({ config }: { config: PublicConfig | null }) {
       setResumeLoading(false);
     }
   };
+
+  // 0. Returning from a Cashfree checkout redirect: confirm that payment
+  if (cashfreeOrderId) {
+    return <CashfreeReturn orderId={cashfreeOrderId} />;
+  }
 
   // 1. If looking to resume payment (has ID), ALWAYS show form regardless of config
   if (resumePlayerId) {

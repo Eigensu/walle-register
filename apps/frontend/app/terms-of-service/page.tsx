@@ -99,21 +99,23 @@ export default function TermsOfService() {
 
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">
-              4. Payment Terms and Razorpay Integration
+              4. Payment Terms and Payment Gateways
             </h2>
             <p className="mb-4">
               All payments for tournament registration are processed through
-              Razorpay, a secure and PCI-DSS Level 1 compliant payment gateway.
+              Razorpay or Cashfree, secure and PCI-DSS Level 1 compliant payment
+              gateways.
               By proceeding with payment, you acknowledge and agree that:
             </p>
             <ul className="list-disc pl-6 mb-4 space-y-2">
               <li>
-                All payment transactions are subject to Razorpay&apos;s Terms of
-                Service and Privacy Policy in addition to ours
+                All payment transactions are subject to the Terms of Service and
+                Privacy Policy of the gateway used (Razorpay or Cashfree) in
+                addition to ours
               </li>
               <li>
                 You authorize Walle Arena to charge the specified registration
-                fee to your chosen payment method through Razorpay
+                fee to your chosen payment method through Razorpay or Cashfree
               </li>
               <li>
                 Walle Arena does not store or have access to your complete
@@ -121,7 +123,8 @@ export default function TermsOfService() {
               </li>
               <li>
                 Payment information is encrypted and processed securely by
-                Razorpay in compliance with international security standards
+                Razorpay or Cashfree in compliance with international security
+                standards
               </li>
               <li>
                 All fees are stated in Indian Rupees (INR) and are inclusive of
@@ -129,7 +132,7 @@ export default function TermsOfService() {
               </li>
               <li>
                 Registration is confirmed only upon successful payment
-                verification by Razorpay
+                verification by the payment gateway (Razorpay or Cashfree)
               </li>
             </ul>
             <p className="mb-4">
@@ -145,7 +148,7 @@ export default function TermsOfService() {
               5. Prohibited Activities and Restricted Categories
             </h2>
             <p className="mb-4">
-              In compliance with Razorpay&apos;s acceptable use policy and
+              In compliance with our payment gateways&apos; acceptable use policies and
               Indian law, you agree not to use this service for any unlawful or
               prohibited purposes, including but not limited to:
             </p>
@@ -443,7 +446,8 @@ export default function TermsOfService() {
             </h2>
             <p className="mb-4">
               Our website may contain links to third-party websites or services
-              (such as Razorpay payment gateway, Cloudinary file storage) that
+              (such as the Razorpay and Cashfree payment gateways, Cloudinary file
+              storage) that
               are not owned or controlled by Walle Arena.
             </p>
             <p className="mb-4">
