@@ -22,8 +22,9 @@ import { formatInr } from "@/lib/format"
 import { SeamRings } from "@/components/brand/seam-rings"
 import { Button } from "@/components/ui/button"
 
-// Green cricket pitch reference image (replace with "/photos/your_pitch.jpg" anytime)
-const PITCH_BG_IMAGE = "/brand/cricket-pitch.svg"
+// Use a supplied NSPL match photo as the background after the intro video ends.
+const PITCH_BG_IMAGE = "/photos/nspl-season-1/match-action/08_img_9320.webp"
+const previousSeasonVideoId = "yOuBxruXpG8"
 
 const HOW_IT_WORKS = [
   {
@@ -150,7 +151,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
   }
 
   return (
-    <div className="relative isolate min-h-screen text-silver-bright">
+    <div className="relative isolate min-h-screen overflow-x-clip text-silver-bright">
       {/* 1 & 3: FIXED FULLSCREEN BACKGROUND: Video -> Green Pitch onEnded */}
       <div className="fixed inset-0 z-0 w-full h-full overflow-hidden pointer-events-none select-none">
         {/* 2: Green Cricket Pitch Background (Shown after video ends) */}
@@ -363,21 +364,21 @@ Organizing Desk: Silver Youth Forum, Mumbai
             <div className="space-y-4 lg:col-span-5">
               <div className="inline-flex items-center gap-2 rounded-full bg-live/25 px-3 py-1 text-xs font-bold uppercase tracking-wider text-live border border-live/30">
                 <Tv className="size-3.5" />
-                Live Broadcast
+                Previous Season
               </div>
               <h2 className="text-2xl font-bold text-white sm:text-3xl">
-                Watch NSPL Match Days Live
+                Watch a Season 1 Match
               </h2>
               <p className="text-xs sm:text-sm leading-relaxed text-silver/85">
-                Every ball, boundary, and wicket broadcasted in high-definition across YouTube with multi-camera action, live commentary, and real-time scorecards.
+                Revisit the National Silver Premier League Season 1 final-day coverage, streamed by JewelBuzz.
               </p>
               <div className="pt-2 flex flex-wrap gap-3">
-                <Button variant="primary" size="sm" onClick={() => setSelectedVideo("/videos/bat.mp4")} className="shadow-md">
-                  <Play className="size-4 fill-current" /> Watch Season 1 Teaser
+                <Button variant="primary" size="sm" onClick={() => setSelectedVideo(previousSeasonVideoId)} className="shadow-md">
+                  <Play className="size-4 fill-current" /> Watch Previous Season Match
                 </Button>
                 <Button asChild variant="outlineDark" size="sm" className="border-white/20 bg-white/10 text-white hover:bg-white/20">
-                  <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
-                    Visit YouTube Channel
+                  <a href="https://www.youtube.com/@JewelBuzz-SpreadTheBuzz" target="_blank" rel="noopener noreferrer">
+                    More from JewelBuzz
                   </a>
                 </Button>
               </div>
@@ -386,16 +387,13 @@ Organizing Desk: Silver Youth Forum, Mumbai
             {/* Video Viewport Card */}
             <div className="lg:col-span-7">
               <div
-                onClick={() => setSelectedVideo("/videos/bat.mp4")}
+                onClick={() => setSelectedVideo(previousSeasonVideoId)}
                 className="group relative aspect-video overflow-hidden rounded-2xl border border-white/20 bg-black/40 backdrop-blur-sm cursor-pointer shadow-xl"
               >
-                <video
-                  src="/videos/bat.mp4"
-                  muted
-                  loop
-                  playsInline
-                  autoPlay
-                  className="size-full object-cover opacity-75 group-hover:scale-105 transition-transform duration-500"
+                <div
+                  className="absolute inset-0 bg-cover bg-center opacity-80 transition-transform duration-500 group-hover:scale-105"
+                  style={{ backgroundImage: `url(https://i.ytimg.com/vi/${previousSeasonVideoId}/hqdefault.jpg)` }}
+                  aria-hidden="true"
                 />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/10 transition-colors">
                   <div className="flex size-16 items-center justify-center rounded-full bg-royal text-white shadow-2xl group-hover:scale-110 transition-transform">
@@ -403,7 +401,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
                   </div>
                 </div>
                 <div className="absolute bottom-4 left-4 rounded-md bg-navy/85 px-3 py-1 text-xs font-semibold text-silver-bright backdrop-blur-sm">
-                  NSPL Season 1 &middot; Final Highlight Reel
+                  NSPL Season 1 &middot; Final Day Coverage
                 </div>
               </div>
             </div>
@@ -512,7 +510,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/90 p-4 backdrop-blur-md animate-in fade-in duration-200">
           <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/20 bg-navy shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/15 px-5 py-4 text-silver-bright">
-              <h3 className="font-bold text-sm sm:text-base">NSPL Match Action</h3>
+              <h3 className="font-bold text-sm sm:text-base">NSPL Season 1 · Final Day · Part 1</h3>
               <button
                 type="button"
                 onClick={() => setSelectedVideo(null)}
@@ -523,11 +521,13 @@ Organizing Desk: Silver Youth Forum, Mumbai
               </button>
             </div>
             <div className="relative aspect-video w-full bg-black">
-              <video
-                src={selectedVideo}
-                controls
-                autoPlay
-                className="size-full object-contain"
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${selectedVideo}?autoplay=1&rel=0`}
+                title="NSPL Season 1 final-day coverage from JewelBuzz"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                className="size-full"
               />
             </div>
           </div>

@@ -312,9 +312,13 @@ dialog.mobile-menu::backdrop {
   .about-hero-layout { align-items: flex-start; padding-top: 130px; padding-bottom: 90px; }
   .about-hero-copy { width: 100%; }
   .about-hero-title { max-width: 17ch; font-size: clamp(3rem, 12vw, 3.8rem); line-height: .98; }
-  .about-hero-art { inset: auto -10% 6% -5%; height: 29%; opacity: .86; }
-  .about-film-hero { width: min(75vw, 31svh); }
-  .about-hero-art-caption { right: 19%; bottom: 5%; font-size: .65rem; }
+  .about-hero-art { inset: 0; z-index: 0; height: auto; opacity: .72; }
+  .about-film-hero { inset: 0; width: auto; height: auto; }
+  .about-film-hero .about-film-video { object-fit: cover; object-position: 18% center; opacity: .82; mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 80%, transparent 100%); -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 12%, #000 80%, transparent 100%); }
+  .about-film-hero .about-film-wash { background: linear-gradient(180deg, var(--brand-navy) 0%, rgb(14 26 43 / 56%) 25%, rgb(14 26 43 / 42%) 66%, var(--brand-navy) 100%); }
+  .about-film-hero .about-film-vignette { background: radial-gradient(ellipse at 58% 46%, transparent 12%, rgb(14 26 43 / 34%) 100%); }
+  .about-hero-art-caption { right: 8%; bottom: 7%; font-size: .65rem; }
+  .about-scroll-cue { z-index: 3; }
   .about-sequence { height: 430svh; }
   .about-sequence-sticky { min-height: 580px; }
   .about-sequence-inner { align-items: flex-start; padding: 18vh 1.25rem 4.5rem; }
