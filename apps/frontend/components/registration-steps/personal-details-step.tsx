@@ -115,11 +115,11 @@ export function PersonalDetailsStep({
           name="residential_area"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Residential area</FormLabel>
+              <FormLabel>Residential Area (Eg. Lalbaug, Malad, Parel)</FormLabel>
               <FormControl>
                 <Input
                   className={fieldClass}
-                  placeholder="City name"
+                  placeholder="Eg. Lalbaug, Malad, Parel"
                   {...field}
                 />
               </FormControl>
