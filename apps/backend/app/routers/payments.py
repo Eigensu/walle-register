@@ -14,7 +14,7 @@ from app.models.payment import Payment, PaymentGateway, PaymentStatus
 from app.models.player import Player, RegistrationStatus
 from app.services.cashfree import CashfreeService, normalize_indian_phone
 from app.services.razorpay import RazorpayService
-from app.services.email_service import send_success_email
+from app.services.email_service import invoice_number_for, send_success_email
 
 logger = logging.getLogger(__name__)
 
@@ -306,7 +306,9 @@ async def razorpay_webhook(
                 name=full_name,
                 player_id=str(player.id),
                 amount=amount_inr,
-                payment_id=payment_id
+                payment_id=payment_id,
+                invoice_number=invoice_number_for(payment.id),
+                invoice_date=payment.created_at.strftime("%d %b %Y"),
             )
 
     return {"status": "ok"}
@@ -384,6 +386,8 @@ async def _mark_cashfree_captured(
             player_id=str(player.id),
             amount=payment.amount // 100,
             payment_id=cf_payment_id,
+            invoice_number=invoice_number_for(payment.id),
+            invoice_date=payment.created_at.strftime("%d %b %Y"),
         )
 
 

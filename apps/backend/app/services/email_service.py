@@ -84,6 +84,11 @@ def _receipt_row(label: str, value_html: str, last: bool = False) -> str:
                 </tr>"""
 
 
+def invoice_number_for(payment_oid: str) -> str:
+    """Stable invoice number derived from the payment record id, e.g. INV-3F9A1C2B."""
+    return f"INV-{str(payment_oid)[-8:].upper()}"
+
+
 def _next_steps(event_label: str) -> list[str]:
     return [
         "Keep this email. Your Registration ID is your reference for anything to do with your entry.",
@@ -98,6 +103,9 @@ def build_success_email(
     player_id: str,
     amount: int,
     payment_id: str | None = None,
+    email: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: str | None = None,
 ) -> tuple[str, str, str]:
     """Build the registration confirmation as (subject, html, plain_text)."""
     organiser = settings.organiser_name
@@ -142,6 +150,41 @@ def build_success_email(
         if support
         else "This is an automated email. Please do not reply to this message."
     )
+
+    invoice_html = ""
+    if invoice_number:
+        bill_to = e(name) + (f'<br><span style="color:{INK_MUTED};">{e(email)}</span>' if email else "")
+        invoice_html = f"""
+              <!-- Invoice -->
+              <h3 style="margin:28px 0 14px;font-family:{FONT_BODY};font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{NAVY};">Invoice</h3>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid {LINE};border-radius:8px;">
+                <tr>
+                  <td style="padding:16px 20px;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:13px;line-height:20px;color:{INK};">
+                    <strong style="color:{NAVY};">{e(organiser)}</strong><br>
+                    Invoice no: <span style="font-family:{FONT_MONO};font-size:12px;">{e(invoice_number)}</span>{f"<br>Date: {e(invoice_date)}" if invoice_date else ""}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:16px 20px;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:13px;line-height:20px;color:{INK};">
+                    <span style="color:{INK_MUTED};">Billed to</span><br>{bill_to}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:0 20px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding:12px 16px 12px 0;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:14px;color:{INK};">Player registration fee<br><span style="font-size:12px;color:{INK_MUTED};">{e(event_name)} ({e(event_label)})</span></td>
+                        <td align="right" valign="top" style="padding:12px 0;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:14px;color:{INK};">{e(amount_text)}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:12px 16px 12px 0;font-family:{FONT_BODY};font-size:14px;font-weight:700;color:{NAVY};">Total paid</td>
+                        <td align="right" style="padding:12px 0;font-family:{FONT_BODY};font-size:14px;font-weight:700;color:{NAVY};">{e(amount_text)}</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+"""
 
     html_body = f"""<!DOCTYPE html>
 <html lang="en">
@@ -193,7 +236,7 @@ def build_success_email(
                   </td>
                 </tr>
               </table>
-
+{invoice_html}
               <!-- Next steps -->
               <h3 style="margin:28px 0 14px;font-family:{FONT_BODY};font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{NAVY};">What happens next</h3>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">{steps_html}
@@ -233,7 +276,17 @@ def build_success_email(
     ]
     if payment_id:
         text_lines.append(f"Payment reference: {payment_id}")
-    text_lines += ["Payment status:   Received", "", "WHAT HAPPENS NEXT"]
+    text_lines.append("Payment status:   Received")
+    if invoice_number:
+        text_lines += ["", "INVOICE", f"{organiser}", f"Invoice no: {invoice_number}"]
+        if invoice_date:
+            text_lines.append(f"Date:       {invoice_date}")
+        text_lines.append(f"Billed to:  {name}" + (f" <{email}>" if email else ""))
+        text_lines += [
+            f"Player registration fee - {event_name} ({event_label}): {amount_text}",
+            f"Total paid: {amount_text}",
+        ]
+    text_lines += ["", "WHAT HAPPENS NEXT"]
     text_lines += [f"{i}. {step}" for i, step in enumerate(steps, start=1)]
     text_lines.append("")
     if support:
@@ -249,6 +302,8 @@ async def send_success_email(
     player_id: str,
     amount: int,
     payment_id: str | None = None,
+    invoice_number: str | None = None,
+    invoice_date: str | None = None,
 ) -> bool:
     """
     Send registration success confirmation email.
@@ -259,6 +314,8 @@ async def send_success_email(
         player_id: Unique player registration ID
         amount: Payment amount in INR (whole rupees)
         payment_id: Razorpay payment ID, shown as the payment reference when available
+        invoice_number: When set, an invoice section is included in the email
+        invoice_date: Date shown on the invoice (e.g. "20 Nov 2026")
 
     Returns:
         bool: True if email sent successfully, False otherwise
@@ -269,6 +326,9 @@ async def send_success_email(
             player_id=player_id,
             amount=amount,
             payment_id=payment_id,
+            email=to_email,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
         )
 
         support = settings.mail_support_email
