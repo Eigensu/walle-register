@@ -151,8 +151,14 @@ def build_success_email(
         else "This is an automated email. Please do not reply to this message."
     )
 
+    address_lines = [l.strip() for l in (settings.organiser_address or "").split("|") if l.strip()]
+    gstin = (settings.organiser_gstin or "").strip()
+
     invoice_html = ""
     if invoice_number:
+        seller_extra = "".join(f"<br>{e(l)}" for l in address_lines)
+        if gstin:
+            seller_extra += f"<br>GSTIN: {e(gstin)}"
         bill_to = e(name) + (f'<br><span style="color:{INK_MUTED};">{e(email)}</span>' if email else "")
         invoice_html = f"""
               <!-- Invoice -->
@@ -160,7 +166,7 @@ def build_success_email(
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid {LINE};border-radius:8px;">
                 <tr>
                   <td style="padding:16px 20px;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:13px;line-height:20px;color:{INK};">
-                    <strong style="color:{NAVY};">{e(organiser)}</strong><br>
+                    <strong style="color:{NAVY};">{e(organiser)}</strong>{seller_extra}<br>
                     Invoice no: <span style="font-family:{FONT_MONO};font-size:12px;">{e(invoice_number)}</span>{f"<br>Date: {e(invoice_date)}" if invoice_date else ""}
                   </td>
                 </tr>
@@ -278,7 +284,11 @@ def build_success_email(
         text_lines.append(f"Payment reference: {payment_id}")
     text_lines.append("Payment status:   Received")
     if invoice_number:
-        text_lines += ["", "INVOICE", f"{organiser}", f"Invoice no: {invoice_number}"]
+        text_lines += ["", "INVOICE", f"{organiser}"]
+        text_lines += address_lines
+        if gstin:
+            text_lines.append(f"GSTIN: {gstin}")
+        text_lines.append(f"Invoice no: {invoice_number}")
         if invoice_date:
             text_lines.append(f"Date:       {invoice_date}")
         text_lines.append(f"Billed to:  {name}" + (f" <{email}>" if email else ""))
