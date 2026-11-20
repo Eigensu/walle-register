@@ -127,6 +127,7 @@ export type SiteConfig = {
 export type Sponsor = {
   key: string
   name: string
+  role: string
   tier: "title" | "associate" | "team" | "partner"
   /** Path under public/, SVG or transparent PNG. */
   logo: string

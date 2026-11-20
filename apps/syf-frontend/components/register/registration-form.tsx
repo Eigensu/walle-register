@@ -44,6 +44,7 @@ type Props = {
   /** "NSPL Season 2" */
   eventLabel: string
   feeLabel: string | null
+  rules: string[]
   payment: { name: string; description: string; color: string }
 }
 
@@ -128,7 +129,7 @@ function validate(step: RegistrationStepId, v: PlayerForm): Errors {
 
 const formSteps: RegistrationStepId[] = ["details", "cricket", "jersey", "history"]
 
-export function RegistrationForm({ resumeId, returnOrderId, previousSeason, eventLabel, feeLabel, payment }: Props) {
+export function RegistrationForm({ resumeId, returnOrderId, previousSeason, eventLabel, feeLabel, rules, payment }: Props) {
   const [values, setValues] = useState<PlayerForm>(empty)
   const [errors, setErrors] = useState<Errors>({})
   const [step, setStep] = useState<RegistrationStepId>("details")
@@ -141,8 +142,23 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
   const [notice, setNotice] = useState<Notice>(null)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(Boolean(resumeId || returnOrderId))
+  const [rulesAccepted, setRulesAccepted] = useState(Boolean(resumeId || returnOrderId))
+  const [rulesDialogOpen, setRulesDialogOpen] = useState(false)
+  const [rulesReadToEnd, setRulesReadToEnd] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
+  const rulesContentRef = useRef<HTMLDivElement>(null)
   const firstRender = useRef(true)
+
+  useEffect(() => {
+    if (!rulesDialogOpen) return
+    const content = rulesContentRef.current
+    if (content) setRulesReadToEnd(content.scrollHeight <= content.clientHeight + 2)
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setRulesDialogOpen(false)
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [rulesDialogOpen])
 
   // Which gateways the backend accepts right now (PAYMENT_GATEWAYS). The first one is preselected.
   useEffect(() => {
@@ -316,6 +332,10 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
   }
 
   function next() {
+    if (step === "details" && !rulesAccepted) {
+      setRulesDialogOpen(true)
+      return
+    }
     const i = formSteps.indexOf(step)
     if (step === "history") return void saveDetails()
     if (check([step])) setStep(formSteps[i + 1])
@@ -334,6 +354,7 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
     setOrder(null)
     setPayLocked(false)
     setNotice(null)
+    setRulesAccepted(false)
     setStep("details")
   }
 
@@ -352,6 +373,86 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
 
   return (
     <section aria-labelledby="form-step-title" className="scroll-mt-24">
+      {step === "details" && (
+        <div className="mb-8 rounded-xl border border-line bg-mist p-4 sm:p-5">
+          <label className="flex cursor-pointer items-start gap-3 text-sm font-medium leading-relaxed text-navy">
+            <input
+              type="checkbox"
+              checked={rulesAccepted}
+              onChange={(event) => {
+                if (event.currentTarget.checked) {
+                  setRulesReadToEnd(false)
+                  setRulesDialogOpen(true)
+                } else {
+                  setRulesAccepted(false)
+                }
+              }}
+              className="mt-0.5 size-4 shrink-0 accent-royal"
+              aria-label="Read and accept the NSPL player registration rules"
+            />
+            <span>I have read and accept the NSPL Player Registration Rules.</span>
+          </label>
+          {!rulesAccepted && <p className="ml-7 mt-1 text-xs text-ink-muted">Open the rules and scroll to the bottom to accept before continuing.</p>}
+        </div>
+      )}
+
+      {rulesDialogOpen && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-navy/75 p-3 backdrop-blur-sm sm:p-6"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setRulesDialogOpen(false)
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="registration-rules-title"
+            className="flex max-h-[min(90dvh,48rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-line bg-paper shadow-2xl"
+          >
+            <div className="border-b border-line px-5 py-4 sm:px-7">
+              <h2 id="registration-rules-title" className="font-display text-2xl text-navy sm:text-3xl">NSPL – Player Registration Rules</h2>
+              <p className="mt-1 text-sm text-ink-muted">Read all rules and scroll to the end before accepting.</p>
+            </div>
+            <div
+              ref={rulesContentRef}
+              onScroll={(event) => {
+                const element = event.currentTarget
+                if (element.scrollTop + element.clientHeight >= element.scrollHeight - 8) setRulesReadToEnd(true)
+              }}
+              className="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7"
+            >
+              <ol className="flex flex-col gap-5">
+                {rules.map((rule, index) => {
+                  const separator = rule.indexOf(":")
+                  return (
+                    <li key={index} className="flex gap-3 text-sm leading-relaxed text-ink-muted sm:text-base">
+                      <span className="font-sport font-semibold text-royal">{String(index + 1).padStart(2, "0")}</span>
+                      <span>
+                        {separator >= 0 ? <><strong className="text-navy">{rule.slice(0, separator)}:</strong>{rule.slice(separator + 1)}</> : rule}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ol>
+              <p className="mt-6 border-t border-line pt-5 text-sm font-bold leading-relaxed text-navy">PLEASE READ ALL RULES CAREFULLY BEFORE REGISTERING.</p>
+            </div>
+            <div className="flex flex-col-reverse gap-3 border-t border-line bg-mist px-5 py-4 sm:flex-row sm:justify-end sm:px-7">
+              <Button type="button" variant="outlineLight" onClick={() => setRulesDialogOpen(false)}>Not now</Button>
+              <Button
+                type="button"
+                disabled={!rulesReadToEnd}
+                onClick={() => {
+                  setRulesAccepted(true)
+                  setRulesDialogOpen(false)
+                }}
+              >
+                I accept the rules
+              </Button>
+            </div>
+          </section>
+        </div>
+      )}
+
       <Stepper steps={steps} active={index(step)} />
 
       <form
@@ -425,7 +526,7 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
                 label="Aadhaar number"
                 inputMode="numeric"
                 autoComplete="off"
-                placeholder="XXXX XXXX XXXX XXXX"
+                placeholder="XXXX XXXX XXXX"
                 maxLength={aadharDigits + Math.ceil(aadharDigits / 4) - 1}
                 value={values.aadhar_number}
                 error={errors.aadhar_number}
@@ -638,7 +739,7 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
               ) : (
                 <span className="hidden sm:block" />
               )}
-              <Button type="submit" disabled={busy}>
+              <Button type="submit" disabled={busy || (step === "details" && !rulesAccepted)}>
                 {busy ? (
                   <>
                     <Loader2 className="animate-spin" aria-hidden="true" />
