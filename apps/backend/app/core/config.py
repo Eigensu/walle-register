@@ -73,7 +73,11 @@ class Settings(BaseSettings):
 	# Shown on the invoice in the confirmation email. Each line is omitted when unset.
 	organiser_gstin: str | None = Field(default=None, alias="ORGANISER_GSTIN")
 	# Use "|" to break the address across lines, e.g. "12 Main Road|Mumbai 400001".
-	organiser_address: str | None = Field(default=None, alias="ORGANISER_ADDRESS")
+	# Defaults to the office address on the website (apps/syf-frontend/site.config.ts).
+	organiser_address: str | None = Field(
+		default="Office No. 2, 1st Floor, Rajbaug Estate, 47/55, Above B. Bhagat Tarachand|Pydhonie, Tambakata, Mumbai 400003",
+		alias="ORGANISER_ADDRESS",
+	)
 
 	model_config = SettingsConfigDict(
 		env_file=ROOT_ENV_PATH,
