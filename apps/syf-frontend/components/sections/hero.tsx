@@ -3,7 +3,7 @@ import Link from "next/link"
 import { site } from "@/site.config"
 import { isProduction, pub, type Field } from "@/lib/content"
 import { formatDate, remaining } from "@/lib/format"
-import type { PhaseState } from "@/lib/phase"
+import type { Cta, PhaseState } from "@/lib/phase"
 import { assetExists, fakeNow, now } from "@/lib/site"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -33,6 +33,13 @@ export function Hero({ state }: SectionProps) {
     hero.showSpotsLeft && status && phase.phase === "open"
       ? `${status.current_registrations} of ${status.registration_cap} spots taken`
       : null
+
+  const registerCta: Cta =
+    phase.primaryCta.kind === "register"
+      ? phase.primaryCta
+      : phase.headerCta.kind === "register"
+        ? phase.headerCta
+        : { label: "Register", href: site.event.registration.href, kind: "register" }
 
   return (
     <section aria-labelledby="hero-title" className="on-navy grain relative isolate overflow-hidden bg-navy text-silver-bright">
@@ -73,9 +80,16 @@ export function Hero({ state }: SectionProps) {
               {subcopy} <TbcFor f={hero.subcopy} />
             </p>
           )}
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <CtaButton id="hero-cta" cta={phase.primaryCta} location="hero" size="lg" />
-            <Button asChild variant="outlineDark" size="lg">
+          <div className="mt-9 grid w-full max-w-md grid-cols-2 gap-3">
+            <CtaButton
+              id="hero-cta"
+              cta={registerCta}
+              label="Register"
+              location="hero"
+              size="lg"
+              className="w-full px-3 text-center sm:px-6"
+            />
+            <Button asChild variant="outlineDark" size="lg" className="w-full px-3 text-center sm:px-6">
               <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
             </Button>
             {phase.headerCta.kind === "register" && phase.primaryCta.kind !== "register" && (
