@@ -42,5 +42,5 @@ export const photoRules = {
   hint: "JPG, PNG or HEIC, up to 10 MB",
 }
 
-/** The backend validates this length (apps/backend/app/routers/registration.py). */
-export const aadharDigits = 16
+/** Aadhaar input length used by the registration form. */
+export const aadharDigits = 12

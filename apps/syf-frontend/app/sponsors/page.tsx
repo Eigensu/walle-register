@@ -35,7 +35,6 @@ export default function SponsorsPage() {
   const titleSponsor = sponsors.find((s) => s.tier === "title")
   const contactEmail = pub(site.contact.email)
   const partners = sponsors.filter((x) => x.tier !== "title" && (x.confirmed || !isProduction))
-  const tierLabel: Record<string, string> = { associate: "Associate Partner", team: "Team Sponsor", partner: "Official Partner" }
 
   // No enquiry backend yet: the form opens the visitor's email app with the details filled in,
   // and nothing is reported as received until they send it themselves.
@@ -146,9 +145,7 @@ export default function SponsorsPage() {
                 className="group flex flex-col justify-between rounded-xl border border-line bg-mist/40 p-5 transition-all hover:border-royal/40 hover:bg-white hover:shadow-sm"
               >
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-royal">
-                    {tierLabel[p.tier]}
-                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-royal">{p.role}</span>
                   <h3 className="mt-2 text-base font-bold text-navy group-hover:text-royal transition-colors">
                     {p.name}
                   </h3>

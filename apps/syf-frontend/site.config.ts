@@ -6,7 +6,7 @@ import { field, mapField } from "./lib/content"
 import { formatInr } from "./lib/format"
 import type { SiteConfig } from "./lib/site-types"
 
-const registrationFee = field<number | null>(null, false, "SYF to decide the Season 2 registration fee")
+const registrationFee = field<number | null>(7200, true)
 
 export const site: SiteConfig = {
   org: {
@@ -85,15 +85,15 @@ export const site: SiteConfig = {
       waitlist: false,
       rules: field(
         [
-          "Registration does not confirm participation. Player slots are limited.",
-          "The registration fee is collected online only. Your slot is held only once the payment goes through, and any discrepancy in your details can cancel the registration.",
-          "Only owners, partners and directors (not top management) of silver jewellery firms or allied industries can take part.",
-          "One entry per player.",
-          "Register only if you can attend the practice sessions and every match day of the season.",
-          "Decisions taken by the organising committee are final and binding.",
+          "Limited Slots: Registration does not guarantee participation. Slots are limited and subject to confirmation.",
+          "Online Payment: Registration fees must be paid online only. Your slot is secured only after successful payment. Incorrect or mismatched details may lead to cancellation.",
+          "Eligibility: Only Owners, Partners and Directors of Silver Jewellery Manufacturing and Wholesale Firms are eligible. Employees and top management personnel are not eligible.",
+          "One Entry Only: Only one registration per player is allowed.",
+          "Full Availability: Register only if you can attend all practice sessions and the tournament (12-13-14 February 2027). No show may lead to blacklist in future seasons.",
+          "Business Proof: A valid GST Registration Certificate is preferred as proof of eligibility. However, other relevant business documents may also be considered at the discretion of the NSPL Organising Committee.",
+          "Final Decision: All decisions of the NSPL Organising Committee will be final and binding.",
         ],
-        false,
-        "Draft rules adapted from JMCL; SYF to approve",
+        true,
       ),
       previousSeason: {
         label: "NSPL Season 1",
@@ -134,7 +134,7 @@ export const site: SiteConfig = {
         "Draft sub copy for SYF approval",
       ),
       photo: field<string | null>("/photos/nspl-season-1/opening-day/03_img_8147.webp", true),
-      secondaryCta: { label: "About Us", href: "/about" },
+      secondaryCta: { label: "About SYF", href: "/about" },
       showSpotsLeft: false,
     },
     stats: { minimumToShow: 3 },
