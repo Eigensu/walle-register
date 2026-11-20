@@ -84,11 +84,6 @@ def _receipt_row(label: str, value_html: str, last: bool = False) -> str:
                 </tr>"""
 
 
-def invoice_number_for(payment_oid: str) -> str:
-    """Stable invoice number derived from the payment record id, e.g. INV-3F9A1C2B."""
-    return f"INV-{str(payment_oid)[-8:].upper()}"
-
-
 def _next_steps(event_label: str) -> list[str]:
     return [
         "Keep this email. Your Registration ID is your reference for anything to do with your entry.",
