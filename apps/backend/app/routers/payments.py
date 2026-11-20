@@ -15,6 +15,7 @@ from app.models.player import Player, RegistrationStatus
 from app.services.cashfree import CashfreeService, normalize_indian_phone
 from app.services.razorpay import RazorpayService
 from app.services.email_service import send_success_email
+from app.services.invoice import ensure_invoice
 
 logger = logging.getLogger(__name__)
 
@@ -216,10 +217,14 @@ async def verify_payment(
         await payment.save()
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
-    payment.status = PaymentStatus.CAPTURED
-    payment.razorpay_payment_id = payload.razorpay_payment_id
-    payment.razorpay_signature = payload.razorpay_signature
-    await payment.save()
+    await Payment.get_motor_collection().update_one(
+        {"_id": payment.id},
+        {"$set": {
+            "status": PaymentStatus.CAPTURED.value,
+            "razorpay_payment_id": payload.razorpay_payment_id,
+            "razorpay_signature": payload.razorpay_signature,
+        }},
+    )
 
     player = await Player.get(player_id)
     if player:
@@ -285,29 +290,41 @@ async def razorpay_webhook(
             return {"status": "ignored", "reason": "payment record not found"}
 
         # Update payment status
-        payment.status = PaymentStatus.CAPTURED
-        payment.razorpay_payment_id = payment_id
-        await payment.save()
+        # Targeted update, not save(): a full-document save from a stale copy would reset
+        # confirmation_sent / invoice_number written by a concurrent delivery.
+        await Payment.get_motor_collection().update_one(
+            {"_id": payment.id},
+            {"$set": {"status": PaymentStatus.CAPTURED.value, "razorpay_payment_id": payment_id}},
+        )
 
         # Update player status
         player = await Player.get(payment.player_id)
         if player:
             player.registration_status = RegistrationStatus.PAID
             await player.save()
-            
-            # Send confirmation email
-            full_name = f"{player.first_name} {player.last_name}"
-            amount_inr = payment.amount // 100  # Convert paise to rupees
-            
-            # Send email asynchronously (non-blocking)
-            background_tasks.add_task(
-                send_success_email,
-                to_email=player.email,
-                name=full_name,
-                player_id=str(player.id),
-                amount=amount_inr,
-                payment_id=payment_id
+
+            # Razorpay retries webhooks and /verify may have run first, so claim the email
+            # atomically: only the first delivery sends the confirmation + invoice.
+            claim = await Payment.get_motor_collection().update_one(
+                {"_id": payment.id, "confirmation_sent": {"$ne": True}},
+                {"$set": {"confirmation_sent": True}},
             )
+            if claim.modified_count == 1:
+                invoice_number, invoice_date = await ensure_invoice(payment)
+                full_name = f"{player.first_name} {player.last_name}"
+                amount_inr = payment.amount // 100  # Convert paise to rupees
+
+                # Send email asynchronously (non-blocking)
+                background_tasks.add_task(
+                    send_success_email,
+                    to_email=player.email,
+                    name=full_name,
+                    player_id=str(player.id),
+                    amount=amount_inr,
+                    payment_id=payment_id,
+                    invoice_number=invoice_number,
+                    invoice_date=invoice_date,
+                )
 
     return {"status": "ok"}
 
@@ -377,6 +394,7 @@ async def _mark_cashfree_captured(
         await player.save()
 
     if newly_captured:
+        invoice_number, invoice_date = await ensure_invoice(payment)
         background_tasks.add_task(
             send_success_email,
             to_email=player.email,
@@ -384,6 +402,8 @@ async def _mark_cashfree_captured(
             player_id=str(player.id),
             amount=payment.amount // 100,
             payment_id=cf_payment_id,
+            invoice_number=invoice_number,
+            invoice_date=invoice_date,
         )
 
 

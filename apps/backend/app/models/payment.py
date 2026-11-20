@@ -41,6 +41,11 @@ class Payment(Document):
     amount: int
     currency: str = "INR"
     created_at: datetime = Field(default_factory=ist_now)
+    # Set once when the confirmation email + invoice are issued (see services/invoice.py).
+    invoice_number: str | None = None
+    paid_at: datetime | None = None
+    # Claimed atomically before sending, so retried webhooks don't re-send the email.
+    confirmation_sent: bool = False
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
