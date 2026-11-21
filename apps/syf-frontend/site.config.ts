@@ -6,7 +6,7 @@ import { field, mapField } from "./lib/content"
 import { formatInr } from "./lib/format"
 import type { SiteConfig } from "./lib/site-types"
 
-const registrationFee = field<number | null>(null, false, "SYF to decide the Season 2 registration fee")
+const registrationFee = field<number | null>(7200, true)
 
 export const site: SiteConfig = {
   org: {

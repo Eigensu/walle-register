@@ -17,6 +17,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { formatInr } from "@/lib/format"
+import { site } from "@/site.config"
 import { SeamRings } from "@/components/brand/seam-rings"
 import { Button } from "@/components/ui/button"
 
@@ -195,7 +196,7 @@ export default function NsplPage() {
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-silver mb-1">
                 <ShieldCheck className="size-4 text-royal" /> Entry Fee
               </div>
-              <span className="text-xl font-extrabold text-white">{formatInr(2000)}</span>
+              <span className="text-xl font-extrabold text-white">{formatInr(site.event.registration.fee.value ?? 7200)}</span>
               <p className="mt-1 text-xs text-silver/80">Kit, auction pool &amp; insurance</p>
             </div>
           </div>

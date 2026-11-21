@@ -10,7 +10,7 @@ INVOICE = dict(email="player@example.com", invoice_number="INV-000042", invoice_
 
 
 def _build(**kwargs):
-    return build_success_email("Test <Player>", "pid1", 15000, "pay_1", **kwargs)
+    return build_success_email("Test <Player>", "pid1", 7200, "pay_1", **kwargs)
 
 
 def test_email_without_invoice_has_no_invoice_section():
@@ -21,7 +21,7 @@ def test_email_without_invoice_has_no_invoice_section():
 
 def test_email_with_invoice_shows_details_in_html_and_text():
     _, html, text = _build(**INVOICE)
-    for needle in ("INV-000042", "20 Nov 2026", "player@example.com", "₹15,000"):
+    for needle in ("INV-000042", "20 Nov 2026", "player@example.com", "₹7,200"):
         assert needle in html and needle in text
     assert "Test &lt;Player&gt;" in html  # name is escaped
     assert "Test <Player>" not in html

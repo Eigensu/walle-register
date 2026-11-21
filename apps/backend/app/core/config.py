@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 	cashfree_env: Literal["sandbox", "production"] = Field(default="sandbox", alias="CASHFREE_ENV")
 	cashfree_api_version: str = Field(default="2025-01-01", alias="CASHFREE_API_VERSION")
 
-	registration_fee_inr: int = Field(default=15000, alias="REGISTRATION_FEE_INR")
+	registration_fee_inr: int = Field(default=7200, alias="REGISTRATION_FEE_INR")
 
 	storage_mode: Literal["local", "s3", "cloudinary"] = Field(default="local", alias="STORAGE_MODE")
 	s3_bucket: str | None = Field(default=None, alias="S3_BUCKET")
