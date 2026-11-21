@@ -65,6 +65,9 @@ def test_ensure_invoice_assigns_sequential_number_once():
     # The counter is only touched after winning the claim, and an existing invoice is never overwritten.
     flt = coll.update_one.call_args_list[0].args[0]
     assert flt["invoice_number"] is None and flt["_id"] == 1
+    # The number is only written while our claim is still current.
+    write = coll.update_one.call_args_list[1].args[0]
+    assert write["invoice_number"] is None and "invoice_claim_at" in write
     # An abandoned claim (older than the TTL) can be taken over.
     assert {"invoice_claim_at": None} in flt["$or"]
 
