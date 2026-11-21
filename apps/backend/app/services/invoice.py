@@ -2,6 +2,7 @@
 
 import asyncio
 import io
+from datetime import datetime, timedelta, timezone
 
 from pymongo import ReturnDocument
 
@@ -10,6 +11,7 @@ from app.models.payment import Payment, ist_now
 _COUNTER_ID = "invoice"
 _WAIT_TRIES = 20
 _WAIT_DELAY = 0.1
+_CLAIM_TTL = 30  # seconds
 
 
 async def _next_sequence() -> int:
@@ -36,9 +38,19 @@ async def ensure_invoice(payment: Payment) -> tuple[str, str]:
     collection = Payment.get_motor_collection()
     # Win the right to number this payment *before* touching the counter, so a lost race
     # never consumes a number and the series stays gapless.
+    # A claim older than _CLAIM_TTL is treated as abandoned (the claimant crashed before
+    # writing the number), so a retry can take it over instead of being stuck forever.
+    now = datetime.now(timezone.utc)
     claim = await collection.update_one(
-        {"_id": payment.id, "invoice_number": None, "invoice_claimed": {"$ne": True}},
-        {"$set": {"invoice_claimed": True, "paid_at": ist_now()}},
+        {
+            "_id": payment.id,
+            "invoice_number": None,
+            "$or": [
+                {"invoice_claim_at": None},
+                {"invoice_claim_at": {"$lt": now - timedelta(seconds=_CLAIM_TTL)}},
+            ],
+        },
+        {"$set": {"invoice_claim_at": now, "paid_at": ist_now()}},
     )
     if claim.modified_count == 1:
         number = f"INV-{await _next_sequence():06d}"
@@ -57,7 +69,6 @@ async def ensure_invoice(payment: Payment) -> tuple[str, str]:
 
 def _format_date(value) -> str:
     """Format as e.g. '20 Nov 2026' in IST. Mongo returns naive datetimes in UTC."""
-    from datetime import timezone
     from zoneinfo import ZoneInfo
 
     if value.tzinfo is None:

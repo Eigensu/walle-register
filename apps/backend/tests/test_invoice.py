@@ -63,7 +63,10 @@ def test_ensure_invoice_assigns_sequential_number_once():
         result = asyncio.run(invoice.ensure_invoice(payment))
     assert result == ("INV-000007", "20 Nov 2026")
     # The counter is only touched after winning the claim, and an existing invoice is never overwritten.
-    assert coll.update_one.call_args_list[0].args[0] == {"_id": 1, "invoice_number": None, "invoice_claimed": {"$ne": True}}
+    flt = coll.update_one.call_args_list[0].args[0]
+    assert flt["invoice_number"] is None and flt["_id"] == 1
+    # An abandoned claim (older than the TTL) can be taken over.
+    assert {"invoice_claim_at": None} in flt["$or"]
 
 
 def test_ensure_invoice_reuses_existing_without_touching_counter():
