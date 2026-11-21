@@ -52,7 +52,6 @@ const required: [string, Field<unknown>][] = [
   ["site.org.logo", site.org.logo],
   ["site.siteUrl", site.siteUrl],
   ["site.home.hero.headline", site.home.hero.headline],
-  ["site.contact.email", site.contact.email],
 ]
 const missingRequired = required.filter(([, f]) => !f.confirmed).map(([p]) => p)
 
