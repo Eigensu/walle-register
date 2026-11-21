@@ -10,7 +10,6 @@ import type { Sponsor } from "@/lib/site-types"
 import { cn } from "@/lib/utils"
 import { TrackLink } from "@/components/track-link"
 import { TbcBadge } from "@/components/brand/tbc"
-import { SectionHeading } from "./section-heading"
 
 const TIER_LABEL: Record<Sponsor["tier"], string> = {
   title: "Title sponsor",
@@ -31,7 +30,7 @@ function sponsorHref(s: Sponsor) {
   return u.toString()
 }
 
-function SponsorMark({ s, size }: { s: Sponsor; size: "title" | "tile" }) {
+function SponsorMark({ s, size, zoom = false }: { s: Sponsor; size: "title" | "tile"; zoom?: boolean }) {
   if (assetExists(s.logo)) {
     return (
       <Image
@@ -42,6 +41,7 @@ function SponsorMark({ s, size }: { s: Sponsor; size: "title" | "tile" }) {
         unoptimized={s.logo.endsWith(".svg")}
         className={cn(
           "w-auto object-contain",
+          zoom && "scale-[1.3]",
           size === "title" ? "h-16 md:h-24" : "h-10 grayscale-0 opacity-100 transition lg:h-12 lg:opacity-70 lg:grayscale lg:group-hover:opacity-100 lg:group-hover:grayscale-0",
         )}
       />
@@ -92,7 +92,9 @@ export function SponsorStrip() {
   return (
     <section aria-labelledby="sponsors-title" className="bg-mist">
       <div className="container-site py-24 lg:py-32">
-        <SectionHeading id="sponsors-title" eyebrow={cfg.eyebrow} heading={cfg.heading} align="center" />
+        <h2 id="sponsors-title" className="type-display-xl text-center text-navy">
+          {cfg.eyebrow}
+        </h2>
 
         <div className="mx-auto mt-14 max-w-[880px] space-y-10">
           {title && (
@@ -113,13 +115,13 @@ export function SponsorStrip() {
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
                 {others
                   .filter((s) => s.tier === tier)
-                  .map((s) => (
+                  .map((s, i) => (
                     <li key={s.key}>
                       <SponsorLink
                         s={s}
-                        className="relative flex h-24 items-center justify-center rounded-lg border border-line bg-paper px-4 transition-colors hover:border-navy/30"
+                        className="relative flex h-24 items-center justify-center overflow-hidden rounded-lg border border-line bg-paper px-4 transition-colors hover:border-navy/30"
                       >
-                        <SponsorMark s={s} size="tile" />
+                        <SponsorMark s={s} size="tile" zoom={i >= 4} />
                       </SponsorLink>
                     </li>
                   ))}

@@ -34,6 +34,7 @@ export function Hero({ state }: SectionProps) {
       ? `${status.current_registrations} of ${status.registration_cap} spots taken`
       : null
 
+  const closed = phase.phase === "closed" || phase.phase === "coming_soon"
   const registerCta: Cta =
     phase.primaryCta.kind === "register"
       ? phase.primaryCta
@@ -81,15 +82,17 @@ export function Hero({ state }: SectionProps) {
             </p>
           )}
           <div className="mt-9 grid w-full max-w-md grid-cols-2 gap-3">
-            <CtaButton
-              id="hero-cta"
-              cta={registerCta}
-              label="Register"
-              location="hero"
-              size="lg"
-              className="w-full px-3 text-center sm:px-6"
-            />
-            <Button asChild variant="outlineDark" size="lg" className="w-full px-3 text-center sm:px-6">
+            {!closed && (
+              <CtaButton
+                id="hero-cta"
+                cta={registerCta}
+                label="Register"
+                location="hero"
+                size="lg"
+                className="w-full px-3 text-center sm:px-6"
+              />
+            )}
+            <Button asChild variant="outlineDark" size="lg" className={cn("w-full px-3 text-center sm:px-6", closed && "col-span-2")}>
               <Link href={hero.secondaryCta.href}>{hero.secondaryCta.label}</Link>
             </Button>
           </div>

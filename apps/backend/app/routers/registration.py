@@ -45,7 +45,7 @@ class PlayerDetailsResponse(BaseModel):
     photo_url: str
     aadhar_number: str
     city: str
-    village: str
+    village: str = ""
     batting_type: str
     bowling_type: str
     wicket_keeper: str
@@ -73,7 +73,7 @@ async def register_player(
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
-    village: str = Form(...),
+    village: str = Form(""),
     photo: UploadFile = File(...),
     # Cricket Details
     batting_type: str = Form(...),
@@ -169,7 +169,7 @@ async def update_player(
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
-    village: str = Form(...),
+    village: str = Form(""),
     photo: UploadFile = File(None),
     # Cricket Details
     batting_type: str = Form(...),

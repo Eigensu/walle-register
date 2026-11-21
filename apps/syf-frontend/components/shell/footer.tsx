@@ -28,7 +28,7 @@ export function Footer() {
     const url = pub(s.url)
     return url ? [{ label: s.label, href: url, pending: !s.url.confirmed }] : []
   })
-  const contactFields = [contact.email, contact.phone, contact.whatsapp, contact.address]
+  const contactFields = [contact.phone, contact.address]
   const hasContact = contactFields.some((f) => pub(f) || isTbcSlot(f))
   const year = new Date().getFullYear()
 
@@ -94,13 +94,7 @@ export function Footer() {
           <div>
             <h2 className="eyebrow text-silver-dim">Contact</h2>
             <dl className="mt-5 space-y-4 text-[0.9375rem]">
-              <ContactRow label="Email" f={contact.email} render={(v) => <a href={`mailto:${v}`} className={linkClass}>{v}</a>} />
               <ContactRow label="Phone" f={contact.phone} render={(v) => <a href={`tel:${v.replace(/\s/g, "")}`} className={linkClass}>{v}</a>} />
-              <ContactRow
-                label="WhatsApp"
-                f={contact.whatsapp}
-                render={(v) => <a href={`https://wa.me/${v.replace(/\D/g, "")}`} target="_blank" rel="noopener" className={linkClass}>Message us</a>}
-              />
               <ContactRow label="Address" f={contact.address} render={(v) => <span className="whitespace-pre-line">{v}</span>} />
             </dl>
           </div>

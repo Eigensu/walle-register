@@ -12,7 +12,6 @@ export type PlayerForm = {
   designation: string
   aadhar_number: string
   city: string
-  village: string
   batting_type: string
   bowling_type: string
   wicket_keeper: string
@@ -91,7 +90,6 @@ export async function getPlayer(playerId: string): Promise<PlayerForm> {
     designation: p.designation,
     aadhar_number: p.aadhar_number.replace(/(\d{4})(?=\d)/g, "$1 "),
     city: p.city,
-    village: p.village,
     batting_type: p.batting_type,
     bowling_type: currentBowlingValue(p.bowling_type),
     wicket_keeper: p.wicket_keeper,

@@ -142,7 +142,7 @@ export function getPhase(now: Date, input: PhaseInput, status: RegistrationStatu
         : seasonStartCountdown,
       live: null,
       primaryCta: exploreCta,
-      headerCta: { label: "Register", href: reg.href, kind: "register" },
+      headerCta: exploreCta,
       showStickyBar: false,
     }
   }
