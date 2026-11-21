@@ -4,6 +4,8 @@ import type { NextConfig } from "next"
 const registrationApi = process.env.REGISTRATION_API_URL?.replace(/\/$/, "")
 
 const nextConfig: NextConfig = {
+  // Expose Vercel's deploy environment so lib/content.ts can default to "production" on production deploys.
+  env: { NEXT_PUBLIC_VERCEL_ENV: process.env.VERCEL_ENV ?? "" },
   images: {
     formats: ["image/avif", "image/webp"],
   },
