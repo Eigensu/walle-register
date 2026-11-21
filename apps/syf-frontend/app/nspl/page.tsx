@@ -341,21 +341,6 @@ export default function NsplPage() {
           </div>
         </div>
 
-        {/* 7. BOTTOM REGISTRATION CTA */}
-        <div className="rounded-2xl border border-royal/40 bg-royal/80 backdrop-blur-md p-8 text-white shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="text-center sm:text-left">
-            <h3 className="text-2xl font-black">Ready to represent your firm on the pitch?</h3>
-            <p className="mt-1 text-xs sm:text-sm text-white/90">
-              Registrations for the NSPL Season 2 player auction pool are closing soon.
-            </p>
-          </div>
-          <Button asChild variant="outlineDark" size="lg" className="border-white bg-white text-navy hover:bg-white/90 hover:text-royal shrink-0 font-bold shadow-lg">
-            <Link href="/register">
-              Sign Up Now <ArrowRight className="size-4 ml-1" />
-            </Link>
-          </Button>
-        </div>
-
       </section>
 
       </div>
