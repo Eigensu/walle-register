@@ -9,7 +9,12 @@ export const mapField = <T, U>(f: Field<T>, fn: (value: T) => U): Field<U> => ({
 
 export type SiteEnv = "development" | "preview" | "production"
 
-export const siteEnv: SiteEnv = (process.env.NEXT_PUBLIC_SITE_ENV as SiteEnv) || "development"
+// NEXT_PUBLIC_SITE_ENV wins when set. Otherwise fall back to Vercel's own environment (inlined at build
+// time by next.config.ts), so a production deploy that forgot the variable never shows preview content.
+const vercelEnv = process.env.NEXT_PUBLIC_VERCEL_ENV
+const fallbackEnv: SiteEnv = vercelEnv === "production" ? "production" : vercelEnv === "preview" ? "preview" : "development"
+
+export const siteEnv: SiteEnv = (process.env.NEXT_PUBLIC_SITE_ENV as SiteEnv) || fallbackEnv
 
 export const isProduction = siteEnv === "production"
 

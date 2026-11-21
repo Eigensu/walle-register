@@ -25,9 +25,9 @@ export function Stepper({ steps, active }: { steps: readonly Step[]; active: num
           const done = i < active
           const isActive = i === active
           return (
-            <li key={s.id} aria-current={isActive ? "step" : undefined} className="flex flex-col gap-3">
+            <li key={s.id} aria-current={isActive ? "step" : undefined} className="flex min-w-0 flex-col gap-3">
               <span className={cn("h-1 rounded-full", i <= active ? "bg-royal" : "bg-line")} aria-hidden="true" />
-              <span className="flex items-center gap-2">
+              <span className="flex min-w-0 items-center gap-1.5 xl:gap-2">
                 <span
                   className={cn(
                     "flex size-6 shrink-0 items-center justify-center rounded-full font-sport text-xs font-semibold",
@@ -38,7 +38,7 @@ export function Stepper({ steps, active }: { steps: readonly Step[]; active: num
                 >
                   {done ? <Check className="size-3.5" strokeWidth={3} aria-hidden="true" /> : i + 1}
                 </span>
-                <span className={cn("text-sm font-semibold", i <= active ? "text-navy" : "text-ink-muted")}>
+                <span className={cn("truncate text-[0.8125rem] font-semibold xl:text-sm", i <= active ? "text-navy" : "text-ink-muted")}>
                   {s.label}
                   {done && <span className="sr-only"> (done)</span>}
                 </span>

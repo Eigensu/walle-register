@@ -27,7 +27,7 @@ export const site: SiteConfig = {
       true,
     ),
   },
-  siteUrl: field(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001", false, "Domain to be registered in SYF's name"),
+  siteUrl: field(process.env.NEXT_PUBLIC_SITE_URL || "https://silveryouthforum.com", true),
   locale: "en-IN",
   timeZone: "Asia/Kolkata",
   timeZoneLabel: "IST",
