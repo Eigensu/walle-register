@@ -71,7 +71,7 @@ class Settings(BaseSettings):
 	event_season: str = Field(default="Season 2", alias="EVENT_SEASON")
 
 	# Shown on the invoice in the confirmation email. Each line is omitted when unset.
-	organiser_gstin: str | None = Field(default=None, alias="ORGANISER_GSTIN")
+	organiser_gstin: str | None = Field(default="27ABSCS6609M1ZG", alias="ORGANISER_GSTIN")
 	# Use "|" to break the address across lines, e.g. "12 Main Road|Mumbai 400001".
 	# Defaults to the office address on the website (apps/syf-frontend/site.config.ts).
 	organiser_address: str | None = Field(
