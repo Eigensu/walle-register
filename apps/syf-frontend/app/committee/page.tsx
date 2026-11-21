@@ -1,13 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Shield, Users, Trophy, Sparkles, Mail, ArrowRight } from "lucide-react"
+import { ArrowLeft, Shield, Users, Trophy, Sparkles } from "lucide-react"
 import { committee } from "@/content/committee"
 import { pub, isProduction } from "@/lib/content"
 import { Monogram } from "@/components/brand/monogram"
 import { TbcBadge, TbcFor } from "@/components/brand/tbc"
 import { SeamRings } from "@/components/brand/seam-rings"
-import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
   title: "Committee Members",
@@ -152,21 +151,6 @@ export default function CommitteePage() {
               Organizing business conclaves, networking summits, and discussions to advance India&rsquo;s silver jewellery industry globally.
             </p>
           </div>
-        </div>
-
-        {/* Committee Contact CTA */}
-        <div className="mt-12 rounded-2xl border border-royal/30 bg-gradient-to-br from-navy to-navy-raised p-8 text-white shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="max-w-xl text-center md:text-left">
-            <h3 className="text-xl font-bold">Have a proposal or question for the Committee?</h3>
-            <p className="mt-2 text-xs leading-relaxed text-silver">
-              Connect with our secretariat regarding event invitations, sponsorship proposals, or membership interest.
-            </p>
-          </div>
-          <Button asChild variant="primary" size="md">
-            <Link href="/contact">
-              <Mail className="size-4" /> Contact Secretariat <ArrowRight className="size-4 ml-1" />
-            </Link>
-          </Button>
         </div>
       </section>
     </div>
