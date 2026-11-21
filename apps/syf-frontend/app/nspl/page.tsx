@@ -26,31 +26,10 @@ const PITCH_BG_IMAGE = "/photos/nspl-season-1/match-action/08_img_9320.webp"
 const previousSeasonVideoId = "yOuBxruXpG8"
 
 const HOW_IT_WORKS = [
-  {
-    step: "01",
-    title: "Register Online",
-    desc: "Complete the 3-minute registration form with your player profile, silver firm affiliation, and kit preferences.",
-  },
-  {
-    step: "02",
-    title: "Player Pool",
-    desc: "The SYF committee validates eligibility. Verified players enter the official NSPL Season 2 Auction Pool.",
-  },
-  {
-    step: "03",
-    title: "Franchise Auction",
-    desc: "Franchise team owners bid in a live, high-stakes auction to form balanced 15-player squads.",
-  },
-  {
-    step: "04",
-    title: "League Matches",
-    desc: "Teams clash in action-packed T20 fixtures under floodlights with official umpires and DRS reviews.",
-  },
-  {
-    step: "05",
-    title: "Grand Finale",
-    desc: "Championship final followed by the prestigious handcrafted silver trophy and MVP award ceremony.",
-  },
+  { step: "01", title: "Register Online" },
+  { step: "02", title: "Player Screening" },
+  { step: "03", title: "Player Auction & Launch Party" },
+  { step: "04", title: "Main Tournament" },
 ]
 
 const TEAMS_PREVIEW = [
@@ -212,7 +191,7 @@ export default function NsplPage() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {HOW_IT_WORKS.map((h, i) => (
               <div
                 key={h.step}
@@ -223,7 +202,6 @@ export default function NsplPage() {
                     {h.step}
                   </span>
                   <h3 className="mt-2 font-bold text-white text-base">{h.title}</h3>
-                  <p className="mt-2 text-xs leading-relaxed text-silver/85">{h.desc}</p>
                 </div>
                 {i < HOW_IT_WORKS.length - 1 && (
                   <div className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 text-white/40 z-10">
