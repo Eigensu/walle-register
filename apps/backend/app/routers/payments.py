@@ -409,11 +409,10 @@ async def _mark_cashfree_captured(
     update: dict = {"status": PaymentStatus.CAPTURED.value}
     if cf_payment_id:
         update["cashfree_payment_id"] = cf_payment_id
-    result = await collection.update_one(
+    await collection.update_one(
         {"_id": payment.id, "status": {"$ne": PaymentStatus.CAPTURED.value}},
         {"$set": update},
     )
-    newly_captured = result.modified_count == 1
 
     player = await Player.get(payment.player_id)
     if not player:
@@ -422,10 +421,17 @@ async def _mark_cashfree_captured(
         player.registration_status = RegistrationStatus.PAID
         await player.save()
 
-    if newly_captured:
+    # Claim the email atomically (like the Razorpay webhook) so only one delivery sends it,
+    # and a failed send releases the claim so the next /verify or webhook retry can resend.
+    claim = await collection.update_one(
+        {"_id": payment.id, "confirmation_sent": {"$ne": True}},
+        {"$set": {"confirmation_sent": True}},
+    )
+    if claim.modified_count == 1:
         invoice_number, invoice_date = await _safe_ensure_invoice(payment)
         background_tasks.add_task(
-            send_success_email,
+            _send_confirmation,
+            payment.id,
             to_email=player.email,
             name=f"{player.first_name} {player.last_name}",
             player_id=str(player.id),

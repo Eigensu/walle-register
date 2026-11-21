@@ -63,7 +63,10 @@ def test_ensure_invoice_assigns_sequential_number_once():
         result = asyncio.run(invoice.ensure_invoice(payment))
     assert result == ("INV-000007", "20 Nov 2026")
     # The counter is only touched after winning the claim, and an existing invoice is never overwritten.
-    assert coll.update_one.call_args_list[0].args[0] == {"_id": 1, "invoice_number": None, "invoice_claimed": {"$ne": True}}
+    flt = coll.update_one.call_args_list[0].args[0]
+    assert flt["invoice_number"] is None and flt["_id"] == 1
+    # An abandoned claim (older than the TTL) can be taken over.
+    assert {"invoice_claim_at": None} in flt["$or"]
 
 
 def test_ensure_invoice_reuses_existing_without_touching_counter():
@@ -83,3 +86,21 @@ def test_ensure_invoice_losing_the_claim_does_not_burn_a_number():
         result = asyncio.run(invoice.ensure_invoice(payment))
     assert result == ("INV-000009", "20 Nov 2026")
     coll.database["counters"].find_one_and_update.assert_not_called()
+
+
+def test_invoice_pdf_is_generated_and_attached_to_the_email():
+    pdf = invoice.build_invoice_pdf(
+        invoice_number="INV-000042", invoice_date="20 Nov 2026", name="Test <Player>", email="p@example.com",
+        player_id="pid1", amount=7200, payment_id="pay_1", organiser="Org", address_lines=["Line 1"],
+        gstin="27ABSCS6609M1ZG", event_name="Event", event_label="EV 1",
+    )
+    assert pdf.startswith(b"%PDF-")
+
+    from app.services import email_service
+
+    sent = []
+    with patch.object(email_service.fastmail, "send_message", new=AsyncMock(side_effect=lambda m: sent.append(m))):
+        assert asyncio.run(email_service.send_success_email("p@example.com", "P", "pid1", 7200, "pay_1", "INV-000042", "20 Nov 2026"))
+        assert asyncio.run(email_service.send_success_email("p@example.com", "P", "pid1", 7200, "pay_1"))
+    assert [a[0].filename for a in sent[0].attachments] == ["INV-000042.pdf"]
+    assert sent[1].attachments == []

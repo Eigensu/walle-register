@@ -2,6 +2,9 @@
 
 import html
 
+from io import BytesIO
+
+from fastapi import UploadFile
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType, MultipartSubtypeEnum
 from app.core.config import get_settings
 
@@ -319,7 +322,7 @@ async def send_success_email(
         player_id: Unique player registration ID
         amount: Payment amount in INR (whole rupees)
         payment_id: Razorpay payment ID, shown as the payment reference when available
-        invoice_number: When set, an invoice section is included in the email
+        invoice_number: When set, an invoice section is included in the email and the invoice PDF is attached
         invoice_date: Date shown on the invoice (e.g. "20 Nov 2026")
 
     Returns:
@@ -336,6 +339,34 @@ async def send_success_email(
             invoice_date=invoice_date,
         )
 
+        attachments = []
+        if invoice_number:
+            try:
+                from app.services.invoice import build_invoice_pdf
+
+                pdf = build_invoice_pdf(
+                    invoice_number=invoice_number,
+                    invoice_date=invoice_date,
+                    name=name,
+                    email=to_email,
+                    player_id=player_id,
+                    amount=amount,
+                    payment_id=payment_id,
+                    organiser=settings.organiser_name,
+                    address_lines=[l.strip() for l in (settings.organiser_address or "").split("|") if l.strip()],
+                    gstin=(settings.organiser_gstin or "").strip(),
+                    event_name=settings.event_name,
+                    event_label=f"{settings.event_short_name} {settings.event_season}",
+                )
+                attachments.append(
+                    UploadFile(filename=f"{invoice_number}.pdf", file=BytesIO(pdf))
+                )
+            except Exception:
+                # The invoice is also in the email body, so don't block the confirmation.
+                print(f"⚠️ Could not build invoice PDF for {invoice_number}")
+                import traceback
+                traceback.print_exc()
+
         support = settings.mail_support_email
         # multipart/alternative puts the preferred version last, so the plain-text body goes
         # first and the HTML is attached as its alternative.
@@ -343,6 +374,7 @@ async def send_success_email(
             subject=subject,
             recipients=[to_email],
             body=text_content,
+            attachments=[{"file": a, "mime_type": "application", "mime_subtype": "pdf"} for a in attachments],
             alternative_body=html_content,
             subtype=MessageType.plain,
             multipart_subtype=MultipartSubtypeEnum.alternative,
