@@ -137,6 +137,7 @@ export default async function RegisterPage() {
                   open={open || preview}
                   eventLabel={eventLabel}
                   feeLabel={feeLabel}
+                  rules={rules}
                   previousSeason={{ label: reg.previousSeason.label, teams }}
                   payment={{ name: org.name, description: reg.paymentName, color: site.theme.colors.royal }}
                   closed={<ClosedPanel phase={phase.phase} badge={phase.badge.text} opensAt={opensAt} cta={phase.primaryCta} />}

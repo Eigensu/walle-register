@@ -98,10 +98,10 @@ async def register_player(
     if len(digit_only_phone) < 10:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Phone must have at least 10 digits")
 
-    # Aadhar validation: exactly 12 digits
+    # Aadhaar validation: exactly 12 digits
     digit_only_aadhar = "".join(ch for ch in aadhar_number if ch.isdigit())
-    if len(digit_only_aadhar) != 16:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Aadhar must be exactly 16 digits")
+    if len(digit_only_aadhar) != 12:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Aadhaar must be exactly 12 digits")
 
     # Duplicate checks - do these before cap check to avoid confusion
     if await Player.find_one(Player.email == email):
@@ -205,10 +205,10 @@ async def update_player(
     if len(digit_only_phone) < 10:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Phone must have at least 10 digits")
 
-    # Aadhar validation
+    # Aadhaar validation: exactly 12 digits
     digit_only_aadhar = "".join(ch for ch in aadhar_number if ch.isdigit())
-    if len(digit_only_aadhar) != 16:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Aadhar must be exactly 16 digits")
+    if len(digit_only_aadhar) != 12:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Aadhaar must be exactly 12 digits")
 
     # Check for duplicate email/phone (excluding current player)
     if email != player.email:
