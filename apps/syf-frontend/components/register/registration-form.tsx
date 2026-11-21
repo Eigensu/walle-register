@@ -66,7 +66,6 @@ const empty: PlayerForm = {
   designation: "",
   aadhar_number: "",
   city: "",
-  village: "",
   batting_type: "",
   bowling_type: "",
   wicket_keeper: "",
@@ -105,7 +104,6 @@ function validate(step: RegistrationStepId, v: PlayerForm): Errors {
     need("designation", "Enter your designation")
     need("residential_area", "Enter your residential area")
     need("city", "Enter your city")
-    need("village", "Enter your native village")
     if (v.aadhar_number.replace(/\D/g, "").length !== aadharDigits) e.aadhar_number = `Enter all ${aadharDigits} digits`
     const photo = photoError(v.photo)
     if (photo) e.photo = photo
@@ -521,7 +519,6 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
                 onValue={(v) => set("residential_area", v)}
               />
               <TextField name="city" label="City" autoComplete="address-level2" value={values.city} error={errors.city} onValue={(v) => set("city", v)} />
-              <TextField name="village" label="Native village" value={values.village} error={errors.village} onValue={(v) => set("village", v)} />
               <TextField
                 name="aadhar_number"
                 label="Aadhaar number"

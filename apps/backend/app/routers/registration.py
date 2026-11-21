@@ -45,7 +45,7 @@ class PlayerDetailsResponse(BaseModel):
     photo_url: str
     aadhar_number: str
     city: str
-    village: str
+    village: str = ""
     batting_type: str
     bowling_type: str
     wicket_keeper: str
@@ -73,7 +73,7 @@ async def register_player(
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
-    village: str = Form(...),
+    village: str = Form(""),
     photo: UploadFile = File(...),
     # Cricket Details
     batting_type: str = Form(...),
@@ -169,7 +169,7 @@ async def update_player(
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
-    village: str = Form(...),
+    village: str | None = Form(None),
     photo: UploadFile = File(None),
     # Cricket Details
     batting_type: str = Form(...),
@@ -229,7 +229,9 @@ async def update_player(
     player.designation = designation
     player.aadhar_number = digit_only_aadhar
     player.city = city
-    player.village = village
+    # The form no longer collects this; keep any value already stored.
+    if village is not None:
+        player.village = village
     player.batting_type = batting_type
     player.bowling_type = bowling_type.value
     player.wicket_keeper = wicket_keeper

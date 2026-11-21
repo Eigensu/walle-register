@@ -175,6 +175,22 @@
   }
 }
 
+@keyframes ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker {
+    animation: none;
+  }
+}
+
 @utility animate-ring-turn {
   animation: ring-turn 140s linear infinite;
   transform-origin: 50% 50%;

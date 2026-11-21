@@ -8,6 +8,7 @@ import { getSiteState, siteUrl } from "@/lib/site"
 import { fontVariables } from "./fonts"
 import { Header } from "@/components/shell/header"
 import { Footer } from "@/components/shell/footer"
+import { TopTicker, TICKER_CONTENT_OFFSET } from "@/components/shell/top-ticker"
 import { StickyRegisterBar } from "@/components/shell/sticky-register-bar"
 import { RevealObserver } from "@/components/reveal-observer"
 import { Wordmark } from "@/components/brand/wordmark"
@@ -51,6 +52,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
     return url ? [{ label: s.label, href: url }] : []
   })
 
+  const ticker = phase.phase === "closed" || phase.phase === "coming_soon"
+
   return (
     <html lang={site.locale} className={fontVariables} style={brandVars}>
       <body>
@@ -60,7 +63,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         >
           Skip to content
         </a>
+        {ticker && <TopTicker text={phase.badge.text} />}
         <Header
+          offset={ticker}
           logo={<Wordmark tone="onDark" compact height={40} priority />}
           homeLabel={site.org.name}
           nav={site.nav}
@@ -68,7 +73,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           menuCta={phase.primaryCta}
           social={social}
         />
-        <main id="main">{children}</main>
+        <main id="main" className={ticker ? TICKER_CONTENT_OFFSET : undefined}>
+          {children}
+        </main>
         <Footer />
         {phase.showStickyBar && (
           <StickyRegisterBar

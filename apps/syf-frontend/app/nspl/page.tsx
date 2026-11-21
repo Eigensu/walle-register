@@ -9,9 +9,7 @@ import {
   Calendar,
   Award,
   ShieldCheck,
-  Download,
   Play,
-  ChevronDown,
   Sparkles,
   MapPin,
   Tv,
@@ -19,6 +17,7 @@ import {
   RotateCcw,
 } from "lucide-react"
 import { formatInr } from "@/lib/format"
+import { site } from "@/site.config"
 import { SeamRings } from "@/components/brand/seam-rings"
 import { Button } from "@/components/ui/button"
 
@@ -65,82 +64,10 @@ const TEAMS_PREVIEW = [
   { name: "Tresorie Gladiators", firm: "Tresorie Silver", icon: "🛡️" },
 ]
 
-const FAQS = [
-  {
-    q: "Who is eligible to register for NSPL Season 2?",
-    a: "Participation is exclusively for members of the Indian silver jewellery fraternity. This includes proprietors, partners, directors, family members, and verified full-time employees of registered bullion, manufacturing, wholesale, and retail silver enterprises.",
-  },
-  {
-    q: "What is the player registration fee and what does it cover?",
-    a: "The registration fee is ₹2,000 all-inclusive. It covers tournament registration, official customized team jersey with printed name and number, matchday insurance, ground hospitality, and participation in the player auction pool.",
-  },
-  {
-    q: "What happens if a player is not selected in the auction?",
-    a: "Per committee tournament rules, players who are not picked during the live franchise auction are eligible for a refund according to our published Refund & Cancellation Policy, or may be drafted into the official reserve pool for injury replacements.",
-  },
-  {
-    q: "What is the tournament format and rules?",
-    a: "NSPL is played under standard T20 regulations using a white leather ball, white cricket clothing, and colored team jerseys. Full match rules and regulations are approved by the SYF Technical Committee and affiliated cricket associations.",
-  },
-  {
-    q: "When and where will the matches be held?",
-    a: "Matches are scheduled across February 2027 at a premier cricket stadium in Mumbai equipped with international-grade floodlights, turf pitches, and digital scoreboards.",
-  },
-]
-
 export default function NsplPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
   const [videoEnded, setVideoEnded] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
-
-  const handleDownloadRules = () => {
-    const rulesText = `
-============================================================
-NATIONAL SILVER PREMIER LEAGUE (NSPL SEASON 2)
-OFFICIAL TOURNAMENT RULES & CODE OF CONDUCT
-Organised by Silver Youth Forum (SYF)
-============================================================
-
-1. ELIGIBILITY & VERIFICATION
-- Players must be associated with a bona fide enterprise in the Indian Silver Jewellery Trade.
-- Each registrant must complete online registration and fee settlement before the cutoff date.
-- Impersonation or fraudulent company representation leads to lifetime tournament ban.
-
-2. TOURNAMENT STRUCTURE
-- Format: T20 overs per innings.
-- Ball: High-grade tournament white leather ball.
-- Powerplay: Overs 1-6 mandatory field restrictions.
-- Bowling limit: Maximum 4 overs per bowler.
-- Time Limit: 85 minutes per innings; strict over-rate penalties apply.
-
-3. AUCTION & TEAM COMPOSITION
-- 15 players per franchise squad (including 1 designated wicket-keeper and at least 4 frontline bowlers).
-- Playing XI must be nominated at the coin toss.
-- Super Sub & Impact Player rules as announced by the Technical Committee.
-
-4. EQUIPMENT & DRESS CODE
-- Custom NSPL player jerseys provided by SYF must be worn during all matches.
-- Colored batting pads matching team kits are mandatory.
-- White cricket trousers, spikes/rubber studs conforming to turf pitch standards.
-
-5. CODE OF CONDUCT & DISCIPLINE
-- Umpires' decisions on the field are final and binding.
-- Zero tolerance for verbal abuse, umpire intimidation, or physical dissent.
-- Level 1 & Level 2 offences carry match bans and team fine deductions.
-
-For questions: contact@silveryouthforum.in
-Organizing Desk: Silver Youth Forum, Mumbai
-============================================================
-`
-    const blob = new Blob([rulesText], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "NSPL-Season2-Official-Rules.txt"
-    a.click()
-    URL.revokeObjectURL(url)
-  }
 
   const handleReplayVideo = () => {
     if (videoRef.current) {
@@ -204,7 +131,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
           <div className="flex flex-wrap items-center gap-2 mb-3">
             <span className="eyebrow text-silver">Flagship Tournament</span>
             <span className="rounded-full bg-royal/80 backdrop-blur-sm px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white shadow-sm">
-              Season 2 &middot; Feb 2027
+              Season 2 &middot; 12&ndash;14 Feb 2027
             </span>
           </div>
           <h1 className="type-display-l text-white drop-shadow-md">
@@ -219,9 +146,6 @@ Organizing Desk: Silver Youth Forum, Mumbai
               <Link href="/register">
                 Register for Season 2 <ArrowRight className="size-4 ml-1" />
               </Link>
-            </Button>
-            <Button variant="outlineDark" size="lg" onClick={handleDownloadRules} className="backdrop-blur-sm bg-navy/30 border-white/20 text-white hover:bg-white/10">
-              <Download className="size-4" /> Download Rules &amp; Regulations
             </Button>
           </div>
         </div>
@@ -239,7 +163,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
             </div>
             <div className="flex items-center gap-2 text-xs font-semibold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 rounded-full px-4 py-1.5 self-start md:self-auto backdrop-blur-sm">
               <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
-              Player Registrations Open
+              Registrations open 24 Nov
             </div>
           </div>
 
@@ -248,8 +172,8 @@ Organizing Desk: Silver Youth Forum, Mumbai
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-silver mb-1">
                 <Calendar className="size-4 text-royal" /> When
               </div>
-              <span className="text-xl font-extrabold text-white">February 2027</span>
-              <p className="mt-1 text-xs text-silver/80">Weekend floodlit match fixtures</p>
+              <span className="text-xl font-extrabold text-white">12–14 February 2027</span>
+              <p className="mt-1 text-xs text-silver/80">Three days of floodlit matches</p>
             </div>
 
             <div className="rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm p-5 transition-colors hover:bg-white/15">
@@ -264,7 +188,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-silver mb-1">
                 <MapPin className="size-4 text-royal" /> Venue &amp; Pitch
               </div>
-              <span className="text-xl font-extrabold text-white">Mumbai Stadium</span>
+              <span className="text-xl font-extrabold text-white">Police Gymkhana</span>
               <p className="mt-1 text-xs text-silver/80">Turf wickets &amp; stadium lights</p>
             </div>
 
@@ -272,7 +196,7 @@ Organizing Desk: Silver Youth Forum, Mumbai
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-silver mb-1">
                 <ShieldCheck className="size-4 text-royal" /> Entry Fee
               </div>
-              <span className="text-xl font-extrabold text-white">{formatInr(2000)}</span>
+              <span className="text-xl font-extrabold text-white">{formatInr(site.event.registration.fee.value ?? 7200)}</span>
               <p className="mt-1 text-xs text-silver/80">Kit, auction pool &amp; insurance</p>
             </div>
           </div>
@@ -346,15 +270,6 @@ Organizing Desk: Silver Youth Forum, Mumbai
                 </div>
               </div>
             ))}
-          </div>
-
-          <div className="mt-8 rounded-xl border border-white/15 bg-white/5 backdrop-blur-sm p-5 text-center">
-            <p className="text-xs text-silver">
-              Want your enterprise to own a franchise team for NSPL Season 2?{" "}
-              <Link href="/sponsors#enquire" className="font-semibold text-white underline hover:text-royal">
-                Submit a Team Ownership enquiry
-              </Link>
-            </p>
           </div>
         </div>
 
@@ -445,44 +360,6 @@ Organizing Desk: Silver Youth Forum, Mumbai
               <h3 className="text-xl font-extrabold text-white mt-1">Ritesh Doshi</h3>
               <p className="mt-1 text-xs text-silver/80">14 wickets in 6 matches</p>
             </div>
-          </div>
-        </div>
-
-        {/* 6. FAQS ACCORDION (Translucent Glassmorphism) */}
-        <div className="rounded-2xl border border-white/20 bg-navy/40 backdrop-blur-md p-6 sm:p-10 shadow-2xl text-white">
-          <div className="max-w-2xl mb-8">
-            <span className="eyebrow text-silver">Frequently Asked Questions</span>
-            <h2 className="text-2xl font-bold text-white sm:text-3xl mt-1">Common Questions About NSPL</h2>
-          </div>
-
-          <div className="space-y-4">
-            {FAQS.map((faq, index) => {
-              const isOpen = openFaq === index
-              return (
-                <div
-                  key={index}
-                  className="rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm overflow-hidden transition-colors hover:border-royal/50 hover:bg-white/15"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(isOpen ? null : index)}
-                    className="flex w-full items-center justify-between p-5 text-left text-sm sm:text-base font-bold text-white"
-                  >
-                    <span>{faq.q}</span>
-                    <ChevronDown
-                      className={`size-5 shrink-0 text-silver transition-transform duration-200 ${
-                        isOpen ? "rotate-180 text-white" : ""
-                      }`}
-                    />
-                  </button>
-                  {isOpen && (
-                    <div className="border-t border-white/15 p-5 pt-3 text-xs sm:text-sm leading-relaxed text-silver-bright">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
           </div>
         </div>
 

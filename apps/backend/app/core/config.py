@@ -71,11 +71,11 @@ class Settings(BaseSettings):
 	event_season: str = Field(default="Season 2", alias="EVENT_SEASON")
 
 	# Shown on the invoice in the confirmation email. Each line is omitted when unset.
-	organiser_gstin: str | None = Field(default=None, alias="ORGANISER_GSTIN")
+	organiser_gstin: str | None = Field(default="27ABSCS6609M1ZG", alias="ORGANISER_GSTIN")
 	# Use "|" to break the address across lines, e.g. "12 Main Road|Mumbai 400001".
-	# Defaults to the office address on the website (apps/syf-frontend/site.config.ts).
+	# Defaults to the principal place of business on the GST registration certificate.
 	organiser_address: str | None = Field(
-		default="Office No. 2, 1st Floor, Rajbaug Estate, 47/55, Above B. Bhagat Tarachand|Pydhonie, Tambakata, Mumbai 400003",
+		default="Flat No. 2, 1st Floor, Raj Baug Estate, Plot-55, Mumbadevi Road|Near Shri Mumbadevi Temple, Tambakata Pydhonie, Mandvi|Mumbai, Maharashtra 400003",
 		alias="ORGANISER_ADDRESS",
 	)
 

@@ -48,7 +48,7 @@ class Player(Document):
     photo_url: str
     aadhar_number: str
     city: str
-    village: str
+    village: str = ""
 
     # Cricket Details
     batting_type: str
