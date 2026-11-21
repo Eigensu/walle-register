@@ -317,6 +317,9 @@ async def razorpay_webhook(
             )
             if claim.modified_count == 1:
                 invoice_number, invoice_date = await _safe_ensure_invoice(payment)
+                if not invoice_number:
+                    await _release_confirmation_claim(payment.id)
+                    return {"status": "ok"}
                 full_name = f"{player.first_name} {player.last_name}"
                 amount_inr = payment.amount // 100  # Convert paise to rupees
 
@@ -387,6 +390,14 @@ async def _safe_ensure_invoice(payment: Payment) -> tuple[str | None, str | None
         return None, None
 
 
+async def _release_confirmation_claim(payment_id_obj) -> None:
+    """The invoice couldn't be issued: release the 'sent' claim so a retry (Razorpay webhook
+    redelivery or /verify) sends the confirmation with its invoice, instead of one without."""
+    await Payment.get_motor_collection().update_one(
+        {"_id": payment_id_obj}, {"$set": {"confirmation_sent": False}}
+    )
+
+
 async def _send_confirmation(payment_id_obj, **kwargs) -> None:
     """Send the confirmation; if it fails, release the 'sent' claim so a retry can resend."""
     sent = False
@@ -395,9 +406,7 @@ async def _send_confirmation(payment_id_obj, **kwargs) -> None:
     except Exception:
         logger.exception("Confirmation email crashed for payment %s", payment_id_obj)
     if not sent:
-        await Payment.get_motor_collection().update_one(
-            {"_id": payment_id_obj}, {"$set": {"confirmation_sent": False}}
-        )
+        await _release_confirmation_claim(payment_id_obj)
 
 
 async def _mark_cashfree_captured(
@@ -429,6 +438,9 @@ async def _mark_cashfree_captured(
     )
     if claim.modified_count == 1:
         invoice_number, invoice_date = await _safe_ensure_invoice(payment)
+        if not invoice_number:
+            await _release_confirmation_claim(payment.id)
+            return
         background_tasks.add_task(
             _send_confirmation,
             payment.id,

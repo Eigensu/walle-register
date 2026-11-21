@@ -40,7 +40,8 @@ async def ensure_invoice(payment: Payment) -> tuple[str, str]:
     # never consumes a number and the series stays gapless.
     # A claim older than _CLAIM_TTL is treated as abandoned (the claimant crashed before
     # writing the number), so a retry can take it over instead of being stuck forever.
-    now = datetime.now(timezone.utc)
+    # Mongo stores datetimes at millisecond precision, so truncate to make the value match exactly.
+    now = datetime.now(timezone.utc).replace(microsecond=0)
     claim = await collection.update_one(
         {
             "_id": payment.id,
@@ -54,7 +55,12 @@ async def ensure_invoice(payment: Payment) -> tuple[str, str]:
     )
     if claim.modified_count == 1:
         number = f"INV-{await _next_sequence():06d}"
-        await collection.update_one({"_id": payment.id}, {"$set": {"invoice_number": number}})
+        # Only write while our claim is still the current one. If we stalled past the TTL and
+        # someone took over, theirs wins and we must not overwrite their number.
+        await collection.update_one(
+            {"_id": payment.id, "invoice_number": None, "invoice_claim_at": now},
+            {"$set": {"invoice_number": number}},
+        )
 
     # Losers wait briefly for the winner to finish writing the number.
     for _ in range(_WAIT_TRIES):
