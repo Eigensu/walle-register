@@ -51,7 +51,7 @@ def test_format_date_converts_utc_to_ist():
 def _fake_collection(stored):
     coll = MagicMock()
     coll.database = {"counters": MagicMock(find_one_and_update=AsyncMock(return_value={"seq": 7}))}
-    coll.update_one = AsyncMock()
+    coll.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
     coll.find_one = AsyncMock(return_value=stored)
     return coll
 
@@ -62,8 +62,8 @@ def test_ensure_invoice_assigns_sequential_number_once():
     with patch.object(invoice.Payment, "get_motor_collection", return_value=coll):
         result = asyncio.run(invoice.ensure_invoice(payment))
     assert result == ("INV-000007", "20 Nov 2026")
-    # Only fills in when unset, so a concurrent caller can't overwrite an existing invoice.
-    assert coll.update_one.call_args.args[0] == {"_id": 1, "invoice_number": None}
+    # The counter is only touched after winning the claim, and an existing invoice is never overwritten.
+    assert coll.update_one.call_args_list[0].args[0] == {"_id": 1, "invoice_number": None, "invoice_claimed": {"$ne": True}}
 
 
 def test_ensure_invoice_reuses_existing_without_touching_counter():
@@ -73,3 +73,13 @@ def test_ensure_invoice_reuses_existing_without_touching_counter():
         result = asyncio.run(invoice.ensure_invoice(payment))
     assert result == ("INV-000003", "20 Nov 2026")
     coll.update_one.assert_not_called()
+
+
+def test_ensure_invoice_losing_the_claim_does_not_burn_a_number():
+    payment = MagicMock(id=1, invoice_number=None, paid_at=None)
+    coll = _fake_collection({"invoice_number": "INV-000009", "paid_at": datetime(2026, 11, 19, 19, 0)})
+    coll.update_one = AsyncMock(return_value=MagicMock(modified_count=0))
+    with patch.object(invoice.Payment, "get_motor_collection", return_value=coll):
+        result = asyncio.run(invoice.ensure_invoice(payment))
+    assert result == ("INV-000009", "20 Nov 2026")
+    coll.database["counters"].find_one_and_update.assert_not_called()

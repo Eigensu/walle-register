@@ -1,5 +1,8 @@
 /** Scrolling registration notice pinned to the very top of every page while registrations are not open. */
+// Literal class names so Tailwind picks them up; keep all three in step.
 export const TICKER_HEIGHT = "h-9"
+export const TICKER_HEADER_OFFSET = "top-9"
+export const TICKER_CONTENT_OFFSET = "pt-9"
 
 export function TopTicker({ text }: { text: string }) {
   const items = Array.from({ length: 10 })

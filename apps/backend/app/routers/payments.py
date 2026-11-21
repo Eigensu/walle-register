@@ -211,10 +211,16 @@ async def verify_payment(
     )
 
     if not is_valid:
-        payment.status = PaymentStatus.FAILED
-        payment.razorpay_payment_id = payload.razorpay_payment_id
-        payment.razorpay_signature = payload.razorpay_signature
-        await payment.save()
+        # Targeted update: never downgrade a payment the webhook already captured, and never
+        # overwrite invoice fields with a stale full-document save.
+        await Payment.get_motor_collection().update_one(
+            {"_id": payment.id, "status": {"$ne": PaymentStatus.CAPTURED.value}},
+            {"$set": {
+                "status": PaymentStatus.FAILED.value,
+                "razorpay_payment_id": payload.razorpay_payment_id,
+                "razorpay_signature": payload.razorpay_signature,
+            }},
+        )
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid signature")
 
     await Payment.get_motor_collection().update_one(
@@ -310,13 +316,14 @@ async def razorpay_webhook(
                 {"$set": {"confirmation_sent": True}},
             )
             if claim.modified_count == 1:
-                invoice_number, invoice_date = await ensure_invoice(payment)
+                invoice_number, invoice_date = await _safe_ensure_invoice(payment)
                 full_name = f"{player.first_name} {player.last_name}"
                 amount_inr = payment.amount // 100  # Convert paise to rupees
 
                 # Send email asynchronously (non-blocking)
                 background_tasks.add_task(
-                    send_success_email,
+                    _send_confirmation,
+                    payment.id,
                     to_email=player.email,
                     name=full_name,
                     player_id=str(player.id),
@@ -371,6 +378,28 @@ def _build_return_url(base: str | None, order_id: str) -> str | None:
     return url if len(url) <= 250 else None
 
 
+async def _safe_ensure_invoice(payment: Payment) -> tuple[str | None, str | None]:
+    """Assign the invoice, but never let a failure block the confirmation email."""
+    try:
+        return await ensure_invoice(payment)
+    except Exception:
+        logger.exception("Could not assign an invoice for payment %s", payment.id)
+        return None, None
+
+
+async def _send_confirmation(payment_id_obj, **kwargs) -> None:
+    """Send the confirmation; if it fails, release the 'sent' claim so a retry can resend."""
+    sent = False
+    try:
+        sent = await send_success_email(**kwargs)
+    except Exception:
+        logger.exception("Confirmation email crashed for payment %s", payment_id_obj)
+    if not sent:
+        await Payment.get_motor_collection().update_one(
+            {"_id": payment_id_obj}, {"$set": {"confirmation_sent": False}}
+        )
+
+
 async def _mark_cashfree_captured(
     payment: Payment, cf_payment_id: str | None, background_tasks: BackgroundTasks
 ) -> None:
@@ -394,7 +423,7 @@ async def _mark_cashfree_captured(
         await player.save()
 
     if newly_captured:
-        invoice_number, invoice_date = await ensure_invoice(payment)
+        invoice_number, invoice_date = await _safe_ensure_invoice(payment)
         background_tasks.add_task(
             send_success_email,
             to_email=player.email,

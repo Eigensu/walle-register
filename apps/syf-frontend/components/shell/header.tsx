@@ -1,5 +1,6 @@
 "use client"
 
+import { TICKER_HEADER_OFFSET } from "@/components/shell/top-ticker"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState, type ReactNode } from "react"
@@ -34,7 +35,7 @@ export function Header({ logo, homeLabel, nav, headerCta, menuCta, social, offse
   return (
     <header
       className={cn(
-        offset ? "top-9" : "top-0",
+        offset ? TICKER_HEADER_OFFSET : "top-0",
         "on-navy fixed inset-x-0 z-50 border-b transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200",
         scrolled
           ? "border-navy-line bg-navy/85 shadow-[0_8px_30px_rgb(14_26_43/0.18)] backdrop-blur-md"

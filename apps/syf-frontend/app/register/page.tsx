@@ -3,7 +3,7 @@ import Link from "next/link"
 import { Suspense, type ReactNode } from "react"
 import { CalendarClock, Loader2 } from "lucide-react"
 import { site } from "@/site.config"
-import { isPending, isProduction, isTbcSlot, pub, type Field } from "@/lib/content"
+import { isPending, isProduction, pub, type Field } from "@/lib/content"
 import { formatDate, formatInr } from "@/lib/format"
 import type { Cta } from "@/lib/phase"
 import { getSiteState } from "@/lib/site"
@@ -55,7 +55,7 @@ export default async function RegisterPage() {
     { label: "Season", value: seasonDates(), f: season.startsAt },
     { label: "Venue", value: venue, f: season.venue },
   ]
-  const shownFacts = facts.filter((x) => x.value || isTbcSlot(x.f))
+  const shownFacts = facts.filter((x) => x.value)
 
   return (
     <>

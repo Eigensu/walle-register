@@ -1,19 +1,19 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { site } from "@/site.config"
-import { isTbcSlot, pub, type Field } from "@/lib/content"
-import { TbcBadge, TbcFor } from "@/components/brand/tbc"
+import { pub, type Field } from "@/lib/content"
+import { TbcFor } from "@/components/brand/tbc"
 import { Wordmark } from "@/components/brand/wordmark"
 import { SeamRings } from "@/components/brand/seam-rings"
 
 function ContactRow({ label, f, render }: { label: string; f: Field<string>; render: (value: string) => ReactNode }) {
   const value = pub(f)
-  if (!value && !isTbcSlot(f)) return null
+  if (!value) return null
   return (
     <div>
       <dt className="eyebrow text-[0.6875rem] text-silver-dim">{label}</dt>
       <dd className="mt-1 text-silver-bright">
-        {value ? render(value) : <TbcBadge note={f.note} />} {value && <TbcFor f={f} />}
+        {render(value)} <TbcFor f={f} />
       </dd>
     </div>
   )
@@ -29,7 +29,7 @@ export function Footer() {
     return url ? [{ label: s.label, href: url, pending: !s.url.confirmed }] : []
   })
   const contactFields = [contact.phone, contact.address]
-  const hasContact = contactFields.some((f) => pub(f) || isTbcSlot(f))
+  const hasContact = contactFields.some((f) => pub(f))
   const year = new Date().getFullYear()
 
   return (
@@ -45,7 +45,7 @@ export function Footer() {
               {description} <TbcFor f={org.description} />
             </p>
           )}
-          {socialLinks.length > 0 ? (
+          {socialLinks.length > 0 && (
             <ul className="mt-6 flex flex-wrap gap-5">
               {socialLinks.map((s) => (
                 <li key={s.label}>
@@ -55,12 +55,6 @@ export function Footer() {
                 </li>
               ))}
             </ul>
-          ) : (
-            social.some((s) => isTbcSlot(s.url)) && (
-              <p className="mt-6 flex items-center gap-2 text-sm text-silver-dim">
-                <TbcBadge note="Social links" /> {social.map((s) => s.label).join(" · ")}
-              </p>
-            )
           )}
         </div>
 

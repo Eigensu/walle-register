@@ -8,7 +8,7 @@ import { getSiteState, siteUrl } from "@/lib/site"
 import { fontVariables } from "./fonts"
 import { Header } from "@/components/shell/header"
 import { Footer } from "@/components/shell/footer"
-import { TopTicker } from "@/components/shell/top-ticker"
+import { TopTicker, TICKER_CONTENT_OFFSET } from "@/components/shell/top-ticker"
 import { StickyRegisterBar } from "@/components/shell/sticky-register-bar"
 import { RevealObserver } from "@/components/reveal-observer"
 import { Wordmark } from "@/components/brand/wordmark"
@@ -73,7 +73,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           menuCta={phase.primaryCta}
           social={social}
         />
-        <main id="main" className={ticker ? "pt-9" : undefined}>
+        <main id="main" className={ticker ? TICKER_CONTENT_OFFSET : undefined}>
           {children}
         </main>
         <Footer />
