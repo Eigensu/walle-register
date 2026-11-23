@@ -1,6 +1,8 @@
 // Browser-side client for the registration backend (same FastAPI code as apps/backend). Requests
 // go to /api/*, which next.config.ts proxies to REGISTRATION_API_URL.
 
+import { withRetry, type RetryOptions } from "./retry"
+
 /** Field names match the backend's form fields, which still carry JMCL's names for last season. */
 export type PlayerForm = {
   first_name: string
@@ -35,20 +37,42 @@ function currentBowlingValue(value: string): string {
   return value
 }
 
+/** A failed API call. `status` is the HTTP status, or null when no response came back at all. */
+export class ApiError extends Error {
+  status: number | null
+
+  constructor(message: string, status: number | null) {
+    super(message)
+    this.name = "ApiError"
+    this.status = status
+  }
+}
+
+/**
+ * The request may never have reached the server, or the server was briefly unavailable, so asking
+ * again can work. A phone that was switched to a UPI app and back often fails its first request.
+ */
+export const isTransientError = (err: unknown): boolean =>
+  err instanceof ApiError && (err.status === null || err.status === 408 || err.status === 429 || err.status >= 500)
+
+/** Aborts a request that hangs, which iOS can do for a page that was in the background. */
+const timeoutSignal = (ms: number): AbortSignal | undefined =>
+  typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function" ? AbortSignal.timeout(ms) : undefined
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
     res = await fetch(`/api${path}`, init)
   } catch {
-    throw new Error("Couldn't reach the registration server. Check your connection and try again.")
+    throw new ApiError("Couldn't reach the registration server. Check your connection and try again.", null)
   }
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     const detail = body?.detail
     // FastAPI sends a string for HTTPException and a list for validation errors.
-    if (typeof detail === "string") throw new Error(detail)
-    if (Array.isArray(detail) && typeof detail[0]?.msg === "string") throw new Error(detail[0].msg)
-    throw new Error("Something went wrong. Please try again.")
+    if (typeof detail === "string") throw new ApiError(detail, res.status)
+    if (Array.isArray(detail) && typeof detail[0]?.msg === "string") throw new ApiError(detail[0].msg, res.status)
+    throw new ApiError("Something went wrong. Please try again.", res.status)
   }
   return res.json() as Promise<T>
 }
@@ -145,4 +169,18 @@ export const createCashfreeOrder = (playerId: string, returnUrl: string) =>
 
 /** Asks the backend to confirm the order with Cashfree; the browser's own result proves nothing. */
 export const verifyCashfreePayment = (orderId: string, playerId?: string) =>
-  request<CashfreeVerifyResponse>("/payments/cashfree/verify", json({ order_id: orderId, player_id: playerId }))
+  request<CashfreeVerifyResponse>("/payments/cashfree/verify", {
+    ...json({ order_id: orderId, player_id: playerId }),
+    signal: timeoutSignal(15_000),
+  })
+
+/**
+ * Confirms a Cashfree order, trying again if the request fails to get through. This is what a player
+ * needs right after paying: the money is gone, so a single dropped request mustn't look like a failed
+ * payment. Rejects only once every attempt has failed (or for an error that retrying can't fix).
+ */
+export const verifyCashfreePaymentWithRetry = (orderId: string, playerId?: string, options?: Partial<RetryOptions>) =>
+  withRetry(() => verifyCashfreePayment(orderId, playerId), { retryIf: isTransientError, ...options })
+
+export const getPlayerWithRetry = (playerId: string, options?: Partial<RetryOptions>) =>
+  withRetry(() => getPlayer(playerId), { retryIf: isTransientError, ...options })

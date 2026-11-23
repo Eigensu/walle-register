@@ -1,20 +1,23 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { ArrowLeft, ArrowRight, CircleCheck, CircleAlert, Loader2, LockKeyhole, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { track } from "@/lib/analytics"
 import { formatInr } from "@/lib/format"
 import { payWithCashfree } from "@/lib/cashfree"
+import { clearPendingPayment, loadPendingPayment, savePendingPayment } from "@/lib/pending-payment"
 import { payWithRazorpay } from "@/lib/razorpay"
 import {
   createCashfreeOrder,
   createOrder,
   getPaymentGateways,
   getPlayer,
+  getPlayerWithRetry,
+  isTransientError,
   registerPlayer,
   updatePlayer,
-  verifyCashfreePayment,
+  verifyCashfreePaymentWithRetry,
   verifyPayment,
   type CashfreeVerifyResponse,
   type CreateOrderResponse,
@@ -33,6 +36,7 @@ import {
   type RegistrationStepId,
 } from "@/content/registration"
 import { ChoiceGroup, fieldId, PhotoField, SelectField, TextField } from "./fields"
+import { PaymentUnconfirmed } from "./payment-unconfirmed"
 import { Stepper } from "./stepper"
 
 type Props = {
@@ -137,15 +141,32 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
   const [gateway, setGateway] = useState<PaymentGateway | null>(null)
   // Set when a Cashfree payment is still processing or under review, so the player can't pay twice.
   const [payLocked, setPayLocked] = useState(false)
+  // A Cashfree payment we couldn't get an answer about, e.g. no connection yet after a UPI app.
+  const [unconfirmed, setUnconfirmed] = useState<{ orderId: string; playerId: string | null } | null>(null)
+  const [checking, setChecking] = useState(false)
+  // Waiting for the backend to confirm a Cashfree payment the player has just made.
+  const [confirming, setConfirming] = useState(false)
   const [notice, setNotice] = useState<Notice>(null)
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(Boolean(resumeId || returnOrderId))
+  // Picking up a payment that was started before this page (re)loaded, with no ?order_id in the URL.
+  const [recovering, setRecovering] = useState(false)
   const [rulesAccepted, setRulesAccepted] = useState(Boolean(resumeId || returnOrderId))
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false)
   const [rulesReadToEnd, setRulesReadToEnd] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const rulesContentRef = useRef<HTMLDivElement>(null)
   const firstRender = useRef(true)
+  const alive = useRef(true)
+  const checkingRef = useRef(false)
+
+  // Lets a retry loop stop once the page has gone. Declared first so it is set before the effects below run.
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!rulesDialogOpen) return
@@ -173,36 +194,95 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
     }
   }, [])
 
-  // Back from a Cashfree bank or UPI redirect: confirm the order with the backend, then show the result.
-  useEffect(() => {
-    if (!returnOrderId || resumeId) return
-    let cancelled = false
-    ;(async () => {
+  /**
+   * Asks the backend how a Cashfree order ended and shows the outcome: after a bank or UPI redirect,
+   * when the page reloads mid-payment, and when re-checking an unconfirmed payment. It retries a request
+   * that doesn't get through, and never throws: a connection that stays down becomes the calm
+   * "unconfirmed" screen rather than an error, because the player may well have paid.
+   */
+  const resolveOrder = useCallback(
+    async (orderId: string, knownPlayerId: string | null, { announceErrors, delays }: { announceErrors: boolean; delays?: number[] }) => {
+      const retry = { isCancelled: () => !alive.current, ...(delays && { delays }) }
       try {
-        const result = await verifyCashfreePayment(returnOrderId)
-        const player = await getPlayer(result.player_id)
-        if (cancelled) return
+        const result = await verifyCashfreePaymentWithRetry(orderId, knownPlayerId ?? undefined, retry)
+        const player = await getPlayerWithRetry(result.player_id, retry)
+        if (!alive.current) return
+        setUnconfirmed(null)
         setValues(player)
         setPlayerId(result.player_id)
         setGateway("cashfree")
         if (result.status === "CAPTURED") {
+          clearPendingPayment()
           track("registration_paid", { gateway: "cashfree" })
           setStep("done")
           return
         }
+        // Still processing or under review: keep the order so a reload picks it up again.
+        if (!inFlight(result.status)) clearPendingPayment()
         setStep("payment")
         setPayLocked(inFlight(result.status))
         setNotice({ kind: "error", text: inFlight(result.status) ? result.message : `${result.message} Your details are saved.` })
       } catch (err) {
-        if (!cancelled) setNotice({ kind: "error", text: (err as Error).message })
-      } finally {
-        if (!cancelled) setLoading(false)
+        if (!alive.current) return
+        if (isTransientError(err)) {
+          setUnconfirmed((previous) => (previous?.orderId === orderId ? previous : { orderId, playerId: knownPlayerId }))
+          return
+        }
+        setUnconfirmed(null)
+        clearPendingPayment()
+        if (announceErrors) setNotice({ kind: "error", text: (err as Error).message })
       }
-    })()
-    return () => {
-      cancelled = true
+    },
+    [],
+  )
+
+  // Back from a Cashfree bank or UPI redirect (?order_id=…), or the page was reloaded or discarded
+  // while the player was in their UPI app: find out how the order ended.
+  useEffect(() => {
+    if (resumeId) return
+    const stored = loadPendingPayment()
+    const orderId = returnOrderId ?? stored?.orderId
+    if (!orderId) return
+    setRulesAccepted(true)
+    if (!returnOrderId) {
+      setRecovering(true)
+      setLoading(true)
     }
-  }, [returnOrderId, resumeId])
+    void resolveOrder(orderId, stored?.orderId === orderId ? stored.playerId : null, { announceErrors: Boolean(returnOrderId) }).finally(() => {
+      if (alive.current) setLoading(false)
+    })
+  }, [returnOrderId, resumeId, resolveOrder])
+
+  // Check an unconfirmed payment again: on request, when the connection or the page comes back, and
+  // every so often. The backend confirms paid orders by itself, so this is usually a matter of time.
+  const checkAgain = useCallback(async () => {
+    if (!unconfirmed || checkingRef.current) return
+    checkingRef.current = true
+    setChecking(true)
+    try {
+      await resolveOrder(unconfirmed.orderId, unconfirmed.playerId, { announceErrors: true, delays: [1500, 3000] })
+    } finally {
+      checkingRef.current = false
+      if (alive.current) setChecking(false)
+    }
+  }, [unconfirmed, resolveOrder])
+
+  useEffect(() => {
+    if (!unconfirmed) return
+    const recheck = () => {
+      if (document.visibilityState === "visible") void checkAgain()
+    }
+    const timer = window.setInterval(recheck, 15_000)
+    window.addEventListener("online", recheck)
+    window.addEventListener("pageshow", recheck)
+    document.addEventListener("visibilitychange", recheck)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener("online", recheck)
+      window.removeEventListener("pageshow", recheck)
+      document.removeEventListener("visibilitychange", recheck)
+    }
+  }, [unconfirmed, checkAgain])
 
   // Resuming: load the saved registration and go straight to payment.
   useEffect(() => {
@@ -295,9 +375,35 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
     // Cashfree appends "?order_id=…" to this when a bank or UPI page sends the payer back.
     const returnUrl = `${window.location.origin}${window.location.pathname}`
     const created = await createCashfreeOrder(id, returnUrl)
-    if ((await payWithCashfree(created)) === "redirected") return
-    const result = await verifyCashfreePayment(created.order_id, id)
+    // Remember the order until we know how it ended: if this page is reloaded or discarded while the
+    // player is in a UPI app, the next load asks the backend about it instead of losing the payment.
+    savePendingPayment({ orderId: created.order_id, playerId: id })
+    let outcome: Awaited<ReturnType<typeof payWithCashfree>>
+    try {
+      outcome = await payWithCashfree(created)
+    } catch (err) {
+      clearPendingPayment() // checkout never opened, so nothing was paid
+      throw err
+    }
+    if (outcome === "redirected") return
+    setConfirming(true)
+    let result: CashfreeVerifyResponse
+    try {
+      // The first request after returning from a UPI app often fails, so this retries it.
+      result = await verifyCashfreePaymentWithRetry(created.order_id, id, { isCancelled: () => !alive.current })
+    } catch (err) {
+      // Still no answer: the player may have paid, so don't show an error or offer to pay again.
+      if (isTransientError(err)) {
+        if (alive.current) setUnconfirmed({ orderId: created.order_id, playerId: id })
+        return
+      }
+      clearPendingPayment()
+      throw err
+    } finally {
+      setConfirming(false)
+    }
     if (result.status === "CAPTURED") {
+      clearPendingPayment()
       track("registration_paid", { gateway: "cashfree" })
       setStep("done")
       return
@@ -307,6 +413,7 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
       setNotice({ kind: "error", text: result.message })
       return
     }
+    clearPendingPayment()
     setNotice({ kind: "error", text: "Payment wasn't completed. Your details are saved, so you can try again whenever you're ready." })
   }
 
@@ -360,10 +467,12 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
     return (
       <div role="status" className="flex flex-col items-center gap-3 py-20 text-ink-muted">
         <Loader2 className="size-7 animate-spin text-royal" aria-hidden="true" />
-        {returnOrderId && !resumeId ? "Confirming your payment…" : "Loading your registration…"}
+        {(returnOrderId && !resumeId) || recovering ? "Confirming your payment…" : "Loading your registration…"}
       </div>
     )
   }
+
+  if (unconfirmed) return <PaymentUnconfirmed playerId={unconfirmed.playerId} checking={checking} onCheck={() => void checkAgain()} />
 
   const active = steps[index(step)]
   const fullName = `${values.first_name} ${values.last_name}`.trim()
@@ -757,7 +866,7 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
               {busy ? (
                 <>
                   <Loader2 className="animate-spin" aria-hidden="true" />
-                  Opening checkout…
+                  {confirming ? "Confirming your payment…" : "Opening checkout…"}
                 </>
               ) : (
                 <>
