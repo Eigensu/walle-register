@@ -34,6 +34,9 @@ class Settings(BaseSettings):
 	cashfree_secret_key: str | None = Field(default=None, alias="CASHFREE_SECRET_KEY")
 	cashfree_env: Literal["sandbox", "production"] = Field(default="sandbox", alias="CASHFREE_ENV")
 	cashfree_api_version: str = Field(default="2025-01-01", alias="CASHFREE_API_VERSION")
+	# How often the backend re-checks unpaid Cashfree orders with Cashfree, so a payment is confirmed
+	# even if the player's browser and the webhook both missed it. 0 turns the check off.
+	cashfree_reconcile_interval_seconds: int = Field(default=60, ge=0, alias="CASHFREE_RECONCILE_INTERVAL_SECONDS")
 
 	registration_fee_inr: int = Field(default=7200, alias="REGISTRATION_FEE_INR")
 

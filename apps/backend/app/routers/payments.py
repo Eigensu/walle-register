@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import secrets
 import time
@@ -455,9 +456,13 @@ async def _mark_cashfree_captured(
 
 
 async def _sync_cashfree_order(
-    payment: Payment, cashfree: CashfreeService, background_tasks: BackgroundTasks
+    payment: Payment, cashfree: CashfreeService, background_tasks: BackgroundTasks, *, mark_failed: bool = True
 ) -> tuple[str, str]:
-    """Ask Cashfree for the real order status (never trust the browser) and update our records."""
+    """Ask Cashfree for the real order status (never trust the browser) and update our records.
+
+    mark_failed=False leaves an unpaid order as CREATED even when its latest attempt failed. The
+    background reconciler uses it: a player can retry inside the same Cashfree checkout, so an
+    early "failed" says nothing about whether the order will still be paid."""
     order = await cashfree.get_order(payment.razorpay_order_id)
     order_status = order.get("order_status")
 
@@ -504,7 +509,7 @@ async def _sync_cashfree_order(
     if latest_status == "PENDING":
         return "PENDING", "Your payment is being processed. We'll confirm by email once it completes."
     if latest_status in ("FAILED", "USER_DROPPED", "CANCELLED", "VOID") or order_status in ("EXPIRED", "TERMINATED"):
-        if payment.status == PaymentStatus.CREATED:
+        if mark_failed and payment.status == PaymentStatus.CREATED:
             payment.status = PaymentStatus.FAILED
             await payment.save()
         return "FAILED", "Payment was not completed. Please try again."
@@ -633,3 +638,81 @@ async def cashfree_webhook(
     # Re-check with the Cashfree API so the final state always comes from Cashfree itself.
     await _sync_cashfree_order(payment, cashfree, background_tasks)
     return {"status": "ok"}
+
+
+# --- Background reconciliation ---------------------------------------------------------------
+# A paid order is normally confirmed by the player's browser (/cashfree/verify) or by Cashfree's
+# webhook, but either can go missing: iOS suspends the page while the player is in their UPI app
+# and the first request afterwards fails, and the webhook only works once its URL is set in the
+# Cashfree dashboard. The reconciler asks Cashfree directly about unpaid orders, so a paid player
+# is confirmed (and emailed their invoice) whichever of the three paths fails.
+RECONCILE_MIN_AGE = timedelta(seconds=20)  # let the browser's /verify and the webhook go first
+RECONCILE_FRESH_WINDOW = timedelta(minutes=15)  # a player may still be paying: checked every pass
+RECONCILE_LOOKBACK = timedelta(hours=24)  # older unpaid orders are checked every RECONCILE_OLDER_EVERY passes
+RECONCILE_OLDER_EVERY = 10
+RECONCILE_BATCH = 100
+RECONCILE_MAX_FAILURES = 3  # consecutive errors before giving up on this pass (Cashfree is probably down)
+
+
+async def _unpaid_cashfree_payments(include_older: bool) -> list[Payment]:
+    """Cashfree orders still waiting for a result, newest first."""
+    now = datetime.now(timezone.utc)
+    oldest = now - (RECONCILE_LOOKBACK if include_older else RECONCILE_FRESH_WINDOW)
+    return (
+        await Payment.find(
+            Payment.gateway == PaymentGateway.CASHFREE,
+            Payment.status == PaymentStatus.CREATED,
+            Payment.created_at >= oldest,
+            Payment.created_at <= now - RECONCILE_MIN_AGE,
+        )
+        .sort(-Payment.created_at)
+        .limit(RECONCILE_BATCH)
+        .to_list()
+    )
+
+
+async def reconcile_cashfree_payments(cashfree: CashfreeService, *, include_older: bool = True) -> int:
+    """Re-check unpaid Cashfree orders with Cashfree itself and record any that were paid.
+
+    Returns how many orders were found paid. Safe to run alongside /verify and the webhook: the
+    capture and the confirmation email are claimed atomically, so whichever gets there first wins.
+    """
+    found_paid = 0
+    failures = 0
+    for payment in await _unpaid_cashfree_payments(include_older):
+        # Request background tasks only run for a response, so run this payment's ourselves.
+        tasks = BackgroundTasks()
+        try:
+            result_status, _ = await _sync_cashfree_order(payment, cashfree, tasks, mark_failed=False)
+        except Exception as exc:
+            failures += 1
+            logger.warning(
+                "Reconciler could not check Cashfree order %s: %s",
+                payment.razorpay_order_id, getattr(exc, "detail", exc),
+                exc_info=not isinstance(exc, HTTPException),
+            )
+            if failures >= RECONCILE_MAX_FAILURES:
+                break
+            continue
+        failures = 0
+        if result_status in ("CAPTURED", "NEEDS_REVIEW"):
+            found_paid += 1
+            logger.info(
+                "Reconciler found Cashfree order %s paid (player %s): %s",
+                payment.razorpay_order_id, payment.player_id, result_status,
+            )
+        await tasks()
+    return found_paid
+
+
+async def run_cashfree_reconciler(cashfree: CashfreeService, interval_seconds: float) -> None:
+    """Reconcile forever, until cancelled. Orders from the last 15 minutes are checked on every
+    pass; the rest of the last 24 hours only on every tenth, to keep Cashfree API calls low."""
+    tick = 0
+    while True:
+        try:
+            await reconcile_cashfree_payments(cashfree, include_older=tick % RECONCILE_OLDER_EVERY == 0)
+        except Exception:
+            logger.exception("Cashfree reconciliation pass failed")
+        tick += 1
+        await asyncio.sleep(interval_seconds)
