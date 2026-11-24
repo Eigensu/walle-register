@@ -32,7 +32,7 @@ const HOW_IT_WORKS = [
   { step: "04", title: "Main Tournament" },
 ]
 
-const TEAMS_PREVIEW = [
+const TEAMS_PREVIEW: { name: string; firm?: string }[] = [
   { name: "Silbells Strikers", firm: "Silbells Jewellery" },
   { name: "SSI Titans", firm: "Silver Show of India" },
   { name: "RS Bullion Blasters", firm: "RS Bullion" },
@@ -41,6 +41,17 @@ const TEAMS_PREVIEW = [
   { name: "Divine Super Kings", firm: "Divine Silver" },
   { name: "Richezza Stars", firm: "Richezza Royal 925" },
   { name: "Tresorie Gladiators", firm: "Tresorie Silver" },
+  { name: "Silverzone Rising Star" },
+  { name: "Maa Silver Kings" },
+  { name: "Mexx Mavericks" },
+  { name: "Divine Dynamites" },
+  { name: "Marvelous Mysha" },
+  { name: "Ksp Comets" },
+  { name: "Kuber Bullion kings" },
+  { name: "Sparkling silver" },
+  { name: "S S lions" },
+  { name: "Shree Balaji Yodhas" },
+  { name: "A.O.S. TIGERS" },
 ]
 
 export default function NsplPage() {
@@ -238,7 +249,7 @@ export default function NsplPage() {
                   <h3 className="font-bold text-white text-sm group-hover:text-royal transition-colors">
                     {t.name}
                   </h3>
-                  <p className="text-xs text-silver/70">{t.firm}</p>
+                  {t.firm && <p className="text-xs text-silver/70">{t.firm}</p>}
                   <span className="mt-2 inline-block rounded bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-silver-bright">
                     Squad drafting soon
                   </span>
