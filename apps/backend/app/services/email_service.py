@@ -6,6 +6,7 @@ from io import BytesIO
 
 from fastapi import UploadFile
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType, MultipartSubtypeEnum
+from app.services.gst import compute_gst_breakup, format_paise
 from app.core.config import get_settings
 
 settings = get_settings()
@@ -152,6 +153,8 @@ def build_success_email(
 
     address_lines = [l.strip() for l in (settings.organiser_address or "").split("|") if l.strip()]
     gstin = (settings.organiser_gstin or "").strip()
+    sac_code = (settings.sac_code or "").strip()
+    breakup = compute_gst_breakup(amount, rate=settings.gst_rate_percent, seller_gstin=gstin, buyer_gstin=buyer_gstin)
 
     invoice_html = ""
     if invoice_number:
@@ -163,6 +166,29 @@ def build_success_email(
             + (f'<br><span style="color:{INK_MUTED};">{e(email)}</span>' if email else "")
             + f"<br>Customer GSTIN: {e((buyer_gstin or '').strip())}"
         )
+        cell = f"padding:12px 0;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:14px;color:{INK};"
+        label = f"padding:12px 16px 12px 0;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:14px;color:{INK};"
+        sac = f'<br><span style="font-size:12px;color:{INK_MUTED};">SAC: {e(sac_code)}</span>' if sac_code else ""
+        fee_label = f'Player registration fee<br><span style="font-size:12px;color:{INK_MUTED};">{e(event_name)} ({e(event_label)})</span>{sac}'
+        total_label = f"padding:12px 16px 12px 0;font-family:{FONT_BODY};font-size:14px;font-weight:700;color:{NAVY};"
+        total_cell = f"padding:12px 0;font-family:{FONT_BODY};font-size:14px;font-weight:700;color:{NAVY};"
+        if breakup:
+            money = lambda paise: format_paise(paise, "₹")  # noqa: E731
+            half_rate = f"{breakup.rate / 2:g}"
+            tax_lines = (
+                [(f"CGST @ {half_rate}%", breakup.cgst), (f"SGST @ {half_rate}%", breakup.sgst)]
+                if breakup.intra_state
+                else [(f"IGST @ {breakup.rate}%", breakup.igst)]
+            )
+            fee_rows_html = f'<tr><td style="{label}">{fee_label}</td><td align="right" valign="top" style="{cell}">{e(money(breakup.taxable))}</td></tr>'
+            for tax_name, paise in tax_lines:
+                fee_rows_html += f'<tr><td style="{label}">{tax_name}</td><td align="right" style="{cell}">{e(money(paise))}</td></tr>'
+            fee_rows_html += f'<tr><td style="{total_label}">Total paid <span style="font-weight:400;font-size:12px;color:{INK_MUTED};">(inclusive of GST)</span></td><td align="right" style="{total_cell}">{e(money(breakup.total))}</td></tr>'
+        else:
+            fee_rows_html = (
+                f'<tr><td style="{label}">{fee_label}</td><td align="right" valign="top" style="{cell}">{e(amount_text)}</td></tr>'
+                f'<tr><td style="{total_label}">Total paid</td><td align="right" style="{total_cell}">{e(amount_text)}</td></tr>'
+            )
         invoice_html = f"""
               <!-- Invoice -->
               <h3 style="margin:28px 0 14px;font-family:{FONT_BODY};font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{NAVY};">Invoice</h3>
@@ -181,14 +207,7 @@ def build_success_email(
                 <tr>
                   <td style="padding:0 20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                      <tr>
-                        <td style="padding:12px 16px 12px 0;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:14px;color:{INK};">Player registration fee<br><span style="font-size:12px;color:{INK_MUTED};">{e(event_name)} ({e(event_label)})</span></td>
-                        <td align="right" valign="top" style="padding:12px 0;border-bottom:1px solid {LINE};font-family:{FONT_BODY};font-size:14px;color:{INK};">{e(amount_text)}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding:12px 16px 12px 0;font-family:{FONT_BODY};font-size:14px;font-weight:700;color:{NAVY};">Total paid</td>
-                        <td align="right" style="padding:12px 0;font-family:{FONT_BODY};font-size:14px;font-weight:700;color:{NAVY};">{e(amount_text)}</td>
-                      </tr>
+                      {fee_rows_html}
                     </table>
                   </td>
                 </tr>
@@ -296,10 +315,22 @@ def build_success_email(
             text_lines.append(f"Date:       {invoice_date}")
         text_lines.append(f"Billed to:  {name}" + (f" <{email}>" if email else ""))
         text_lines.append(f"Customer GSTIN: { (buyer_gstin or '').strip() }")
-        text_lines += [
-            f"Player registration fee - {event_name} ({event_label}): {amount_text}",
-            f"Total paid: {amount_text}",
-        ]
+        if sac_code:
+            text_lines.append(f"SAC: {sac_code}")
+        if breakup:
+            money = lambda paise: format_paise(paise, "₹")  # noqa: E731
+            half_rate = f"{breakup.rate / 2:g}"
+            text_lines.append(f"Player registration fee - {event_name} ({event_label}): {money(breakup.taxable)}")
+            if breakup.intra_state:
+                text_lines += [f"CGST @ {half_rate}%: {money(breakup.cgst)}", f"SGST @ {half_rate}%: {money(breakup.sgst)}"]
+            else:
+                text_lines.append(f"IGST @ {breakup.rate}%: {money(breakup.igst)}")
+            text_lines.append(f"Total paid (inclusive of GST): {money(breakup.total)}")
+        else:
+            text_lines += [
+                f"Player registration fee - {event_name} ({event_label}): {amount_text}",
+                f"Total paid: {amount_text}",
+            ]
     text_lines += ["", "WHAT HAPPENS NEXT"]
     text_lines += [f"{i}. {step}" for i, step in enumerate(steps, start=1)]
     text_lines.append("")
@@ -366,6 +397,8 @@ async def send_success_email(
                     event_name=settings.event_name,
                     event_label=f"{settings.event_short_name} {settings.event_season}",
                     buyer_gstin=buyer_gstin,
+                    gst_rate=settings.gst_rate_percent,
+                    sac_code=(settings.sac_code or "").strip(),
                 )
                 attachments.append(
                     UploadFile(filename=f"{invoice_number}.pdf", file=BytesIO(pdf))
