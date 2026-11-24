@@ -29,6 +29,7 @@ class TshirtSize(str, Enum):
     XXL = "XXL"
     XXXL = "XXXL"
     XXXXL = "XXXXL"
+    XXXXXL = "XXXXXL"
 
 
 def ist_now() -> datetime:

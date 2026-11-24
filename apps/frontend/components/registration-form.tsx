@@ -51,7 +51,7 @@ type PaymentStatus = "idle" | "processing" | "paid" | "failed";
 type StatusMessage = { kind: "success" | "error"; text: string } | null;
 
 const supportedBowlingValues = new Set(["right_arm", "left_arm", "none"]);
-const supportedTshirtSizes = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL"]);
+const supportedTshirtSizes = new Set(["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"]);
 
 export function RegistrationForm({
   resumePlayerId,

@@ -64,6 +64,7 @@ const TSHIRT_SIZE_LABELS: Record<string, string> = {
   XXL: "44 - XXL",
   XXXL: "46 - XXXL",
   XXXXL: "48 - XXXXL",
+  XXXXXL: "50 - XXXXXL",
 };
 
 const bowlingTypeLabel = (value?: string) => BOWLING_TYPE_LABELS[value ?? ""] ?? value ?? "—";
