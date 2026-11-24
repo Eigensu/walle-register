@@ -749,15 +749,17 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
               />
               {values.played_JMCL_S2 === "yes" &&
                 (previousSeason.teams.length ? (
-                  <ChoiceGroup
-                    name="JMCL_S2_team"
-                    legend="Which team?"
-                    options={previousSeason.teams}
-                    columns="sm:grid-cols-2 lg:grid-cols-3"
-                    value={values.JMCL_S2_team}
-                    error={errors.JMCL_S2_team}
-                    onValue={(v) => set("JMCL_S2_team", v)}
-                  />
+                  <div className="max-w-md">
+                    <SelectField
+                      name="JMCL_S2_team"
+                      label="Which team?"
+                      placeholder="Select your team"
+                      options={previousSeason.teams}
+                      value={values.JMCL_S2_team}
+                      error={errors.JMCL_S2_team}
+                      onValue={(v) => set("JMCL_S2_team", v)}
+                    />
+                  </div>
                 ) : (
                   <div className="max-w-md">
                     <TextField name="JMCL_S2_team" label="Which team?" value={values.JMCL_S2_team} error={errors.JMCL_S2_team} onValue={(v) => set("JMCL_S2_team", v)} />
