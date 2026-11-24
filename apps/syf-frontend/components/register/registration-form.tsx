@@ -91,6 +91,8 @@ function photoError(photo: PlayerForm["photo"]): string | undefined {
   return undefined
 }
 
+const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/
+
 function validate(step: RegistrationStepId, v: PlayerForm): Errors {
   const e: Errors = {}
   const need = (key: keyof PlayerForm, message: string) => {
@@ -102,6 +104,7 @@ function validate(step: RegistrationStepId, v: PlayerForm): Errors {
     if (!EMAIL.test(v.email.trim())) e.email = "Enter a valid email address"
     if (!/^\d{10}$/.test(v.phone)) e.phone = "Enter your 10-digit mobile number"
     need("firm_name", "Enter your firm's name")
+    if (v.gst_number && !GSTIN.test(v.gst_number)) e.gst_number = "Enter a valid 15-character GST number, or leave it blank"
     need("designation", "Enter your designation")
     need("residential_area", "Enter your residential area")
     need("city", "Enter your city")

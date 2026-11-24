@@ -201,13 +201,21 @@
 }
 
 .committee-marquee-viewport:hover .committee-marquee-track,
-.committee-marquee-viewport:focus-within .committee-marquee-track {
+.committee-marquee-viewport:focus-within .committee-marquee-track,
+.committee-marquee-viewport:active .committee-marquee-track {
   animation-play-state: paused;
 }
 
+/* No motion: show the committee as a row the visitor can scroll, with only one copy of it. */
 @media (prefers-reduced-motion: reduce) {
+  .committee-marquee-viewport {
+    overflow-x: auto;
+  }
   .committee-marquee-track {
     animation: none;
+  }
+  .committee-marquee-track > ul[aria-hidden="true"] {
+    display: none;
   }
 }
 

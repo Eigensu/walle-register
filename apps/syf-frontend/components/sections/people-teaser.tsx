@@ -22,9 +22,9 @@ export function PeopleTeaser() {
         <SectionHeading id="people-title" eyebrow={people.eyebrow} heading={people.heading} link={people.link} />
 
         <div className="committee-marquee-viewport mt-12 overflow-hidden">
-          <div className="committee-marquee-track flex w-max" aria-label="Meet the committee">
+          <div className="committee-marquee-track flex w-max">
             {[0, 1].map((copy) => (
-              <ul key={copy} aria-hidden={copy === 1} className="flex shrink-0 gap-4 pr-4 sm:gap-6 sm:pr-6">
+              <ul key={copy} aria-hidden={copy === 1} aria-label={copy === 0 ? "Meet the committee" : undefined} className="flex shrink-0 gap-4 pr-4 sm:gap-6 sm:pr-6">
                 {members.map((m, i) => {
                   const photo = pub(m.photo)
                   return (
