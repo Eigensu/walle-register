@@ -1,4 +1,5 @@
-from contextlib import asynccontextmanager
+import asyncio
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 
 from beanie import init_beanie
@@ -13,6 +14,7 @@ from app.models.player import Player
 from app.models.admin import Admin
 from app.models.config import AppConfig
 from app.routers import payments, registration, admin, admin_panel
+from app.routers.payments import run_cashfree_reconciler
 from app.services.cashfree import CashfreeService
 from app.services.razorpay import RazorpayService
 from app.services.storage import build_storage_service
@@ -65,8 +67,22 @@ async def lifespan(app: FastAPI):
         cfg = AppConfig(registration_open=True)
         await cfg.insert()
 
+    # Confirms paid Cashfree orders that neither the player's browser nor the webhook reported.
+    reconciler = (
+        asyncio.create_task(
+            run_cashfree_reconciler(cashfree, settings.cashfree_reconcile_interval_seconds),
+            name="cashfree-reconciler",
+        )
+        if cashfree and settings.cashfree_reconcile_interval_seconds > 0
+        else None
+    )
+
     yield
 
+    if reconciler:
+        reconciler.cancel()
+        with suppress(asyncio.CancelledError):
+            await reconciler
     if razorpay:
         await razorpay.aclose()
     if cashfree:
