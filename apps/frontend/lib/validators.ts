@@ -16,7 +16,7 @@ const CARD_MIMES = [
 ] as const;
 
 const bowlingValues = ["right_arm", "left_arm", "none"] as const;
-const tshirtValues = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL"] as const;
+const tshirtValues = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "XXXXXL"] as const;
 const legacyBowlingValues = [
   "Right Arm Fast", "Left Arm Fast", "Right Arm Medium", "Left Arm Medium",
   "Right Arm Spin (Off)", "Right Arm Spin (Leg)", "Left Arm Spin (Orthodox)",

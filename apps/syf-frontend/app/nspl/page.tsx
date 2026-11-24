@@ -33,14 +33,14 @@ const HOW_IT_WORKS = [
 ]
 
 const TEAMS_PREVIEW = [
-  { name: "Silbells Strikers", firm: "Silbells Jewellery", icon: "⚡" },
-  { name: "SSI Titans", firm: "Silver Show of India", icon: "👑" },
-  { name: "RS Bullion Blasters", firm: "RS Bullion", icon: "🔥" },
-  { name: "Queens & Kings Royals", firm: "Queens & Kings", icon: "🦁" },
-  { name: "Arihant Knights", firm: "Arihant 925 (AJPL)", icon: "⚔️" },
-  { name: "Divine Super Kings", firm: "Divine Silver", icon: "🌟" },
-  { name: "Richezza Stars", firm: "Richezza Royal 925", icon: "💎" },
-  { name: "Tresorie Gladiators", firm: "Tresorie Silver", icon: "🛡️" },
+  { name: "Silbells Strikers", firm: "Silbells Jewellery" },
+  { name: "SSI Titans", firm: "Silver Show of India" },
+  { name: "RS Bullion Blasters", firm: "RS Bullion" },
+  { name: "Queens & Kings Royals", firm: "Queens & Kings" },
+  { name: "Arihant Knights", firm: "Arihant 925 (AJPL)" },
+  { name: "Divine Super Kings", firm: "Divine Silver" },
+  { name: "Richezza Stars", firm: "Richezza Royal 925" },
+  { name: "Tresorie Gladiators", firm: "Tresorie Silver" },
 ]
 
 export default function NsplPage() {
@@ -234,9 +234,6 @@ export default function NsplPage() {
                 key={t.name}
                 className="group flex items-start gap-4 rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm p-4 transition-all hover:bg-white/15 hover:border-royal/50"
               >
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-2xl shadow-inner border border-white/20">
-                  {t.icon}
-                </div>
                 <div>
                   <h3 className="font-bold text-white text-sm group-hover:text-royal transition-colors">
                     {t.name}

@@ -35,6 +35,17 @@ export function JMCLSeasonStep({ form }: JMCLSeasonStepProps) {
     "Dintara Diamonds",
     "Sheaura Stars",
     "Shankesh Superkings",
+    "Silverzone Rising Star",
+    "Maa Silver Kings",
+    "Mexx Mavericks",
+    "Divine Dynamites",
+    "Marvelous Mysha",
+    "Ksp Comets",
+    "Kuber Bullion kings",
+    "Sparkling silver",
+    "S S lions",
+    "Shree Balaji Yodhas",
+    "A.O.S. TIGERS",
   ];
 
   return (
