@@ -112,6 +112,8 @@ def build_invoice_pdf(
     event_name: str,
     event_label: str,
     buyer_gstin: str = "",
+    gst_rate: int = 0,
+    sac_code: str = "",
 ) -> bytes:
     """Render the invoice as a single-page A4 PDF and return its bytes."""
     from reportlab.lib import colors
@@ -120,6 +122,8 @@ def build_invoice_pdf(
     from reportlab.lib.units import mm
     from reportlab.platypus import BaseDocTemplate, Frame, PageTemplate, Paragraph, Spacer, Table, TableStyle
     from xml.sax.saxutils import escape as e
+
+    from app.services.gst import compute_gst_breakup, format_paise
 
     navy = colors.HexColor("#0E1A2B")
     muted = colors.HexColor("#4A5568")
@@ -154,17 +158,31 @@ def build_invoice_pdf(
         + f"<br/>Customer GSTIN: {e((buyer_gstin or '').strip())}"
     )
 
-    items = Table(
-        [
+    breakup = compute_gst_breakup(amount, rate=gst_rate, seller_gstin=gstin, buyer_gstin=buyer_gstin)
+    description = f"Player registration fee<br/><font size='9' color='#4A5568'>{e(event_name)} ({e(event_label)})</font>"
+    if sac_code:
+        description += f"<br/><font size='9' color='#4A5568'>SAC: {e(sac_code)}</font>"
+    if breakup:
+        money = lambda paise: format_paise(paise, "Rs. ")  # noqa: E731
+        half_rate = f"{breakup.rate / 2:g}"
+        rows = [[Paragraph("<b>Description</b>", body), Paragraph("<b>Amount</b>", right)]]
+        rows.append([Paragraph(description, body), Paragraph(e(money(breakup.taxable)), right)])
+        if breakup.intra_state:
+            rows.append([Paragraph(f"CGST @ {half_rate}%", body), Paragraph(e(money(breakup.cgst)), right)])
+            rows.append([Paragraph(f"SGST @ {half_rate}%", body), Paragraph(e(money(breakup.sgst)), right)])
+        else:
+            rows.append([Paragraph(f"IGST @ {breakup.rate}%", body), Paragraph(e(money(breakup.igst)), right)])
+        rows.append([Paragraph("<b>Total paid</b> (inclusive of GST)", body), Paragraph(f"<b>{e(money(breakup.total))}</b>", right)])
+    else:
+        rows = [
             [Paragraph("<b>Description</b>", body), Paragraph("<b>Amount</b>", right)],
-            [Paragraph(f"Player registration fee<br/><font size='9' color='#4A5568'>{e(event_name)} ({e(event_label)})</font>", body), Paragraph(e(amount_text), right)],
+            [Paragraph(description, body), Paragraph(e(amount_text), right)],
             [Paragraph("<b>Total paid</b>", body), Paragraph(f"<b>{e(amount_text)}</b>", right)],
-        ],
-        colWidths=[125 * mm, 45 * mm],
-    )
+        ]
+    items = Table(rows, colWidths=[125 * mm, 45 * mm])
     items.setStyle(TableStyle([
         ("LINEBELOW", (0, 0), (-1, 0), 1, navy),
-        ("LINEBELOW", (0, 1), (-1, 1), 0.5, line),
+        ("LINEBELOW", (0, 1), (-1, -2), 0.5, line),
         ("TOPPADDING", (0, 0), (-1, -1), 8), ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
         ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),

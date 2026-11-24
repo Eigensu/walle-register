@@ -75,6 +75,11 @@ class Settings(BaseSettings):
 
 	# Shown on the invoice in the confirmation email. Each line is omitted when unset.
 	organiser_gstin: str | None = Field(default="27ABSCS6609M1ZG", alias="ORGANISER_GSTIN")
+	# GST carved out of the (GST-inclusive) registration fee on the invoice. Needs ORGANISER_GSTIN;
+	# set GST_RATE_PERCENT=0 to print the invoice without a tax breakup.
+	gst_rate_percent: int = Field(default=18, ge=0, le=100, alias="GST_RATE_PERCENT")
+	# Service accounting code printed on the invoice. Blank = not printed.
+	sac_code: str | None = Field(default=None, alias="SAC_CODE")
 	# Use "|" to break the address across lines, e.g. "12 Main Road|Mumbai 400001".
 	# Defaults to the principal place of business on the GST registration certificate.
 	organiser_address: str | None = Field(
