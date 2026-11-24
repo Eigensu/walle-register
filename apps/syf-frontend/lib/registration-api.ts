@@ -103,7 +103,7 @@ export const updatePlayer = (playerId: string, values: PlayerForm) =>
   })
 
 export async function getPlayer(playerId: string): Promise<PlayerForm> {
-  const p = await request<PlayerDetails>(`/player/${encodeURIComponent(playerId)}`)
+  const p = await request<PlayerDetails>(`/player/${encodeURIComponent(playerId)}`, { signal: timeoutSignal(15_000) })
   return {
     first_name: p.first_name,
     last_name: p.last_name,

@@ -205,6 +205,14 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
       const retry = { isCancelled: () => !alive.current, ...(delays && { delays }) }
       try {
         const result = await verifyCashfreePaymentWithRetry(orderId, knownPlayerId ?? undefined, retry)
+        // A page that merely reloaded (no ?order_id=) must not show a saved registration's details
+        // on a browser that may now belong to someone else, unless the payment actually needs them.
+        if (!announceErrors && result.status !== "CAPTURED" && !inFlight(result.status)) {
+          if (!alive.current) return
+          setUnconfirmed(null)
+          clearPendingPayment()
+          return
+        }
         const player = await getPlayerWithRetry(result.player_id, retry)
         if (!alive.current) return
         setUnconfirmed(null)
