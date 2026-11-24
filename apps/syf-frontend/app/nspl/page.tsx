@@ -15,6 +15,9 @@ import {
   Tv,
   X,
   RotateCcw,
+  Medal,
+  Swords,
+  Hand,
 } from "lucide-react"
 import { formatInr } from "@/lib/format"
 import { site } from "@/site.config"
@@ -157,7 +160,7 @@ export default function NsplPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm p-5 transition-colors hover:bg-white/15">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-silver mb-1">
                 <Calendar className="size-4 text-royal" /> When
@@ -319,7 +322,7 @@ export default function NsplPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-amber-500/30 bg-amber-950/30 backdrop-blur-sm p-6 text-center">
               <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-amber-500/20 text-amber-300 mb-3 border border-amber-400/30">
                 <Trophy className="size-7" />
@@ -327,6 +330,15 @@ export default function NsplPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-amber-300">Season 1 Champions</span>
               <h3 className="text-xl font-extrabold text-white mt-1">Silbells Warriors</h3>
               <p className="mt-1 text-xs text-silver/80">Lifted the inaugural silver cup</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-300/30 bg-slate-200/10 backdrop-blur-sm p-6 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-slate-300/20 text-slate-200 mb-3 border border-slate-300/30">
+                <Medal className="size-7" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-200">Season 1 Runners Up</span>
+              <h3 className="text-xl font-extrabold text-white mt-1">Silver Zone Rising Stars</h3>
+              <p className="mt-1 text-xs text-silver/80">Finalists in the inaugural season</p>
             </div>
 
             <div className="rounded-xl border border-royal/30 bg-royal/10 backdrop-blur-sm p-6 text-center">
@@ -345,6 +357,24 @@ export default function NsplPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Best Bowler</span>
               <h3 className="text-xl font-extrabold text-white mt-1">Ritesh Doshi</h3>
               <p className="mt-1 text-xs text-silver/80">14 wickets in 6 matches</p>
+            </div>
+
+            <div className="rounded-xl border border-rose-500/30 bg-rose-950/30 backdrop-blur-sm p-6 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-rose-500/20 text-rose-300 mb-3 border border-rose-400/30">
+                <Swords className="size-7" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-300">Best Batsman</span>
+              <h3 className="text-xl font-extrabold text-white mt-1">Jubin Jain</h3>
+              <p className="mt-1 text-xs text-silver/80">138 runs &middot; Avg 27.60 &middot; SR 215.63</p>
+            </div>
+
+            <div className="rounded-xl border border-sky-500/30 bg-sky-950/30 backdrop-blur-sm p-6 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-sky-500/20 text-sky-300 mb-3 border border-sky-400/30">
+                <Hand className="size-7" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-300">Best Fielder</span>
+              <h3 className="text-xl font-extrabold text-white mt-1">Jubin Jain</h3>
+              <p className="mt-1 text-xs text-silver/80">6 dismissals &middot; 1 catch &middot; 4 run outs</p>
             </div>
           </div>
         </div>
