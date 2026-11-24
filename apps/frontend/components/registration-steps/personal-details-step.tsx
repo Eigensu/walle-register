@@ -148,6 +148,28 @@ export function PersonalDetailsStep({
 
         <FormField
           control={form.control}
+          name="gst_number"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>GST Number (Optional)</FormLabel>
+              <FormControl>
+                <Input
+                  className={fieldClass}
+                  placeholder="Enter GSTIN"
+                  maxLength={15}
+                  autoComplete="off"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.replace(/\s/g, "").toUpperCase())}
+                />
+              </FormControl>
+              <FormDescription>If provided, it will appear on your invoice.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="designation"
           render={({ field }) => (
             <FormItem>

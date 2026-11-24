@@ -9,6 +9,7 @@ export type PlayerForm = {
   phone: string
   residential_area: string
   firm_name: string
+  gst_number: string
   designation: string
   aadhar_number: string
   city: string
@@ -87,6 +88,7 @@ export async function getPlayer(playerId: string): Promise<PlayerForm> {
     phone: p.phone,
     residential_area: p.residential_area,
     firm_name: p.firm_name,
+    gst_number: p.gst_number ?? "",
     designation: p.designation,
     aadhar_number: p.aadhar_number.replace(/(\d{4})(?=\d)/g, "$1 "),
     city: p.city,

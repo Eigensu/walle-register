@@ -1,4 +1,5 @@
-﻿from datetime import datetime, timezone
+import re
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, EmailStr
@@ -7,6 +8,18 @@ from pymongo.errors import DuplicateKeyError
 from app.models.player import BowlingType, Player, RegistrationStatus, TshirtSize
 from app.models.config import AppConfig
 from app.services.storage import StorageService
+
+GSTIN_PATTERN = re.compile(r"^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$")
+
+
+def _clean_gstin(value: str | None) -> str:
+    """Normalise an optional GSTIN (blank is fine) and reject one that can't be valid, since it is
+    printed on the player's tax invoice."""
+    gstin = "".join((value or "").split()).upper()
+    if gstin and not GSTIN_PATTERN.match(gstin):
+        raise HTTPException(status_code=422, detail="Enter a valid 15-character GST number, or leave it blank.")
+    return gstin
+
 
 router = APIRouter(prefix="/api", tags=["registration"])
 
@@ -41,6 +54,7 @@ class PlayerDetailsResponse(BaseModel):
     phone: str
     residential_area: str
     firm_name: str
+    gst_number: str = ""
     designation: str
     photo_url: str
     aadhar_number: str
@@ -70,6 +84,7 @@ async def register_player(
     phone: str = Form(...),
     residential_area: str = Form(...),
     firm_name: str = Form(...),
+    gst_number: str | None = Form(default=None),
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
@@ -128,6 +143,7 @@ async def register_player(
         phone=phone,
         residential_area=residential_area,
         firm_name=firm_name,
+        gst_number=_clean_gstin(gst_number),
         designation=designation,
         photo_url=photo_url,
         aadhar_number=digit_only_aadhar,
@@ -166,6 +182,7 @@ async def update_player(
     phone: str = Form(...),
     residential_area: str = Form(...),
     firm_name: str = Form(...),
+    gst_number: str | None = Form(default=None),
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
@@ -226,6 +243,9 @@ async def update_player(
     player.phone = phone
     player.residential_area = residential_area
     player.firm_name = firm_name
+    # Older clients omit this optional field; preserve any stored value in that case.
+    if gst_number is not None:
+        player.gst_number = _clean_gstin(gst_number)
     player.designation = designation
     player.aadhar_number = digit_only_aadhar
     player.city = city
@@ -303,6 +323,7 @@ async def get_player_details(player_id: str):
         phone=player.phone,
         residential_area=player.residential_area,
         firm_name=player.firm_name,
+        gst_number=getattr(player, "gst_number", "") or "",
         designation=player.designation,
         photo_url=player.photo_url,
         aadhar_number=player.aadhar_number,

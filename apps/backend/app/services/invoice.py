@@ -111,6 +111,7 @@ def build_invoice_pdf(
     gstin: str,
     event_name: str,
     event_label: str,
+    buyer_gstin: str = "",
 ) -> bytes:
     """Render the invoice as a single-page A4 PDF and return its bytes."""
     from reportlab.lib import colors
@@ -146,7 +147,12 @@ def build_invoice_pdf(
     header = Table([[Paragraph(seller, body), Paragraph(meta, right)]], colWidths=[105 * mm, 65 * mm])
     header.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0), ("RIGHTPADDING", (0, 0), (-1, -1), 0)]))
 
-    bill_to = f"<b>{e(name)}</b>" + (f"<br/>{e(email)}" if email else "") + f"<br/>Registration ID: {e(player_id)}"
+    bill_to = (
+        f"<b>{e(name)}</b>"
+        + (f"<br/>{e(email)}" if email else "")
+        + f"<br/>Registration ID: {e(player_id)}"
+        + f"<br/>Customer GSTIN: {e((buyer_gstin or '').strip())}"
+    )
 
     items = Table(
         [

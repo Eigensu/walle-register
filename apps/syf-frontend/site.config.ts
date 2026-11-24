@@ -125,7 +125,7 @@ export const site: SiteConfig = {
         false,
         "Draft sub copy for SYF approval",
       ),
-      photo: field<string | null>("/photos/nspl-season-1/opening-day/04_img_8179.webp", true),
+      photo: field<string | null>("/photos/nspl-season-1/hero/syf-launch-cover.webp", true),
       secondaryCta: { label: "About SYF", href: "/about" },
       showSpotsLeft: false,
     },

@@ -5,7 +5,6 @@ import { ArrowLeft, Shield, Users, Trophy, Sparkles } from "lucide-react"
 import { committee } from "@/content/committee"
 import { pub, isProduction } from "@/lib/content"
 import { Monogram } from "@/components/brand/monogram"
-import { TbcBadge, TbcFor } from "@/components/brand/tbc"
 import { SeamRings } from "@/components/brand/seam-rings"
 
 export const metadata: Metadata = {
@@ -72,7 +71,6 @@ export default function CommitteePage() {
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {members.map((m) => {
               const photo = pub(m.photo)
-              const designation = pub(m.designation)
               return (
                 <div
                   key={m.name}
@@ -87,33 +85,24 @@ export default function CommitteePage() {
                           alt={m.name}
                           fill
                           sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
-                          className="object-cover grayscale transition duration-300 group-hover:grayscale-0 group-hover:scale-105"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <Monogram name={m.name} className="h-full w-full" />
                         </div>
                       )}
-                      <div className="absolute top-2 right-2 rounded-md bg-navy/70 px-2 py-0.5 text-[10px] font-bold text-silver-bright backdrop-blur-sm">
-                        #{String(m.order).padStart(2, "0")}
-                      </div>
                     </div>
 
                     {/* Member Details */}
                     <h3 className="text-base font-bold text-navy group-hover:text-royal transition-colors">
                       {m.name}
                     </h3>
-                    <p className="mt-1 text-xs font-medium text-ink-muted line-clamp-2">
+                    <p className="mt-1 text-sm font-semibold leading-snug text-navy/70 line-clamp-2">
                       {m.firm}
                     </p>
                   </div>
 
-                  <div className="mt-4 border-t border-line/60 pt-3 flex items-center justify-between">
-                    <span className="eyebrow text-[0.625rem] text-silver-dim">
-                      {designation ? designation : <TbcBadge note="Designation TBC" />}
-                    </span>
-                    <TbcFor f={m.designation} />
-                  </div>
                 </div>
               )
             })}

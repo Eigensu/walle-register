@@ -45,6 +45,9 @@ export const playerSchema = z.object({
     .regex(/^\d{10}$/, "Phone must be exactly 10 digits"),
   residential_area: z.string(),
   firm_name: z.string(),
+  gst_number: z
+    .string()
+    .regex(/^$|^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/, "Enter a valid 15-character GST number, or leave it blank"),
   designation: z.string(),
   aadhar_number: z
     .string()

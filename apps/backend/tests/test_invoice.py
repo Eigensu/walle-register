@@ -1,3 +1,4 @@
+import re
 import asyncio
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -36,11 +37,20 @@ def test_invoice_shows_multiline_address_and_gstin():
     assert "Line one\nLine two\nGSTIN: 27ABCDE1234F1Z5" in text
 
 
+def test_customer_gstin_flows_into_invoice_email():
+    _, html, text = _build(**INVOICE, buyer_gstin=" 27ABCDE1234F1Z5 ")
+    assert "Customer GSTIN: 27ABCDE1234F1Z5" in html
+    assert "Customer GSTIN: 27ABCDE1234F1Z5" in text
+
+
 def test_invoice_omits_blank_gstin_and_address():
     with patch.object(email_settings, "organiser_address", None), \
          patch.object(email_settings, "organiser_gstin", "  "):
         _, html, text = _build(**INVOICE)
-    assert "GSTIN" not in html and "GSTIN" not in text
+    assert "GSTIN: 27ABSCS6609M1ZG" not in html and "GSTIN: 27ABSCS6609M1ZG" not in text
+    assert re.search(r"Customer GSTIN:\s*</", html)
+    assert "Customer GSTIN: \n" in text
+    assert "None" not in html and "undefined" not in html
 
 
 def test_format_date_converts_utc_to_ist():
@@ -107,3 +117,16 @@ def test_invoice_pdf_is_generated_and_attached_to_the_email():
         assert asyncio.run(email_service.send_success_email("p@example.com", "P", "pid1", 7200, "pay_1"))
     assert [a[0].filename for a in sent[0].attachments] == ["INV-000042.pdf"]
     assert sent[1].attachments == []
+
+
+def test_gstin_is_normalised_and_validated():
+    import pytest
+    from fastapi import HTTPException
+    from app.routers.registration import _clean_gstin
+
+    assert _clean_gstin(None) == ""
+    assert _clean_gstin("  ") == ""
+    assert _clean_gstin(" 27abcde1234f1z5 ") == "27ABCDE1234F1Z5"
+    for bad in ("ABC", "27ABCDE1234F1Z", "27ABCDE1234F1X5"):
+        with pytest.raises(HTTPException):
+            _clean_gstin(bad)

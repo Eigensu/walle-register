@@ -104,6 +104,7 @@ def build_success_email(
     email: str | None = None,
     invoice_number: str | None = None,
     invoice_date: str | None = None,
+    buyer_gstin: str = "",
 ) -> tuple[str, str, str]:
     """Build the registration confirmation as (subject, html, plain_text)."""
     organiser = settings.organiser_name
@@ -157,7 +158,11 @@ def build_success_email(
         seller_extra = "".join(f"<br>{e(l)}" for l in address_lines)
         if gstin:
             seller_extra += f"<br>GSTIN: {e(gstin)}"
-        bill_to = e(name) + (f'<br><span style="color:{INK_MUTED};">{e(email)}</span>' if email else "")
+        bill_to = (
+            e(name)
+            + (f'<br><span style="color:{INK_MUTED};">{e(email)}</span>' if email else "")
+            + f"<br>Customer GSTIN: {e((buyer_gstin or '').strip())}"
+        )
         invoice_html = f"""
               <!-- Invoice -->
               <h3 style="margin:28px 0 14px;font-family:{FONT_BODY};font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:{NAVY};">Invoice</h3>
@@ -290,6 +295,7 @@ def build_success_email(
         if invoice_date:
             text_lines.append(f"Date:       {invoice_date}")
         text_lines.append(f"Billed to:  {name}" + (f" <{email}>" if email else ""))
+        text_lines.append(f"Customer GSTIN: { (buyer_gstin or '').strip() }")
         text_lines += [
             f"Player registration fee - {event_name} ({event_label}): {amount_text}",
             f"Total paid: {amount_text}",
@@ -312,6 +318,7 @@ async def send_success_email(
     payment_id: str | None = None,
     invoice_number: str | None = None,
     invoice_date: str | None = None,
+    buyer_gstin: str = "",
 ) -> bool:
     """
     Send registration success confirmation email.
@@ -337,6 +344,7 @@ async def send_success_email(
             email=to_email,
             invoice_number=invoice_number,
             invoice_date=invoice_date,
+            buyer_gstin=buyer_gstin,
         )
 
         attachments = []
@@ -357,6 +365,7 @@ async def send_success_email(
                     gstin=(settings.organiser_gstin or "").strip(),
                     event_name=settings.event_name,
                     event_label=f"{settings.event_short_name} {settings.event_season}",
+                    buyer_gstin=buyer_gstin,
                 )
                 attachments.append(
                     UploadFile(filename=f"{invoice_number}.pdf", file=BytesIO(pdf))
