@@ -33,6 +33,7 @@ export type PlayerDetailsResponse = {
   phone: string;
   residential_area: string;
   firm_name: string;
+  gst_number?: string;
   designation: string;
   photo_url: string;
   aadhar_number: string;

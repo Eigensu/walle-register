@@ -29,6 +29,7 @@ class PlayerResponse(BaseModel):
     phone: str
     residential_area: str
     firm_name: str
+    gst_number: str = ""
     designation: str
     # Cricket Details
     batting_type: str
@@ -174,6 +175,7 @@ async def get_all_players(
                 phone=doc.get("phone", ""),
                 residential_area=doc.get("residential_area", ""),
                 firm_name=doc.get("firm_name", ""),
+                gst_number=doc.get("gst_number", "") or "",
                 designation=doc.get("designation", ""),
                 batting_type=doc.get("batting_type", ""),
                 bowling_type=display_bowling_type(doc.get("bowling_type", "")),
@@ -233,6 +235,7 @@ async def export_players_csv(
         "Phone",
         "Residential Area",
         "Firm/Company",
+        "GST Number",
         "Designation",
         "Aadhar Number",
         "City",
@@ -285,6 +288,7 @@ async def export_players_csv(
             player.get("phone", ""),
             player.get("residential_area", ""),
             player.get("firm_name", ""),
+            player.get("gst_number", "") or "",
             player.get("designation", ""),
             player.get("aadhar_number", ""),
             player.get("city", ""),

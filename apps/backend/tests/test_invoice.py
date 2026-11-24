@@ -36,11 +36,20 @@ def test_invoice_shows_multiline_address_and_gstin():
     assert "Line one\nLine two\nGSTIN: 27ABCDE1234F1Z5" in text
 
 
+def test_customer_gstin_flows_into_invoice_email():
+    _, html, text = _build(**INVOICE, buyer_gstin=" 27ABCDE1234F1Z5 ")
+    assert "Customer GSTIN: 27ABCDE1234F1Z5" in html
+    assert "Customer GSTIN: 27ABCDE1234F1Z5" in text
+
+
 def test_invoice_omits_blank_gstin_and_address():
     with patch.object(email_settings, "organiser_address", None), \
          patch.object(email_settings, "organiser_gstin", "  "):
         _, html, text = _build(**INVOICE)
-    assert "GSTIN" not in html and "GSTIN" not in text
+    assert "GSTIN: 27ABSCS6609M1ZG" not in html and "GSTIN: 27ABSCS6609M1ZG" not in text
+    assert "Customer GSTIN: </" in html
+    assert "Customer GSTIN: \n" in text
+    assert "None" not in html and "undefined" not in html
 
 
 def test_format_date_converts_utc_to_ist():

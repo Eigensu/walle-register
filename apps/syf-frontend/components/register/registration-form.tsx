@@ -63,6 +63,7 @@ const empty: PlayerForm = {
   phone: "",
   residential_area: "",
   firm_name: "",
+  gst_number: "",
   designation: "",
   aadhar_number: "",
   city: "",
@@ -500,6 +501,17 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
                 onValue={(v) => set("phone", v.replace(/\D/g, "").slice(0, 10))}
               />
               <TextField name="firm_name" label="Firm / organisation" autoComplete="organization" value={values.firm_name} error={errors.firm_name} onValue={(v) => set("firm_name", v)} />
+              <TextField
+                name="gst_number"
+                label="GST number (optional)"
+                autoComplete="off"
+                placeholder="Enter GSTIN"
+                maxLength={15}
+                value={values.gst_number}
+                error={errors.gst_number}
+                hint="Optional. If provided, it will appear on your invoice."
+                onValue={(v) => set("gst_number", v.replace(/\s/g, "").toUpperCase())}
+              />
               <TextField
                 name="designation"
                 label="Designation"

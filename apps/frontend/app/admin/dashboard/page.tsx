@@ -31,6 +31,7 @@ interface Player {
   phone: string;
   residential_area: string;
   firm_name: string;
+  gst_number?: string;
   designation: string;
   registration_status: string;
   payment_status: string | null;
@@ -707,6 +708,14 @@ export default function AdminDashboard() {
                     </p>
                     <p className="mt-1 text-slate-900 dark:text-white">
                       {selectedPlayer.firm_name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                      GST Number
+                    </p>
+                    <p className="mt-1 text-slate-900 dark:text-white">
+                      {selectedPlayer.gst_number || "—"}
                     </p>
                   </div>
                   <div>

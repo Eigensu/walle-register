@@ -41,6 +41,7 @@ class PlayerDetailsResponse(BaseModel):
     phone: str
     residential_area: str
     firm_name: str
+    gst_number: str = ""
     designation: str
     photo_url: str
     aadhar_number: str
@@ -70,6 +71,7 @@ async def register_player(
     phone: str = Form(...),
     residential_area: str = Form(...),
     firm_name: str = Form(...),
+    gst_number: str | None = Form(default=None),
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
@@ -128,6 +130,7 @@ async def register_player(
         phone=phone,
         residential_area=residential_area,
         firm_name=firm_name,
+        gst_number=(gst_number or "").strip().upper(),
         designation=designation,
         photo_url=photo_url,
         aadhar_number=digit_only_aadhar,
@@ -166,6 +169,7 @@ async def update_player(
     phone: str = Form(...),
     residential_area: str = Form(...),
     firm_name: str = Form(...),
+    gst_number: str | None = Form(default=None),
     designation: str = Form(...),
     aadhar_number: str = Form(...),
     city: str = Form(...),
@@ -226,6 +230,9 @@ async def update_player(
     player.phone = phone
     player.residential_area = residential_area
     player.firm_name = firm_name
+    # Older clients omit this optional field; preserve any stored value in that case.
+    if gst_number is not None:
+        player.gst_number = gst_number.strip().upper()
     player.designation = designation
     player.aadhar_number = digit_only_aadhar
     player.city = city
@@ -303,6 +310,7 @@ async def get_player_details(player_id: str):
         phone=player.phone,
         residential_area=player.residential_area,
         firm_name=player.firm_name,
+        gst_number=getattr(player, "gst_number", "") or "",
         designation=player.designation,
         photo_url=player.photo_url,
         aadhar_number=player.aadhar_number,

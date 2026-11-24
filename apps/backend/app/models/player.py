@@ -44,6 +44,7 @@ class Player(Document):
     phone: Indexed(str, unique=True)  # type: ignore[assignment]
     residential_area: str
     firm_name: str
+    gst_number: str = ""
     designation: str
     photo_url: str
     aadhar_number: str
