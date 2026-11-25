@@ -34,6 +34,9 @@ class Settings(BaseSettings):
 	cashfree_secret_key: str | None = Field(default=None, alias="CASHFREE_SECRET_KEY")
 	cashfree_env: Literal["sandbox", "production"] = Field(default="sandbox", alias="CASHFREE_ENV")
 	cashfree_api_version: str = Field(default="2025-01-01", alias="CASHFREE_API_VERSION")
+	# How often the backend re-checks unpaid Cashfree orders with Cashfree, so a payment is confirmed
+	# even if the player's browser and the webhook both missed it. 0 turns the check off.
+	cashfree_reconcile_interval_seconds: int = Field(default=60, ge=0, alias="CASHFREE_RECONCILE_INTERVAL_SECONDS")
 
 	registration_fee_inr: int = Field(default=7200, alias="REGISTRATION_FEE_INR")
 
@@ -72,6 +75,11 @@ class Settings(BaseSettings):
 
 	# Shown on the invoice in the confirmation email. Each line is omitted when unset.
 	organiser_gstin: str | None = Field(default="27ABSCS6609M1ZG", alias="ORGANISER_GSTIN")
+	# GST carved out of the (GST-inclusive) registration fee on the invoice. Needs ORGANISER_GSTIN;
+	# set GST_RATE_PERCENT=0 to print the invoice without a tax breakup.
+	gst_rate_percent: int = Field(default=18, ge=0, le=100, alias="GST_RATE_PERCENT")
+	# Service accounting code printed on the invoice. Blank = not printed.
+	sac_code: str | None = Field(default=None, alias="SAC_CODE")
 	# Use "|" to break the address across lines, e.g. "12 Main Road|Mumbai 400001".
 	# Defaults to the principal place of business on the GST registration certificate.
 	organiser_address: str | None = Field(

@@ -47,7 +47,8 @@ const orgLogoFiles = {
 for (const [key, file] of Object.entries(orgLogoFiles)) checkFile(site.org.logo, file, `site.org.logo.${key}`)
 checkFile(site.event.logo, site.event.logo.value, "site.event.logo")
 
-// Without these, the production site would be missing its identity or contact route.
+// Without these, the production site would be missing its identity. The contact email is not
+// required: /contact and /sponsors fall back gracefully, and it stays in the pending report.
 const required: [string, Field<unknown>][] = [
   ["site.org.logo", site.org.logo],
   ["site.siteUrl", site.siteUrl],

@@ -15,6 +15,9 @@ import {
   Tv,
   X,
   RotateCcw,
+  Medal,
+  Swords,
+  Hand,
 } from "lucide-react"
 import { formatInr } from "@/lib/format"
 import { site } from "@/site.config"
@@ -32,15 +35,26 @@ const HOW_IT_WORKS = [
   { step: "04", title: "Main Tournament" },
 ]
 
-const TEAMS_PREVIEW = [
-  { name: "Silbells Strikers", firm: "Silbells Jewellery", icon: "⚡" },
-  { name: "SSI Titans", firm: "Silver Show of India", icon: "👑" },
-  { name: "RS Bullion Blasters", firm: "RS Bullion", icon: "🔥" },
-  { name: "Queens & Kings Royals", firm: "Queens & Kings", icon: "🦁" },
-  { name: "Arihant Knights", firm: "Arihant 925 (AJPL)", icon: "⚔️" },
-  { name: "Divine Super Kings", firm: "Divine Silver", icon: "🌟" },
-  { name: "Richezza Stars", firm: "Richezza Royal 925", icon: "💎" },
-  { name: "Tresorie Gladiators", firm: "Tresorie Silver", icon: "🛡️" },
+const TEAMS_PREVIEW: { name: string; firm?: string }[] = [
+  { name: "Silbells Strikers", firm: "Silbells Jewellery" },
+  { name: "SSI Titans", firm: "Silver Show of India" },
+  { name: "RS Bullion Blasters", firm: "RS Bullion" },
+  { name: "Queens & Kings Royals", firm: "Queens & Kings" },
+  { name: "Arihant Knights", firm: "Arihant 925 (AJPL)" },
+  { name: "Divine Super Kings", firm: "Divine Silver" },
+  { name: "Richezza Stars", firm: "Richezza Royal 925" },
+  { name: "Tresorie Gladiators", firm: "Tresorie Silver" },
+  { name: "Silverzone Rising Star" },
+  { name: "Maa Silver Kings" },
+  { name: "Mexx Mavericks" },
+  { name: "Divine Dynamites" },
+  { name: "Marvelous Mysha" },
+  { name: "Ksp Comets" },
+  { name: "Kuber Bullion kings" },
+  { name: "Sparkling silver" },
+  { name: "S S lions" },
+  { name: "Shree Balaji Yodhas" },
+  { name: "A.O.S. TIGERS" },
 ]
 
 export default function NsplPage() {
@@ -146,7 +160,7 @@ export default function NsplPage() {
             </div>
           </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm p-5 transition-colors hover:bg-white/15">
               <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-silver mb-1">
                 <Calendar className="size-4 text-royal" /> When
@@ -234,14 +248,11 @@ export default function NsplPage() {
                 key={t.name}
                 className="group flex items-start gap-4 rounded-xl border border-white/15 bg-white/10 backdrop-blur-sm p-4 transition-all hover:bg-white/15 hover:border-royal/50"
               >
-                <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-2xl shadow-inner border border-white/20">
-                  {t.icon}
-                </div>
                 <div>
                   <h3 className="font-bold text-white text-sm group-hover:text-royal transition-colors">
                     {t.name}
                   </h3>
-                  <p className="text-xs text-silver/70">{t.firm}</p>
+                  {t.firm && <p className="text-xs text-silver/70">{t.firm}</p>}
                   <span className="mt-2 inline-block rounded bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-silver-bright">
                     Squad drafting soon
                   </span>
@@ -311,7 +322,7 @@ export default function NsplPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-6 sm:grid-cols-3">
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-amber-500/30 bg-amber-950/30 backdrop-blur-sm p-6 text-center">
               <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-amber-500/20 text-amber-300 mb-3 border border-amber-400/30">
                 <Trophy className="size-7" />
@@ -319,6 +330,15 @@ export default function NsplPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-amber-300">Season 1 Champions</span>
               <h3 className="text-xl font-extrabold text-white mt-1">Silbells Warriors</h3>
               <p className="mt-1 text-xs text-silver/80">Lifted the inaugural silver cup</p>
+            </div>
+
+            <div className="rounded-xl border border-slate-300/30 bg-slate-200/10 backdrop-blur-sm p-6 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-slate-300/20 text-slate-200 mb-3 border border-slate-300/30">
+                <Medal className="size-7" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-200">Season 1 Runners Up</span>
+              <h3 className="text-xl font-extrabold text-white mt-1">Silver Zone Rising Stars</h3>
+              <p className="mt-1 text-xs text-silver/80">Finalists in the inaugural season</p>
             </div>
 
             <div className="rounded-xl border border-royal/30 bg-royal/10 backdrop-blur-sm p-6 text-center">
@@ -337,6 +357,24 @@ export default function NsplPage() {
               <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">Best Bowler</span>
               <h3 className="text-xl font-extrabold text-white mt-1">Ritesh Doshi</h3>
               <p className="mt-1 text-xs text-silver/80">14 wickets in 6 matches</p>
+            </div>
+
+            <div className="rounded-xl border border-rose-500/30 bg-rose-950/30 backdrop-blur-sm p-6 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-rose-500/20 text-rose-300 mb-3 border border-rose-400/30">
+                <Swords className="size-7" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-300">Best Batsman</span>
+              <h3 className="text-xl font-extrabold text-white mt-1">Jubin Jain</h3>
+              <p className="mt-1 text-xs text-silver/80">138 runs &middot; Avg 27.60 &middot; SR 215.63</p>
+            </div>
+
+            <div className="rounded-xl border border-sky-500/30 bg-sky-950/30 backdrop-blur-sm p-6 text-center">
+              <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-sky-500/20 text-sky-300 mb-3 border border-sky-400/30">
+                <Hand className="size-7" />
+              </div>
+              <span className="text-xs font-bold uppercase tracking-wider text-sky-300">Best Fielder</span>
+              <h3 className="text-xl font-extrabold text-white mt-1">Jubin Jain</h3>
+              <p className="mt-1 text-xs text-silver/80">6 dismissals &middot; 1 catch &middot; 4 run outs</p>
             </div>
           </div>
         </div>

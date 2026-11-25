@@ -31,6 +31,7 @@ export const tshirtSizes = [
   { value: "XXL", label: "44 - XXL" },
   { value: "XXXL", label: "46 - XXXL" },
   { value: "XXXXL", label: "48 - XXXXL" },
+  { value: "XXXXXL", label: "50 - XXXXXL" },
 ] as const
 
 export const waistSizes = [28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50]

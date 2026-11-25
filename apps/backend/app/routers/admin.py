@@ -81,6 +81,7 @@ def display_tshirt_size(value: str) -> str:
         "XXL": "44 - XXL",
         "XXXL": "46 - XXXL",
         "XXXXL": "48 - XXXXL",
+        "XXXXXL": "50 - XXXXXL",
     }.get(value, value)
 
 
