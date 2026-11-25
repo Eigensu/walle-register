@@ -31,7 +31,7 @@ export const sponsors: Sponsor[] = [
   roleSponsor("youtube-partner", "YouTube Partner", "Silver India Heritage"),
   roleSponsor("hydration-partner", "Water Partner", "Richezza"),
   roleSponsor("toss-ka-boss", "Toss Ka Boss", "Antraa"),
-  roleSponsor("cap-partner", "Cap Partner", "Silber"),
+  roleSponsor("cap-partner", "Cap Partner", "Silbells"),
   roleSponsor("trophy-partner", "Trophy Partner", "Emerald"),
   roleSponsor("kit-partner", "Kit Partner", "Arya24"),
   roleSponsor("man-of-the-match-partner", "Man of the Match", "Aurous"),
