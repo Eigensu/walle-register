@@ -43,6 +43,7 @@ export type PlayerDetailsResponse = {
   bowling_type: string;
   wicket_keeper: string;
   name_on_jersey: string;
+  jersey_number: number | null;
   tshirt_size: string;
   waist_size: number;
   played_JMCL_S2: string;

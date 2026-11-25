@@ -42,6 +42,7 @@ interface Player {
   bowling_type?: string;
   wicket_keeper?: string;
   name_on_jersey?: string;
+  jersey_number?: number | null;
   tshirt_size?: string;
   waist_size?: number;
   played_JMCL_S2?: string;
@@ -775,6 +776,10 @@ export default function AdminDashboard() {
                     <p className="mt-1 text-slate-900 dark:text-white">
                       {selectedPlayer.name_on_jersey || "—"}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Jersey Number</p>
+                    <p className="mt-1 text-slate-900 dark:text-white">{selectedPlayer.jersey_number ?? "—"}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-400">

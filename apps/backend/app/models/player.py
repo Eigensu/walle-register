@@ -58,6 +58,7 @@ class Player(Document):
     
     # Jersey Details
     name_on_jersey: str
+    jersey_number: int | None = None
     tshirt_size: str
     waist_size: int
     

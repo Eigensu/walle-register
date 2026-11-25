@@ -37,6 +37,7 @@ class PlayerResponse(BaseModel):
     wicket_keeper: str
     # Jersey Details
     name_on_jersey: str
+    jersey_number: int | None = None
     tshirt_size: str
     waist_size: int
     # JMCL Season 1 Details
@@ -181,6 +182,7 @@ async def get_all_players(
                 bowling_type=display_bowling_type(doc.get("bowling_type", "")),
                 wicket_keeper=doc.get("wicket_keeper", ""),
                 name_on_jersey=doc.get("name_on_jersey", ""),
+                jersey_number=doc.get("jersey_number"),
                 tshirt_size=display_tshirt_size(doc.get("tshirt_size", "")),
                 waist_size=doc.get("waist_size", 0),
                 played_JMCL_S2=doc.get("played_JMCL_S2", ""),
@@ -244,6 +246,7 @@ async def export_players_csv(
         "Bowling Type",
         "Wicket Keeper",
         "Name on Jersey",
+        "Jersey Number",
         "T-Shirt Size",
         "Waist Size",
         "Played JMCL S1",
@@ -297,6 +300,7 @@ async def export_players_csv(
             display_bowling_type(player.get("bowling_type", "")),
             player.get("wicket_keeper", ""),
             player.get("name_on_jersey", ""),
+            player.get("jersey_number", ""),
             display_tshirt_size(player.get("tshirt_size", "")),
             player.get("waist_size", ""),
             player.get("played_JMCL_S2", ""),
