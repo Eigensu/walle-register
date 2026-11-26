@@ -35,6 +35,19 @@ export function JerseyDetailsStep({
     <div className="space-y-6">
       <FormField
         control={form.control}
+        name="jersey_number"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Jersey Number (optional)</FormLabel>
+            <FormControl>
+              <input {...field} type="number" min={0} max={99} inputMode="numeric" placeholder="0–99" className={fieldClass} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
         name="name_on_jersey"
         render={({ field }) => (
           <FormItem>

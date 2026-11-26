@@ -61,6 +61,7 @@ export const playerSchema = z.object({
   ),
   wicket_keeper: z.string(),
   name_on_jersey: z.string(),
+  jersey_number: z.string().regex(/^$|^\d{1,2}$/, "Enter a number from 0 to 99"),
   tshirt_size: z.string().refine(
     (value) => !value || tshirtValues.includes(value as (typeof tshirtValues)[number]) || value === "4XL" || value === "5XL",
     "Choose a supported T-shirt size",

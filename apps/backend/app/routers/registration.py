@@ -21,6 +21,15 @@ def _clean_gstin(value: str | None) -> str:
     return gstin
 
 
+def _clean_jersey_number(value: str | None) -> int | None:
+    text = (value or "").strip()
+    if not text:
+        return None
+    if not text.isdigit() or int(text) > 99:
+        raise HTTPException(status_code=422, detail="Jersey number must be between 0 and 99.")
+    return int(text)
+
+
 router = APIRouter(prefix="/api", tags=["registration"])
 
 MAX_FILE_BYTES = 10 * 1024 * 1024
@@ -64,6 +73,7 @@ class PlayerDetailsResponse(BaseModel):
     bowling_type: str
     wicket_keeper: str
     name_on_jersey: str
+    jersey_number: int | None = None
     tshirt_size: str
     waist_size: int
     played_JMCL_S2: str
@@ -96,6 +106,7 @@ async def register_player(
     wicket_keeper: str = Form(...),
     # Jersey Details
     name_on_jersey: str = Form(...),
+    jersey_number: str | None = Form(default=None),
     tshirt_size: TshirtSize = Form(...),
     waist_size: int = Form(...),
     # JMCL Season 1 Details
@@ -155,6 +166,7 @@ async def register_player(
         wicket_keeper=wicket_keeper,
         # Jersey Details
         name_on_jersey=name_on_jersey,
+        jersey_number=_clean_jersey_number(jersey_number),
         tshirt_size=tshirt_size.value,
         waist_size=waist_size,
         # JMCL Season 1 Details
@@ -194,6 +206,7 @@ async def update_player(
     wicket_keeper: str = Form(...),
     # Jersey Details
     name_on_jersey: str = Form(...),
+    jersey_number: str | None = Form(default=None),
     tshirt_size: TshirtSize = Form(...),
     waist_size: int = Form(...),
     # JMCL Season 1 Details
@@ -256,6 +269,8 @@ async def update_player(
     player.bowling_type = bowling_type.value
     player.wicket_keeper = wicket_keeper
     player.name_on_jersey = name_on_jersey
+    if jersey_number is not None:
+        player.jersey_number = _clean_jersey_number(jersey_number)
     player.tshirt_size = tshirt_size.value
     player.waist_size = waist_size
     player.played_JMCL_S2 = played_JMCL_S2
@@ -333,6 +348,7 @@ async def get_player_details(player_id: str):
         bowling_type=player.bowling_type,
         wicket_keeper=player.wicket_keeper,
         name_on_jersey=player.name_on_jersey,
+        jersey_number=getattr(player, "jersey_number", None),
         tshirt_size=player.tshirt_size,
         waist_size=player.waist_size,
         played_JMCL_S2=player.played_JMCL_S2,

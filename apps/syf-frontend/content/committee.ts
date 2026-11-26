@@ -14,16 +14,16 @@ const member = (order: number, name: string, firm: string, photo: string | null 
 })
 
 export const committee: Person[] = [
-  member(1, "Anil Jain", "Queens & Kings", "/committee/01-anil-jain-white.webp"),
-  member(2, "Sumeet Jain", "Silbells", "/committee/02-sumeet-jain-white.webp"),
-  member(3, "Suraj Mehta", "RS Bullion", "/committee/03-suraj-mehta-white.webp"),
-  member(4, "Akshay Navlakha", "Divine Silver", "/committee/04-akshay-navlakha-white.webp"),
-  member(5, "Chetan Rajawat", "J'Riti Riwaaz", "/committee/05-chetan-rajawat-white.webp"),
-  member(6, "Aman Singhvi", "Arihant 925 Jewellery Pvt. Ltd. (AJPL)", "/committee/06-aman-singhvi-white.webp"),
-  member(7, "Kartik Jain", "Tresorie", "/committee/07-kartik-jain-white.webp"),
-  member(8, "Ritesh Doshi", "Richezza Royal 925 Sterling Silver Jewellery", "/committee/08-ritesh-doshi-white.webp"),
-  member(9, "Jayesh Rathod", "Silbells Jewellery Pvt. Ltd."),
-  member(10, "Akshay Mehta", "Mehta Properties"),
-  member(11, "Vivek Kabra", "JewelBuzz"),
-  member(12, "Pavan Jain", "Antraa Silver"),
+  member(1, "Jayesh Rathod", "Silbells Jewellery Pvt. Ltd."),
+  member(2, "Anil Jain", "Queens & Kings", "/committee/01-anil-jain-white.webp"),
+  member(3, "Ritesh Doshi", "Richezza Royal 925 Sterling Silver Jewellery", "/committee/08-ritesh-doshi-white.webp"),
+  member(4, "Suraj Mehta", "RS Bullion", "/committee/03-suraj-mehta-white.webp"),
+  member(5, "Aman Singhvi", "Arihant 925 Jewellery Pvt. Ltd. (AJPL)", "/committee/06-aman-singhvi-white.webp"),
+  member(6, "Akshay Mehta", "Mehta Properties", "/committee/11-akshay-mehta-white.webp"),
+  member(7, "Akshay Navlakha", "Divine Silver", "/committee/04-akshay-navlakha-white.webp"),
+  member(8, "Vivek Kabra", "JewelBuzz", "/committee/09-vivek-kabra-white.webp"),
+  member(9, "Sumeet Jain", "Silbells", "/committee/02-sumeet-jain-white.webp"),
+  member(10, "Kartik Jain", "Tresorie", "/committee/07-kartik-jain-white.webp"),
+  member(11, "Chetan Rajawat", "J'Riti Riwaaz", "/committee/05-chetan-rajawat-white.webp"),
+  member(12, "Pavan Jain", "Antraa Silver", "/committee/10-pavan-jain-white.webp"),
 ]

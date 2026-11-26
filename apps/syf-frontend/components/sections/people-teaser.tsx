@@ -31,7 +31,7 @@ export function PeopleTeaser() {
                     <li key={`${m.name}-${i}`} style={{ "--reveal-delay": `${i * 60}ms` } as CSSProperties} className="w-[44vw] max-w-64 shrink-0 sm:w-[30vw] lg:w-[18vw] lg:max-w-56">
                       {assetExists(photo) ? (
                         <div className="group relative aspect-square overflow-hidden rounded-lg bg-navy">
-                          <Image src={photo} alt="" fill sizes="(min-width: 1024px) 18vw, 44vw" className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                          <Image src={photo} alt="" fill sizes="(min-width: 1024px) 18vw, 44vw" className={`object-cover transition-transform duration-300 group-hover:scale-105 ${["Akshay Mehta", "Vivek Kabra"].includes(m.name) ? "object-top" : "object-center"}`} />
                         </div>
                       ) : (
                         <Monogram name={m.name} className="aspect-square rounded-lg" />

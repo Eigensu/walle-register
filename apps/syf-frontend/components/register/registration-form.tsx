@@ -75,6 +75,7 @@ const empty: PlayerForm = {
   bowling_type: "",
   wicket_keeper: "",
   name_on_jersey: "",
+  jersey_number: "",
   tshirt_size: "",
   waist_size: "",
   played_JMCL_S2: "",
@@ -123,6 +124,7 @@ function validate(step: RegistrationStepId, v: PlayerForm): Errors {
   }
   if (step === "jersey") {
     need("name_on_jersey", "Enter the name for your jersey")
+    if (v.jersey_number && (!/^\d{1,2}$/.test(v.jersey_number) || Number(v.jersey_number) > 99)) e.jersey_number = "Enter a number from 0 to 99"
     if (!tshirtSizes.some((option) => option.value === v.tshirt_size)) e.tshirt_size = "Choose a T-shirt size"
     need("waist_size", "Choose a waist size")
   }
@@ -715,6 +717,17 @@ export function RegistrationForm({ resumeId, returnOrderId, previousSeason, even
                 hint={`${values.name_on_jersey.length}/15 characters`}
                 className="font-sport text-lg uppercase tracking-wider"
                 onValue={(v) => set("name_on_jersey", v)}
+              />
+              <TextField
+                name="jersey_number"
+                label="Jersey number (optional)"
+                type="number"
+                min={0}
+                max={99}
+                inputMode="numeric"
+                value={values.jersey_number}
+                error={errors.jersey_number}
+                onValue={(v) => set("jersey_number", v)}
               />
               <SelectField
                 name="tshirt_size"

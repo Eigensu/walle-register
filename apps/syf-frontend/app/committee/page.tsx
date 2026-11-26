@@ -85,7 +85,7 @@ export default function CommitteePage() {
                           alt={m.name}
                           fill
                           sizes="(min-width: 1280px) 20vw, (min-width: 768px) 30vw, 90vw"
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          className={`object-cover transition-transform duration-300 group-hover:scale-105 ${["Akshay Mehta", "Vivek Kabra"].includes(m.name) ? "object-top" : "object-center"}`}
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
