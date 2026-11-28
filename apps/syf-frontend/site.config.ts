@@ -176,7 +176,7 @@ export const site: SiteConfig = {
     people: {
       eyebrow: "The people behind SYF",
       heading: field("Led by the industry's next generation", false, "Draft heading"),
-      teaserCount: 6,
+      teaserCount: 12,
       link: { label: "Meet the committee", href: "/committee" },
     },
     gallery: {
